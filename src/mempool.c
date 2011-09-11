@@ -16,7 +16,7 @@ static SVR_Arena* SVR_Arena_allocExternal(size_t size);
  * Initialize the SVR_MemPool component
  */
 void SVR_MemPool_init(void) {
-    descriptor_allocator = BlockAlloc_newAllocator(sizeof(SVR_Arena));
+    descriptor_allocator = BlockAlloc_newAllocator(sizeof(SVR_Arena), 4);
 }
 
 /**

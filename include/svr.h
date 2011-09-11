@@ -19,7 +19,7 @@
 #include <svr/mempool.h>
 #include <svr/allocators.h>
 #include <svr/blockalloc.h>
-#include <svr/streambuffer.h>
+#include <svr/pack.h>
 
 #include <svr/message.h>
 

@@ -1,5 +1,7 @@
 
-#include <svr.h>
+#include "svr.h"
+
+#define DEFAULT_GROW_SIZE 4
 
 static List* shared_allocators = NULL;
 static pthread_mutex_t piles_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -20,14 +22,15 @@ void BlockAlloc_close(void) {
     List_destroy(shared_allocators);
 }
 
-BlockAllocator* BlockAlloc_newAllocator(uint32_t block_size) {
+BlockAllocator* BlockAlloc_newAllocator(size_t block_size, size_t grow_size) {
     BlockAllocator* allocator;
 
     allocator = malloc(sizeof(BlockAllocator));
     allocator->block_size = block_size;
-    allocator->grow_size = 4;
+    allocator->grow_size = grow_size;
     allocator->num_blocks = 0;
     allocator->index = 0;
+    allocator->chunks = List_new();
     allocator->blocks = NULL;
     pthread_mutex_init(&allocator->lock, NULL);
 
@@ -35,9 +38,13 @@ BlockAllocator* BlockAlloc_newAllocator(uint32_t block_size) {
 }
 
 void BlockAlloc_freeAllocator(BlockAllocator* allocator) {
-    for (int i = 0; i < allocator->index; i++) {
-        free(allocator->blocks[i]);
+    void* chunk;
+
+    while((chunk = List_get(allocator->chunks, 0)) != NULL) {
+        free(chunk);
     }
+    
+    free(allocator->blocks);
     free(allocator);
 }
 
@@ -54,7 +61,7 @@ BlockAllocator* BlockAlloc_getSharedAllocator(uint32_t block_size) {
     }
 
     if (allocator == NULL) {
-        allocator = BlockAlloc_newAllocator(block_size);
+        allocator = BlockAlloc_newAllocator(block_size, DEFAULT_GROW_SIZE);
         List_append(shared_allocators, allocator);
     }
     pthread_mutex_unlock(&piles_lock);
@@ -76,9 +83,13 @@ void* BlockAlloc_alloc(BlockAllocator* allocator) {
         allocator->blocks = realloc(allocator->blocks, allocator->num_blocks * sizeof(void*));
         allocator->index = allocator->grow_size;
 
-        for (int i = 0; i < allocator->index; i++) {
-            allocator->blocks[i] = malloc(allocator->block_size);
+        allocator->blocks[0] = malloc(allocator->block_size * allocator->grow_size);
+
+        for(int i = 1; i < allocator->index; i++) {
+            allocator->blocks[i] = ((uint8_t*)allocator->blocks[0]) + (i * allocator->block_size);
         }
+
+        List_append(allocator->chunks, allocator->blocks[0]);
     }
 
     allocator->index -= 1;

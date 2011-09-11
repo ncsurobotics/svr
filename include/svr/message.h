@@ -38,9 +38,9 @@ struct SVR_Message_s {
     unsigned short count;
 
     /**
-     * The MemPool allocation that backs this message
+     * The Arena allocation that backs this message
      */
-    MemPool_Alloc* alloc;
+    SVR_Arena* alloc;
 };
 
 /**
@@ -65,10 +65,27 @@ struct SVR_Message_s {
  * header, and the rest of the message is null separated ASCII strings
  */
 struct SVR_PackedMessage_s {
-    StreamBuffer* message;
+    size_t length;
+
+    void* data;
+
+    uint16_t payload_size;
 
     void* payload;
-    uint16_t payload_size;
+
+    /**
+     * The Arena allocation that backs this message
+     */
+    SVR_Arena* alloc;
 };
+
+#define SVR_MESSAGE_PREFIX_LEN 4
+
+void SVR_Message_init(void);
+SVR_PackedMessage* SVR_packMessage(SVR_Message* message);
+SVR_Message* SVR_unpackMessage(SVR_PackedMessage* packed_message);
+SVR_Message* SVR_Message_new(unsigned int component_count);
+SVR_PackedMessage* SVR_PackedMessage_new(void);
+void* SVR_PackedMessage_makeBufferSpace(SVR_PackedMessage* packed_message, size_t space);
 
 #endif // #ifndef __SVR_MESSAGE_H
