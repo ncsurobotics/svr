@@ -3,7 +3,7 @@
 
 # Build options
 CC ?= gcc
-CFLAGS = -std=c99 -Wall -Werror -pedantic -Wmissing-prototypes -g
+CFLAGS = -std=gnu99 -Wall -Werror -pedantic -Wmissing-prototypes -g
 
 # Include /usr/local in include and library search paths
 CFLAGS += -I/usr/local/include
