@@ -1,10 +1,10 @@
 
 #include <svr.h>
 
-static StringBufferPool* default_pool = NULL;
+static StreamBufferPool* default_pool = NULL;
 
-StringBufferPool* StringBuffer_newPool(uint32_t buffer_size, uint32_t allocation_unit) {
-    StringBufferPool* pool = malloc(sizeof(StringBufferPool));
+StreamBufferPool* StringBuffer_newPool(uint32_t buffer_size, uint32_t allocation_unit) {
+    StreamBufferPool* pool = malloc(sizeof(StreamBufferPool));
     pool->free_buffers = NULL;
     pool->buffer_size = buffer_size;
     pool->allocation_unit = allocation_unit;
@@ -12,12 +12,12 @@ StringBufferPool* StringBuffer_newPool(uint32_t buffer_size, uint32_t allocation
     return pool;
 }
 
-void StringBuffer_setDefaultPool(StringBufferPool* pool) {
+void StringBuffer_setDefaultPool(StreamBufferPool* pool) {
     default_pool = pool;
 }
 
-StringBuffer* StringBuffer_new(StringBufferPool* pool) {
-    StringBuffer* buffer;
+StreamBuffer* StringBuffer_new(StreamBufferPool* pool) {
+    StreamBuffer* buffer;
 
     if(pool == NULL) {
         pool = default_pool;
@@ -26,7 +26,7 @@ StringBuffer* StringBuffer_new(StringBufferPool* pool) {
     pthread_mutex_lock(&pool->lock);
     if(pool->free_buffers == NULL) {
         for(int i = 0; i < pool->allocation_unit; i++) {
-            buffer = malloc(sizeof(StringBuffer));
+            buffer = malloc(sizeof(StreamBuffer));
             buffer->buffer = malloc(pool->buffer_size);
             buffer->size = pool->buffer_size;
             buffer->write_index = 0;
@@ -42,7 +42,7 @@ StringBuffer* StringBuffer_new(StringBufferPool* pool) {
     return buffer;
 }
 
-void StringBuffer_free(StringBufferPool* pool, StringBuffer* buffer) {
+void StringBuffer_free(StreamBufferPool* pool, StreamBuffer* buffer) {
     if(pool == NULL) {
         pool = default_pool;
     }
@@ -53,14 +53,14 @@ void StringBuffer_free(StringBufferPool* pool, StringBuffer* buffer) {
     pthread_mutex_unlock(&pool->lock);
 }
 
-static void StringBuffer_makeSpace(StringBuffer* buffer, size_t space) {
+static void StringBuffer_makeSpace(StreamBuffer* buffer, size_t space) {
     if(buffer->write_index + space >= buffer->size) {
         buffer->size = buffer->write_index + space;
         buffer->buffer = realloc(buffer->buffer, buffer->size);
     }
 }
 
-size_t StringBuffer_write(StringBuffer* buffer, const char* format, ...) {
+size_t StringBuffer_write(StreamBuffer* buffer, const char* format, ...) {
     const char* s;
     uint32_t length;
     uint32_t old_write_index = buffer->write_index;
@@ -113,7 +113,7 @@ size_t StringBuffer_write(StringBuffer* buffer, const char* format, ...) {
     return buffer->write_index - old_write_index;
 }
 
-size_t StringBuffer_printf(StringBuffer* buffer, const char* format, ...) {
+size_t StringBuffer_printf(StreamBuffer* buffer, const char* format, ...) {
     va_list ap;
     uint32_t n;
 
@@ -130,15 +130,15 @@ size_t StringBuffer_printf(StringBuffer* buffer, const char* format, ...) {
     return n;
 }
 
-size_t StringBuffer_getLength(StringBuffer* buffer) {
+size_t StringBuffer_getLength(StreamBuffer* buffer) {
     return buffer->write_index;
 }
 
-void* StringBuffer_getBuffer(StringBuffer* buffer) {
+void* StringBuffer_getBuffer(StreamBuffer* buffer) {
     return buffer->buffer;
 }
 
-void StringBuffer_read(StringBuffer* buffer, const char* format, ...) {
+void StringBuffer_read(StreamBuffer* buffer, const char* format, ...) {
     va_list ap;
 
     va_start(ap, format);

@@ -3,15 +3,15 @@
 
 #include <svr.h>
 
-BlockAllocator* message_allocator = NULL;
-BlockAllocator* packed_message_allocator = NULL;
+BlockAllocator* svr_alloc_message = NULL;
+BlockAllocator* svr_alloc_packed_message = NULL;
 
-StringBufferPool* message_body_buffers = NULL;
-StringBufferPool* short_string_buffers = NULL;
+StreamBufferPool* svr_alloc_message_body = NULL;
+StreamBufferPool* svr_alloc_string = NULL;
 
 void Allocators_init(void) {
-    message_allocator = BlockAlloc_getAllocator(sizeof(SVR_Message));
-    packed_message_allocator = BlockAlloc_getAllocator(sizeof(SVR_PackedMessage));
-    message_body_buffers = StringBuffer_newPool(64, 4);
-    short_string_buffers = StringBuffer_newPool(16, 8);
+    svr_alloc_message = BlockAlloc_newAllocator(sizeof(SVR_Message));
+    svr_alloc_packed_message = BlockAlloc_newAllocator(sizeof(SVR_PackedMessage));
+    svr_alloc_message_body = StringBuffer_newPool(64, 4);
+    svr_alloc_string = StringBuffer_newPool(16, 8);
 }

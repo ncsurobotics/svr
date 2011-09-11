@@ -16,9 +16,10 @@
 #include <string.h>
 
 #include <svr/forward.h>
+#include <svr/mempool.h>
 #include <svr/allocators.h>
 #include <svr/blockalloc.h>
-#include <svr/stringbuffer.h>
+#include <svr/streambuffer.h>
 
 #include <svr/message.h>
 

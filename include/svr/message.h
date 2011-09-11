@@ -65,7 +65,7 @@ struct SVR_Message_s {
  * header, and the rest of the message is null separated ASCII strings
  */
 struct SVR_PackedMessage_s {
-    StringBuffer* message;
+    StreamBuffer* message;
 
     void* payload;
     uint16_t payload_size;

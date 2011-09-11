@@ -18,7 +18,10 @@ struct BlockAllocator_s {
 
 void BlockAlloc_init(void);
 void BlockAlloc_close(void);
-BlockAllocator* BlockAlloc_getAllocator(uint32_t block_size);
+BlockAllocator* BlockAlloc_newAllocator(uint32_t block_size);
+void BlockAlloc_freeAllocator(BlockAllocator* allocator);
+BlockAllocator* BlockAlloc_getSharedAllocator(uint32_t block_size);
+size_t BlockAlloc_getBlockSize(BlockAllocator* allocator);
 void* BlockAlloc_alloc(BlockAllocator* allocator);
 void BlockAlloc_free(BlockAllocator* allocator, void* p);
 

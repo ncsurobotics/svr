@@ -4,6 +4,9 @@
 
 typedef uint8_t DataBuffer;
 
+struct SVR_MemPool_s;
+struct SVR_MemPool_Block_s;
+struct SVR_Arena_s;
 struct BlockAllocator_s;
 struct StringBufferPool_s;
 struct StringBuffer_s;
@@ -16,8 +19,11 @@ struct Stream_s;
 struct Source_s;
 struct FrameProperties_s;
 
-typedef struct StringBuffer_s StringBuffer;
-typedef struct StringBufferPool_s StringBufferPool;
+typedef struct SVR_MemPool_s SVR_MemPool;
+typedef struct SVR_MemPool_Block_s SVR_MemPool_Block;
+typedef struct SVR_Arena_s SVR_Arena;
+typedef struct StringBuffer_s StreamBuffer;
+typedef struct StringBufferPool_s StreamBufferPool;
 typedef struct BlockAllocator_s BlockAllocator;
 typedef struct SVR_Message_s SVR_Message;
 typedef struct SVR_PackedMessage_s SVR_PackedMessage;
