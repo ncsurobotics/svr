@@ -31,7 +31,7 @@ struct SVR_Arena_s {
     /**
      * The base address of this memory allocation
      */
-    uint8_t* base;
+    void* base;
 
     /**
      * The write index (in bytes) within the block
@@ -42,7 +42,7 @@ struct SVR_Arena_s {
      * The block this allocation was made from or NULL if this block is
      * directly allocated using malloc
      */
-    BlockAllocator* allocator;
+    SVR_BlockAllocator* allocator;
 
     /**
      * Pointer to the next chunk in this arena
@@ -55,7 +55,7 @@ struct SVR_Arena_s {
 void SVR_MemPool_init(void);
 void SVR_MemPool_close(void);
 
-SVR_Arena* SVR_Arena_alloc(BlockAllocator* allocator);
+SVR_Arena* SVR_Arena_alloc(SVR_BlockAllocator* allocator);
 void* SVR_Arena_write(SVR_Arena* alloc, const void* data, size_t size);
 void* SVR_Arena_strdup(SVR_Arena* alloc, const char* s);
 void* SVR_Arena_reserve(SVR_Arena* alloc, size_t size);

@@ -7,7 +7,7 @@ LDFLAGS += -L../ -l$(LIB_NAME:lib%.so=%) -lpthread
 
 INCLUDES= ../../include/svr/*.h ../../include/svr/server/*.h ../../include/svr.h
 
-SRC= 
+SRC= client.c server.c main.c
 OBJ= $(SRC:.c=.o)
 
 all: $(SERVER_NAME)

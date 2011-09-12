@@ -6,26 +6,24 @@
 static List* shared_allocators = NULL;
 static pthread_mutex_t piles_lock = PTHREAD_MUTEX_INITIALIZER;
 
-/* TODO: Allocate blocks in chunks using one malloc. store chunk pointers in a list */
-
-void BlockAlloc_init(void) {
+void SVR_BlockAlloc_init(void) {
     shared_allocators = List_new();
 }
 
-void BlockAlloc_close(void) {
-    BlockAllocator* allocator;
+void SVR_BlockAlloc_close(void) {
+    SVR_BlockAllocator* allocator;
 
     while ((allocator = List_remove(shared_allocators, 0)) != NULL) {
-        BlockAlloc_freeAllocator(allocator);
+        SVR_BlockAlloc_freeAllocator(allocator);
     }
 
     List_destroy(shared_allocators);
 }
 
-BlockAllocator* BlockAlloc_newAllocator(size_t block_size, size_t grow_size) {
-    BlockAllocator* allocator;
+SVR_BlockAllocator* SVR_BlockAlloc_newAllocator(size_t block_size, size_t grow_size) {
+    SVR_BlockAllocator* allocator;
 
-    allocator = malloc(sizeof(BlockAllocator));
+    allocator = malloc(sizeof(SVR_BlockAllocator));
     allocator->block_size = block_size;
     allocator->grow_size = grow_size;
     allocator->num_blocks = 0;
@@ -37,7 +35,7 @@ BlockAllocator* BlockAlloc_newAllocator(size_t block_size, size_t grow_size) {
     return allocator;
 }
 
-void BlockAlloc_freeAllocator(BlockAllocator* allocator) {
+void SVR_BlockAlloc_freeAllocator(SVR_BlockAllocator* allocator) {
     void* chunk;
 
     while((chunk = List_get(allocator->chunks, 0)) != NULL) {
@@ -48,8 +46,8 @@ void BlockAlloc_freeAllocator(BlockAllocator* allocator) {
     free(allocator);
 }
 
-BlockAllocator* BlockAlloc_getSharedAllocator(uint32_t block_size) {
-    BlockAllocator* allocator;
+SVR_BlockAllocator* SVR_BlockAlloc_getSharedAllocator(uint32_t block_size) {
+    SVR_BlockAllocator* allocator;
     int i = 0;
 
     pthread_mutex_lock(&piles_lock);
@@ -61,7 +59,7 @@ BlockAllocator* BlockAlloc_getSharedAllocator(uint32_t block_size) {
     }
 
     if (allocator == NULL) {
-        allocator = BlockAlloc_newAllocator(block_size, DEFAULT_GROW_SIZE);
+        allocator = SVR_BlockAlloc_newAllocator(block_size, DEFAULT_GROW_SIZE);
         List_append(shared_allocators, allocator);
     }
     pthread_mutex_unlock(&piles_lock);
@@ -69,11 +67,11 @@ BlockAllocator* BlockAlloc_getSharedAllocator(uint32_t block_size) {
     return allocator;
 }
 
-size_t BlockAlloc_getBlockSize(BlockAllocator* allocator) {
+size_t SVR_BlockAlloc_getBlockSize(SVR_BlockAllocator* allocator) {
     return allocator->block_size;
 }
 
-void* BlockAlloc_alloc(BlockAllocator* allocator) {
+void* SVR_BlockAlloc_alloc(SVR_BlockAllocator* allocator) {
     void* p;
 
     pthread_mutex_lock(&allocator->lock);
@@ -100,7 +98,7 @@ void* BlockAlloc_alloc(BlockAllocator* allocator) {
     return p;
 }
 
-void BlockAlloc_free(BlockAllocator* allocator, void* p) {
+void SVR_BlockAlloc_free(SVR_BlockAllocator* allocator, void* p) {
     pthread_mutex_lock(&allocator->lock);
     allocator->blocks[allocator->index] = p;
     allocator->index++;

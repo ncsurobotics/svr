@@ -6,7 +6,7 @@
  */
 #define ALLOC_ALIGNMENT 2
 
-static BlockAllocator* descriptor_allocator = NULL;
+static SVR_BlockAllocator* descriptor_allocator = NULL;
 
 static SVR_Arena* SVR_Arena_allocExternal(size_t size);
 
@@ -16,7 +16,7 @@ static SVR_Arena* SVR_Arena_allocExternal(size_t size);
  * Initialize the SVR_MemPool component
  */
 void SVR_MemPool_init(void) {
-    descriptor_allocator = BlockAlloc_newAllocator(sizeof(SVR_Arena), 4);
+    descriptor_allocator = SVR_BlockAlloc_newAllocator(sizeof(SVR_Arena), 4);
 }
 
 /**
@@ -25,7 +25,7 @@ void SVR_MemPool_init(void) {
  * Close the SVR_MemPool component
  */
 void SVR_MemPool_close(void) {
-    BlockAlloc_freeAllocator(descriptor_allocator);
+    SVR_BlockAlloc_freeAllocator(descriptor_allocator);
 }
 
 /**
@@ -37,10 +37,10 @@ void SVR_MemPool_close(void) {
  *
  * \return The new allocation object
  */
-SVR_Arena* SVR_Arena_alloc(BlockAllocator* allocator) {
-    SVR_Arena* alloc = BlockAlloc_alloc(descriptor_allocator);
+SVR_Arena* SVR_Arena_alloc(SVR_BlockAllocator* allocator) {
+    SVR_Arena* alloc = SVR_BlockAlloc_alloc(descriptor_allocator);
 
-    alloc->base = BlockAlloc_alloc(allocator);
+    alloc->base = SVR_BlockAlloc_alloc(allocator);
     alloc->allocator = allocator;
     alloc->write_index = 0;
     alloc->next = NULL;
@@ -49,7 +49,7 @@ SVR_Arena* SVR_Arena_alloc(BlockAllocator* allocator) {
 }
 
 static SVR_Arena* SVR_Arena_allocExternal(size_t size) {
-    SVR_Arena* alloc = BlockAlloc_alloc(descriptor_allocator);
+    SVR_Arena* alloc = SVR_BlockAlloc_alloc(descriptor_allocator);
 
     alloc->base = malloc(size);
     alloc->allocator = NULL;
@@ -74,10 +74,10 @@ void SVR_Arena_free(SVR_Arena* alloc) {
     if (alloc->allocator == NULL) {
         free(alloc->base);
     } else {
-        BlockAlloc_free(alloc->allocator, alloc->base);
+        SVR_BlockAlloc_free(alloc->allocator, alloc->base);
     }
 
-    BlockAlloc_free(descriptor_allocator, alloc);
+    SVR_BlockAlloc_free(descriptor_allocator, alloc);
 }
 
 /**
@@ -133,7 +133,7 @@ void* SVR_Arena_reserve(SVR_Arena* alloc, size_t size) {
 
     /* Find a chunk with enough free space or exhaust the list */
     while(alloc->next) {
-        if (alloc->write_index + size < BlockAlloc_getBlockSize(alloc->allocator)) {
+        if (alloc->write_index + size < SVR_BlockAlloc_getBlockSize(alloc->allocator)) {
             break;
         }
 
@@ -141,8 +141,8 @@ void* SVR_Arena_reserve(SVR_Arena* alloc, size_t size) {
     }
 
     /* Allocate a new block if necessary */
-    if (alloc->write_index + size >= BlockAlloc_getBlockSize(alloc->allocator)) {
-        if(size > BlockAlloc_getBlockSize(alloc->allocator)) {
+    if (alloc->write_index + size >= SVR_BlockAlloc_getBlockSize(alloc->allocator)) {
+        if(size > SVR_BlockAlloc_getBlockSize(alloc->allocator)) {
             /* Too big for a block, allocate directly */
             alloc->next = SVR_Arena_allocExternal(size);
         } else {

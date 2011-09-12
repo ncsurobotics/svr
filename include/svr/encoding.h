@@ -10,18 +10,18 @@ typedef int IplImage;
 
 //#include <cv.h>
 
-struct Encoding_s {
+struct SVR_Encoding_s {
     /**
      * Create a new encoder instance. The returned data represents the
      * private data of the encoder
      */
-    void* (*openEncoder)(FrameProperties* frame_properties);
+    void* (*openEncoder)(SVR_FrameProperties* frame_properties);
 
     /**
      * Create a new decoder instance. The returned data represents the
      * private data of the decoder
      */
-    void* (*openDecoder)(FrameProperties* frame_properties);
+    void* (*openDecoder)(SVR_FrameProperties* frame_properties);
 
     /**
      * Destroy and close the encoder instanance
@@ -51,7 +51,7 @@ struct Encoding_s {
     const char* name;
 };
 
-Encoding* SVR_getEncoding(const char* name);
+SVR_Encoding* SVR_getEncoding(const char* name);
 
 #endif // #ifndef __SVR_ENCODING_H
 

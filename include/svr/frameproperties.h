@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-struct FrameProperties_s {
+struct SVR_FrameProperties_s {
     uint16_t height;
     uint16_t width;
     uint8_t depth;

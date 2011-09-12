@@ -82,10 +82,14 @@ struct SVR_PackedMessage_s {
 #define SVR_MESSAGE_PREFIX_LEN 4
 
 void SVR_Message_init(void);
-SVR_PackedMessage* SVR_packMessage(SVR_Message* message);
-SVR_Message* SVR_unpackMessage(SVR_PackedMessage* packed_message);
+
 SVR_Message* SVR_Message_new(unsigned int component_count);
-SVR_PackedMessage* SVR_PackedMessage_new(void);
-void* SVR_PackedMessage_makeBufferSpace(SVR_PackedMessage* packed_message, size_t space);
+SVR_PackedMessage* SVR_Message_pack(SVR_Message* message);
+void SVR_Message_release(SVR_Message* message);
+
+SVR_PackedMessage* SVR_PackedMessage_new(size_t packed_length);
+SVR_Message* SVR_PackedMessage_unpack(SVR_PackedMessage* packed_message);
+void SVR_PackedMessage_release(SVR_PackedMessage* packed_message);
+
 
 #endif // #ifndef __SVR_MESSAGE_H

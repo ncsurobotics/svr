@@ -15,19 +15,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <svr/logging.h>
 #include <svr/forward.h>
 #include <svr/mempool.h>
-#include <svr/allocators.h>
 #include <svr/blockalloc.h>
 #include <svr/pack.h>
 
 #include <svr/message.h>
+#include <svr/net.h>
 
-#include <svr/client.h>
 #include <svr/encoding.h>
 #include <svr/frameproperties.h>
-#include <svr/reencoder.h>
-#include <svr/source.h>
-#include <svr/stream.h>
 
 #endif // #ifndef __SVR_SVR_H

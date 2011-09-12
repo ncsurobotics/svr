@@ -1,13 +1,13 @@
 
 #include "svr.h"
 
-static BlockAllocator* message_allocator = NULL;
+static SVR_BlockAllocator* message_allocator = NULL;
 
 static SVR_Message* SVR_Message_newWithAlloc(unsigned int component_count, SVR_Arena* alloc);
-static SVR_PackedMessage* SVR_PackedMessage_newWithAlloc(SVR_Arena* alloc);
+static SVR_PackedMessage* SVR_PackedMessage_newWithAlloc(size_t packed_length, SVR_Arena* alloc);
 
 void SVR_Message_init(void) {
-    message_allocator = BlockAlloc_newAllocator(256, 8);
+    message_allocator = SVR_BlockAlloc_newAllocator(256, 8);
 }
 
 /**
@@ -18,8 +18,8 @@ void SVR_Message_init(void) {
  * \param message The message to packe
  * \return The packed equivalent of message
  */
-SVR_PackedMessage* SVR_packMessage(SVR_Message* message) {
-    SVR_PackedMessage* packed_message = SVR_PackedMessage_newWithAlloc(message->alloc);
+SVR_PackedMessage* SVR_Message_pack(SVR_Message* message) {
+    SVR_PackedMessage* packed_message;
     size_t total_data_length = 0;
 
     /* Add length of each component and space for a null terminator for each */
@@ -27,13 +27,16 @@ SVR_PackedMessage* SVR_packMessage(SVR_Message* message) {
         total_data_length += strlen(message->components[i]) + 1;
     }
 
-    /* Make space for the packed message */
-    SVR_PackedMessage_makeBufferSpace(packed_message, total_data_length + SVR_MESSAGE_PREFIX_LEN);
+    /* Constructed the empty, packed message */
+    packed_message = SVR_PackedMessage_newWithAlloc(total_data_length + SVR_MESSAGE_PREFIX_LEN, message->alloc);
 
     packed_message->length = SVR_pack(packed_message->data, packed_message->length, "hhhh", total_data_length, message->request_id, message->count, message->payload_size);
     for(int i = 0; i < message->count; i++) {
         packed_message->length = SVR_pack(packed_message->data, packed_message->length, "s", message->components[i]);
     }
+
+    packed_message->payload = message->payload;
+    packed_message->payload_size = message->payload_size;
 
     return packed_message;
 }
@@ -47,7 +50,7 @@ SVR_PackedMessage* SVR_packMessage(SVR_Message* message) {
  * \param packed_message A packed message to unpack
  * \return The unpacked message
  */
-SVR_Message* SVR_unpackMessage(SVR_PackedMessage* packed_message) {
+SVR_Message* SVR_PackedMessage_unpack(SVR_PackedMessage* packed_message) {
     SVR_Message* message = SVR_Message_newWithAlloc(0, packed_message->alloc);
     size_t pack_offset = 0;
     size_t data_length;
@@ -61,6 +64,9 @@ SVR_Message* SVR_unpackMessage(SVR_PackedMessage* packed_message) {
     for(int i = 0; i < message->count; i++) {
         pack_offset = SVR_unpack(packed_message->data, pack_offset, "s", &message->components[i]);
     }
+
+    message->payload = packed_message->payload;
+    message->payload_size = packed_message->payload_size;
 
     return message;
 }
@@ -107,24 +113,27 @@ SVR_Message* SVR_Message_new(unsigned int component_count) {
  * \param alloc The SVR_MemPool allocation to allocate space for this message from
  * \return A new packed message object
  */
-static SVR_PackedMessage* SVR_PackedMessage_newWithAlloc(SVR_Arena* alloc) {
+static SVR_PackedMessage* SVR_PackedMessage_newWithAlloc(size_t packed_length, SVR_Arena* alloc) {
     SVR_PackedMessage* packed_message = SVR_Arena_reserve(alloc, sizeof(SVR_PackedMessage));
 
-    packed_message->length = 0;
-    packed_message->data = NULL;
-    packed_message->payload_size = 0;
+    packed_message->data = SVR_Arena_reserve(packed_message->alloc, packed_length);
+    packed_message->length = packed_length;
     packed_message->payload = NULL;
+    packed_message->payload_size = 0;
     packed_message->alloc = alloc;
 
     return packed_message;
 }
 
-SVR_PackedMessage* SVR_PackedMessage_new(void) {
+SVR_PackedMessage* SVR_PackedMessage_new(size_t packed_length) {
     SVR_Arena* alloc = SVR_Arena_alloc(message_allocator);
-    return SVR_PackedMessage_newWithAlloc(alloc);
+    return SVR_PackedMessage_newWithAlloc(packed_length, alloc);
 }
 
-void* SVR_PackedMessage_makeBufferSpace(SVR_PackedMessage* packed_message, size_t space) {
-    packed_message->data = SVR_Arena_reserve(packed_message->alloc, space);
-    return packed_message->data;
+void SVR_PackedMessage_release(SVR_PackedMessage* packed_message) {
+    SVR_Arena_free(packed_message->alloc);
+}
+
+void SVR_Message_release(SVR_Message* message) {
+    SVR_Arena_free(message->alloc);
 }
