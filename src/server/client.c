@@ -4,25 +4,21 @@
 #include "svr.h"
 #include "svr/server/client.h"
 
-static void* SVR_removeMarkedClosedClients(void* __unused);
 static void* SVR_Client_worker(void* _client);
+static void SVR_Client_cleanup(void* _client);
 
 /* List of active clients */
 static List* clients = NULL;
-static Queue* closed_clients = NULL;
 
 /* Global clients lock */
 static pthread_mutex_t global_clients_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static pthread_mutex_t remove_client_lock = PTHREAD_MUTEX_INITIALIZER;
-
-/** Task handle of thread that destroys clients */
-static pthread_t close_clients_thread;
+static int client_thread_count = 0;
+static pthread_mutex_t client_thread_count_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t client_thread_count_zero = PTHREAD_COND_INITIALIZER;
 
 void SVR_Client_init(void) {
     clients = List_new();
-    closed_clients = Queue_new();
-    pthread_create(&close_clients_thread, NULL, &SVR_removeMarkedClosedClients, NULL);
 }
 
 void SVR_Client_close(void) {
@@ -36,15 +32,11 @@ void SVR_Client_close(void) {
         }
         SVR_releaseGlobalClientsLock();
 
-        /* Ensure removeMarkedClosedClients stops blocking to exit */
-        Queue_append(closed_clients, NULL);
-        
         /* Wait for all client threads to complete */
         SVR_joinAllClientThreads();
         
         /* Free the clients lists */
         List_destroy(clients);
-        Queue_destroy(closed_clients);
     }
 }
 
@@ -55,7 +47,28 @@ SVR_Client* SVR_Client_new(int socket) {
     client->streams = Dictionary_new();
     client->sources = Dictionary_new();
 
+    SVR_REFCOUNTED_INIT(client, SVR_Client_cleanup);
+    SVR_LOCKABLE_INIT(client);
+
+    pthread_mutex_lock(&client_thread_count_lock);
+    client_thread_count++;
+    pthread_mutex_unlock(&client_thread_count_lock);
+
     return client;
+}
+
+static void SVR_Client_cleanup(void* _client) {
+    SVR_Client* client = (SVR_Client*) _client;
+
+    pthread_join(client->thread, NULL);
+    free(client);
+
+    pthread_mutex_lock(&client_thread_count_lock);
+    client_thread_count--;
+    if(client_thread_count == 0) {
+        pthread_cond_broadcast(&client_thread_count_zero);
+    }
+    pthread_mutex_unlock(&client_thread_count_lock);
 }
 
 void SVR_addClient(int socket) {
@@ -69,16 +82,18 @@ void SVR_addClient(int socket) {
 }
 
 /**
- * \brief Remove clients previously marked as closed
+ * \brief Mark a client as closed
  *
- * \return Always returns NULL
+ * Mark a client as closed. It's resources will be released on the next call to
+ * SVR_Client_removeMarkedClosedClients()
+ *
+ * \param client Mark the given client as closed
  */
-static void* SVR_removeMarkedClosedClients(void* __unused) {
-    SVR_Client* client;
+void SVR_Client_markForClosing(SVR_Client* client) {
+    SVR_LOCK(client);
+    if(client->state != SVR_CLOSED) {
+        client->state = SVR_CLOSED;
 
-    /* NULL pushed to the queue after all clients have been disconnected
-       during shutdown */
-    while((client = Queue_pop(closed_clients, true)) != NULL) {
         /* Immediately close the socket. The client can not longer generate requests */
         shutdown(client->socket, SHUT_RDWR);
         close(client->socket);
@@ -87,25 +102,8 @@ static void* SVR_removeMarkedClosedClients(void* __unused) {
         SVR_acquireGlobalClientsLock();
         List_remove(clients, List_indexOf(clients, client));
         SVR_releaseGlobalClientsLock();
-
-        /* Wait for the client thread to terminate */
-        pthread_join(client->thread, NULL);
-        
-        /* With the client thread dead and the client removed from the client
-           list the client is inaccessible at this point. Only threads which
-           acquired a reference before the client was closed may still have
-           access to it */
-        
-        /* Wait for any thread which holds an in_use read lock on the client to
-           complete. No more threads could possibly try to acquire a read lock
-           so we're just waiting for existing locks to expire */
-        //pthread_rwlock_wrlock(&client->in_use);
-
-        /* The client is completely removed and unused. Safe to free backing memory */
-        free(client);
     }
-
-    return NULL;
+    SVR_UNLOCK(client);
 }
 
 /**
@@ -123,31 +121,17 @@ void SVR_Client_kick(SVR_Client* client, const char* reason) {
     SVR_Client_markForClosing(client);
 }
 
-
-/**
- * \brief Mark a client as closed
- *
- * Mark a client as closed. It's resources will be released on the next call to
- * SVR_Client_removeMarkedClosedClients()
- *
- * \param client Mark the given client as closed
- */
-void SVR_Client_markForClosing(SVR_Client* client) {
-    pthread_mutex_lock(&remove_client_lock);
-    if(client->state != SVR_CLOSED) {
-        client->state = SVR_CLOSED;
-        Queue_append(closed_clients, client);
-    }
-    pthread_mutex_unlock(&remove_client_lock);
-}
-
 /**
  * \brief Wait for all client threads to die
  *
  * Wait for all client threads to shutdown and be destroyed
  */
 void SVR_joinAllClientThreads(void) {
-    pthread_join(close_clients_thread, NULL);
+    pthread_mutex_lock(&client_thread_count_lock);
+    while(client_thread_count > 0) {
+        pthread_cond_wait(&client_thread_count_zero, &client_thread_count_lock);
+    }
+    pthread_mutex_unlock(&client_thread_count_lock);
 }
 
 /**
@@ -204,7 +188,6 @@ static void* SVR_Client_worker(void* _client) {
         }
 
         /* Process message */
-        //SVR_Process_process(client, message);
 
         /* Destroy client message */
         SVR_Message_release(message);

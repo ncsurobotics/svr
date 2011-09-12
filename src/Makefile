@@ -10,7 +10,7 @@ LDFLAGS += $(EXTRA_LDFLAGS)
 
 INCLUDES= ../include/svr/*.h ../include/svr.h
 
-SRC = blockalloc.c mempool.c message.c pack.c net.c logging.c
+SRC = blockalloc.c mempool.c message.c pack.c net.c logging.c refcount.c
 OBJ = $(SRC:.c=.o)
 
 all: $(LIB_NAME)

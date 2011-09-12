@@ -53,6 +53,12 @@ struct SVR_Client_s {
      * List of sources the client provides
      */
     Dictionary* sources;
+
+    /* This object is reference counted */
+    SVR_REFCOUNTED;
+
+    /* This object is lockable */
+    SVR_LOCKABLE;
 };
 
 void SVR_Client_init(void);

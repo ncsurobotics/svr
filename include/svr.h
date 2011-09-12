@@ -15,8 +15,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <svr/logging.h>
 #include <svr/forward.h>
+#include <svr/refcount.h>
+#include <svr/lockable.h>
+#include <svr/logging.h>
 #include <svr/mempool.h>
 #include <svr/blockalloc.h>
 #include <svr/pack.h>
