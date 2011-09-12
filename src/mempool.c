@@ -113,6 +113,41 @@ void* SVR_Arena_strdup(SVR_Arena* alloc, const char* s) {
 }
 
 /**
+ * \brief Prepare a formatted string
+ *
+ * Writes a formatted string as sprintf, but allocates space dynamically
+ *
+ * \param alloc SVR_Arena to use for space
+ * \param format Format specifier, same as given to printf family
+ * \param ... arguments to format string
+ * \return Pointer to formatted string
+ */
+void* SVR_Arena_sprintf(SVR_Arena* alloc, const char* format, ...) {
+    size_t space = SVR_BlockAlloc_getBlockSize(alloc->allocator) - alloc->write_index;
+    void* p = ((uint8_t*)alloc->base) + alloc->write_index;
+    va_list ap;
+    int n;
+
+    va_start(ap, format);
+    n = vsnprintf(p, space, format, ap);
+    va_end(ap);
+    
+    /* If the above vsnprintf call did not truncate the output then this call
+       will simply claim the space used, otherwise it will make the necessary
+       space so we can vsnprintf successfully */
+    p = SVR_Arena_reserve(alloc, n + 1);
+
+    /* Output was truncated, try with the new reserved space */
+    if(n >= space) {
+        va_start(ap, format);
+        vsnprintf(p, n + 1, format, ap);
+        va_end(ap);
+    }
+
+    return p;
+}
+
+/**
  * \brief Reserve space in an allocation
  *
  * Reserve space in the allocation that can be written to by the caller instead

@@ -56,6 +56,7 @@ void SVR_MemPool_init(void);
 void SVR_MemPool_close(void);
 
 SVR_Arena* SVR_Arena_alloc(SVR_BlockAllocator* allocator);
+void* SVR_Arena_sprintf(SVR_Arena* alloc, const char* format, ...);
 void* SVR_Arena_write(SVR_Arena* alloc, const void* data, size_t size);
 void* SVR_Arena_strdup(SVR_Arena* alloc, const char* s);
 void* SVR_Arena_reserve(SVR_Arena* alloc, size_t size);
