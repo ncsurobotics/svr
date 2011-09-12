@@ -1,0 +1,8 @@
+syntax: glob
+*.o
+*.so
+*~
+*.swp1
+
+syntax: regexp
+^src/server/svr$
