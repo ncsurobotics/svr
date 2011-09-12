@@ -13,7 +13,7 @@ void SVR_BlockAlloc_init(void) {
 void SVR_BlockAlloc_close(void) {
     SVR_BlockAllocator* allocator;
 
-    while ((allocator = List_remove(shared_allocators, 0)) != NULL) {
+    while((allocator = List_remove(shared_allocators, 0)) != NULL) {
         SVR_BlockAlloc_freeAllocator(allocator);
     }
 
@@ -51,14 +51,14 @@ SVR_BlockAllocator* SVR_BlockAlloc_getSharedAllocator(uint32_t block_size) {
     int i = 0;
 
     pthread_mutex_lock(&piles_lock);
-    while ((allocator = List_get(shared_allocators, i)) != NULL) {
-        if (allocator->block_size == block_size) {
+    while((allocator = List_get(shared_allocators, i)) != NULL) {
+        if(allocator->block_size == block_size) {
             break;
         }
         i++;
     }
 
-    if (allocator == NULL) {
+    if(allocator == NULL) {
         allocator = SVR_BlockAlloc_newAllocator(block_size, DEFAULT_GROW_SIZE);
         List_append(shared_allocators, allocator);
     }
@@ -76,7 +76,7 @@ void* SVR_BlockAlloc_alloc(SVR_BlockAllocator* allocator) {
 
     pthread_mutex_lock(&allocator->lock);
 
-    if (allocator->index == 0) {
+    if(allocator->index == 0) {
         allocator->num_blocks += allocator->grow_size;
         allocator->blocks = realloc(allocator->blocks, allocator->num_blocks * sizeof(void*));
         allocator->index = allocator->grow_size;

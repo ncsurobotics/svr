@@ -116,7 +116,7 @@ SVR_Message* SVR_Message_new(unsigned int component_count) {
 static SVR_PackedMessage* SVR_PackedMessage_newWithAlloc(size_t packed_length, SVR_Arena* alloc) {
     SVR_PackedMessage* packed_message = SVR_Arena_reserve(alloc, sizeof(SVR_PackedMessage));
 
-    packed_message->data = SVR_Arena_reserve(packed_message->alloc, packed_length);
+    packed_message->data = SVR_Arena_reserve(alloc, packed_length);
     packed_message->length = packed_length;
     packed_message->payload = NULL;
     packed_message->payload_size = 0;

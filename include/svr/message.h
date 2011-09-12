@@ -79,7 +79,7 @@ struct SVR_PackedMessage_s {
     SVR_Arena* alloc;
 };
 
-#define SVR_MESSAGE_PREFIX_LEN 4
+#define SVR_MESSAGE_PREFIX_LEN 8
 
 void SVR_Message_init(void);
 

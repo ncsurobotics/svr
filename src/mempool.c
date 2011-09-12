@@ -67,11 +67,11 @@ static SVR_Arena* SVR_Arena_allocExternal(size_t size) {
  * \param alloc The allocation to free
  */
 void SVR_Arena_free(SVR_Arena* alloc) {
-    if (alloc->next) {
+    if(alloc->next) {
         SVR_Arena_free(alloc->next);
     }
 
-    if (alloc->allocator == NULL) {
+    if(alloc->allocator == NULL) {
         free(alloc->base);
     } else {
         SVR_BlockAlloc_free(alloc->allocator, alloc->base);
@@ -124,16 +124,21 @@ void* SVR_Arena_strdup(SVR_Arena* alloc, const char* s) {
  * \return A pointer to the reserved space
  */
 void* SVR_Arena_reserve(SVR_Arena* alloc, size_t size) {
+    SVR_BlockAllocator* allocator = alloc->allocator;
+    size_t block_size = SVR_BlockAlloc_getBlockSize(allocator);
+    bool found;
     void* p;
 
     /* Round up to the nearest boundary to keep alignment if not already aligned */
-    if (size % ALLOC_ALIGNMENT > 0) {
+    if(size % ALLOC_ALIGNMENT > 0) {
         size += (ALLOC_ALIGNMENT - (size % ALLOC_ALIGNMENT));
     }
 
     /* Find a chunk with enough free space or exhaust the list */
+    found = false;
     while(alloc->next) {
-        if (alloc->write_index + size < SVR_BlockAlloc_getBlockSize(alloc->allocator)) {
+        if(alloc->write_index + size < block_size) {
+            found = true;
             break;
         }
 
@@ -141,12 +146,12 @@ void* SVR_Arena_reserve(SVR_Arena* alloc, size_t size) {
     }
 
     /* Allocate a new block if necessary */
-    if (alloc->write_index + size >= SVR_BlockAlloc_getBlockSize(alloc->allocator)) {
-        if(size > SVR_BlockAlloc_getBlockSize(alloc->allocator)) {
+    if(!found) {
+        if(size > block_size) {
             /* Too big for a block, allocate directly */
             alloc->next = SVR_Arena_allocExternal(size);
         } else {
-            alloc->next = SVR_Arena_alloc(alloc->allocator);
+            alloc->next = SVR_Arena_alloc(allocator);
         }
 
         alloc = alloc->next;
