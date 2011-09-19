@@ -17,6 +17,7 @@
 int SVR_Net_sendPackedMessage(int socket, SVR_PackedMessage* packed_message) {
     ssize_t sent_bytes, n;
 
+    /* Send message body */
     sent_bytes = 0;
     while(sent_bytes < packed_message->length) {
         n = send(socket, ((uint8_t*)packed_message->data) + sent_bytes, packed_message->length - sent_bytes, 0);
@@ -27,6 +28,7 @@ int SVR_Net_sendPackedMessage(int socket, SVR_PackedMessage* packed_message) {
         sent_bytes += n;
     }
 
+    /* Send payload */
     sent_bytes = 0;
     while(sent_bytes < packed_message->payload_size) {
         n = send(socket, ((uint8_t*)packed_message->payload) + sent_bytes, packed_message->payload_size - sent_bytes, 0);

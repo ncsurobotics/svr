@@ -2,10 +2,10 @@
 #include <seawolf.h>
 
 #include "svr.h"
-#include "svr/server/client.h"
+#include "svr/server/svr.h"
 
-static void* SVR_Client_worker(void* _client);
-static void SVR_Client_cleanup(void* _client);
+static void* SVRs_Client_worker(void* _client);
+static void SVRs_Client_cleanup(void* _client);
 
 /* List of active clients */
 static List* clients = NULL;
@@ -17,37 +17,37 @@ static int client_thread_count = 0;
 static pthread_mutex_t client_thread_count_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t client_thread_count_zero = PTHREAD_COND_INITIALIZER;
 
-void SVR_Client_init(void) {
+void SVRs_Client_init(void) {
     clients = List_new();
 }
 
-void SVR_Client_close(void) {
-    SVR_Client* client;
+void SVRs_Client_close(void) {
+    SVRs_Client* client;
 
     if(clients) {
         /* Kick all still attached clients */
-        SVR_acquireGlobalClientsLock();
+        SVRs_acquireGlobalClientsLock();
         for(int i = 0; (client = List_get(clients, i)) != NULL; i++) {
-            SVR_Client_kick(client, "SVR closing");
+            SVRs_Client_kick(client, "SVR closing");
         }
-        SVR_releaseGlobalClientsLock();
+        SVRs_releaseGlobalClientsLock();
 
         /* Wait for all client threads to complete */
-        SVR_joinAllClientThreads();
+        SVRs_joinAllClientThreads();
         
         /* Free the clients lists */
         List_destroy(clients);
     }
 }
 
-SVR_Client* SVR_Client_new(int socket) {
-    SVR_Client* client = malloc(sizeof(SVR_Client));
+SVRs_Client* SVRs_Client_new(int socket) {
+    SVRs_Client* client = malloc(sizeof(SVRs_Client));
 
     client->socket = socket;
     client->streams = Dictionary_new();
     client->sources = Dictionary_new();
 
-    SVR_REFCOUNTED_INIT(client, SVR_Client_cleanup);
+    SVR_REFCOUNTED_INIT(client, SVRs_Client_cleanup);
     SVR_LOCKABLE_INIT(client);
 
     pthread_mutex_lock(&client_thread_count_lock);
@@ -57,8 +57,8 @@ SVR_Client* SVR_Client_new(int socket) {
     return client;
 }
 
-static void SVR_Client_cleanup(void* _client) {
-    SVR_Client* client = (SVR_Client*) _client;
+static void SVRs_Client_cleanup(void* _client) {
+    SVRs_Client* client = (SVRs_Client*) _client;
 
     pthread_join(client->thread, NULL);
     free(client);
@@ -71,25 +71,25 @@ static void SVR_Client_cleanup(void* _client) {
     pthread_mutex_unlock(&client_thread_count_lock);
 }
 
-void SVR_addClient(int socket) {
-    SVR_Client* client = SVR_Client_new(socket);
+void SVRs_addClient(int socket) {
+    SVRs_Client* client = SVRs_Client_new(socket);
 
-    SVR_acquireGlobalClientsLock();
+    SVRs_acquireGlobalClientsLock();
     List_append(clients, client);
-    SVR_releaseGlobalClientsLock();
+    SVRs_releaseGlobalClientsLock();
 
-    pthread_create(&client->thread, NULL, &SVR_Client_worker, client);
+    pthread_create(&client->thread, NULL, &SVRs_Client_worker, client);
 }
 
 /**
  * \brief Mark a client as closed
  *
  * Mark a client as closed. It's resources will be released on the next call to
- * SVR_Client_removeMarkedClosedClients()
+ * SVRs_Client_removeMarkedClosedClients()
  *
  * \param client Mark the given client as closed
  */
-void SVR_Client_markForClosing(SVR_Client* client) {
+void SVRs_Client_markForClosing(SVRs_Client* client) {
     SVR_LOCK(client);
     if(client->state != SVR_CLOSED) {
         client->state = SVR_CLOSED;
@@ -99,9 +99,9 @@ void SVR_Client_markForClosing(SVR_Client* client) {
         close(client->socket);
         
         /* Remove client from clients list */
-        SVR_acquireGlobalClientsLock();
+        SVRs_acquireGlobalClientsLock();
         List_remove(clients, List_indexOf(clients, client));
-        SVR_releaseGlobalClientsLock();
+        SVRs_releaseGlobalClientsLock();
     }
     SVR_UNLOCK(client);
 }
@@ -109,16 +109,16 @@ void SVR_Client_markForClosing(SVR_Client* client) {
 /**
  * \brief Kick a client 
  */
-void SVR_Client_kick(SVR_Client* client, const char* reason) {
+void SVRs_Client_kick(SVRs_Client* client, const char* reason) {
     SVR_Message* message = SVR_Message_new(2);
 
-    message->components[0] = SVR_Arena_strdup(message->alloc, "KICK");
+    message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.Kick");
     message->components[1] = SVR_Arena_strdup(message->alloc, reason);
 
     SVR_Net_sendMessage(client->socket, message);
     SVR_Message_release(message);
 
-    SVR_Client_markForClosing(client);
+    SVRs_Client_markForClosing(client);
 }
 
 /**
@@ -126,7 +126,7 @@ void SVR_Client_kick(SVR_Client* client, const char* reason) {
  *
  * Wait for all client threads to shutdown and be destroyed
  */
-void SVR_joinAllClientThreads(void) {
+void SVRs_joinAllClientThreads(void) {
     pthread_mutex_lock(&client_thread_count_lock);
     while(client_thread_count > 0) {
         pthread_cond_wait(&client_thread_count_zero, &client_thread_count_lock);
@@ -138,11 +138,11 @@ void SVR_joinAllClientThreads(void) {
  * \brief Get clients
  *
  * Get a list of all clients. Access to the list should be proteced by calls to
- * SVR_Client_acquireGlobalClientsLock and SVR_Client_releaseGlobalClientsLock
+ * SVRs_Client_acquireGlobalClientsLock and SVRs_Client_releaseGlobalClientsLock
  *
  * \return The list of clients
  */
-List* SVR_getAllClients(void) {
+List* SVRs_getAllClients(void) {
     return clients;
 }
 
@@ -152,7 +152,7 @@ List* SVR_getAllClients(void) {
  * Acquire a global lock on the clients list. This lock should only be held for
  * a short amount of time if necessary.
  */
-void SVR_acquireGlobalClientsLock(void) {
+void SVRs_acquireGlobalClientsLock(void) {
     pthread_mutex_lock(&global_clients_lock);
 }
 
@@ -162,8 +162,18 @@ void SVR_acquireGlobalClientsLock(void) {
  * Release the global lock on the clients list. This lock should only be held
  * for a short amount of time if necessary.
  */
-void SVR_releaseGlobalClientsLock(void) {
+void SVRs_releaseGlobalClientsLock(void) {
     pthread_mutex_unlock(&global_clients_lock);
+}
+
+int SVRs_Client_sendMessage(SVRs_Client* client, SVR_Message* message) {
+    int n;
+
+    SVR_LOCK(client);
+    n = SVR_Net_sendMessage(client->socket, message);
+    SVR_UNLOCK(client);
+
+    return n;
 }
 
 /**
@@ -171,11 +181,11 @@ void SVR_releaseGlobalClientsLock(void) {
  *
  * Handle requests from a single client until the client closes
  *
- * \param _client Pointer to a SVR_Client structure
+ * \param _client Pointer to a SVRs_Client structure
  * \return Always returns NULL
  */
-static void* SVR_Client_worker(void* _client) {
-    SVR_Client* client = (SVR_Client*) _client;
+static void* SVRs_Client_worker(void* _client) {
+    SVRs_Client* client = (SVRs_Client*) _client;
     SVR_Message* message;
  
     while(client->state != SVR_CLOSED) {
@@ -183,11 +193,12 @@ static void* SVR_Client_worker(void* _client) {
         message = SVR_Net_receiveMessage(client->socket);
 
         if(message == NULL) {
-            SVR_Client_markForClosing(client);
+            SVRs_Client_markForClosing(client);
             break;
         }
 
         /* Process message */
+        SVRs_processMessage(client, message);
 
         /* Destroy client message */
         SVR_Message_release(message);

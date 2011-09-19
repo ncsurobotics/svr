@@ -5,6 +5,7 @@
 #include <seawolf.h>
 
 #include <svr/forward.h>
+#include <svr/server/forward.h>
 
 /**
  * Client state
@@ -29,15 +30,15 @@ typedef enum {
      * Client connection is closed
      */
     SVR_CLOSED
-} SVR_Client_State;
+} SVRs_Client_State;
 
-struct SVR_Client_s {
+struct SVRs_Client_s {
     /**
      * Socket file descriptor
      */
     int socket;
 
-    SVR_Client_State state;
+    SVRs_Client_State state;
 
     /**
      * Client's thread
@@ -61,17 +62,18 @@ struct SVR_Client_s {
     SVR_LOCKABLE;
 };
 
-void SVR_Client_init(void);
-void SVR_Client_close(void);
-SVR_Client* SVR_Client_new(int socket);
-void SVR_Client_markForClosing(SVR_Client* client);
-void SVR_Client_kick(SVR_Client* client, const char* reason);
+void SVRs_Client_init(void);
+void SVRs_Client_close(void);
+SVRs_Client* SVRs_Client_new(int socket);
+void SVRs_Client_markForClosing(SVRs_Client* client);
+void SVRs_Client_kick(SVRs_Client* client, const char* reason);
+int SVRs_Client_sendMessage(SVRs_Client* client, SVR_Message* message);
 
-void SVR_addClient(int socket);
-List* SVR_getAllClients(void);
-void SVR_joinAllClientThreads(void);
-void SVR_acquireGlobalClientsLock(void);
-void SVR_releaseGlobalClientsLock(void);
+void SVRs_addClient(int socket);
+List* SVRs_getAllClients(void);
+void SVRs_joinAllClientThreads(void);
+void SVRs_acquireGlobalClientsLock(void);
+void SVRs_releaseGlobalClientsLock(void);
 
 /**
  * \brief Write encoded stream data
@@ -79,19 +81,19 @@ void SVR_releaseGlobalClientsLock(void);
  * Once data has been encoded by the stream it is passed to the client to be
  * written out as a frame data packet
  */
-size_t SVR_Client_writeStreamData(SVR_Client* client, SVR_Stream* stream, SVR_DataBuffer* data, size_t data_available);
+size_t SVRs_Client_writeStreamData(SVRs_Client* client, SVRs_Stream* stream, SVR_DataBuffer* data, size_t data_available);
 
 /**
  * Subscribe the client to the given source using the given encoding
  */
-int SVR_Client_openStream(SVR_Client* client, char* source_name, char* encoding_name);
+int SVRs_Client_openStream(SVRs_Client* client, char* source_name, char* encoding_name);
 
 /**
  * Request the stream associated with the given source be resized
  */
-int SVR_Client_resizeStream(SVR_Client* client, char* source_name, uint16_t height, uint16_t width);
+int SVRs_Client_resizeStream(SVRs_Client* client, char* source_name, uint16_t height, uint16_t width);
 
-int SVR_Client_closeStream(SVR_Client* client, char* source_name);
+int SVRs_Client_closeStream(SVRs_Client* client, char* source_name);
 
 // void Client_newClientSource(Client* client, char* source_name,
 
