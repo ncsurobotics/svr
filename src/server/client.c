@@ -57,6 +57,10 @@ SVRs_Client* SVRs_Client_new(int socket) {
     return client;
 }
 
+void SVRs_Client_provideSource(SVRs_Client* client, SVRs_Source* source) {
+    Dictionary_set(client->sources, source->name, source);
+}
+
 static void SVRs_Client_cleanup(void* _client) {
     SVRs_Client* client = (SVRs_Client*) _client;
 
@@ -203,6 +207,8 @@ static void* SVRs_Client_worker(void* _client) {
         /* Destroy client message */
         SVR_Message_release(message);
     }
+
+    SVR_UNREF(client);
 
     return NULL;
 }

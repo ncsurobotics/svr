@@ -16,6 +16,7 @@ int main(void) {
     SVR_Message_init();
 
     SVRs_Client_init();
+    SVRs_Source_init();
     SVRs_Server_mainLoop();
     
     return 0;

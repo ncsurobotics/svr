@@ -12,6 +12,7 @@
 #include "svr/server/stream.h"
 #include "svr/server/event.h"
 #include "svr/server/messagerouting.h"
+#include "svr/server/messagehandlers.h"
 
 void SVRs_exit(void);
 void SVRs_exitError(void);

@@ -19,17 +19,17 @@ typedef struct {
 
 static const char* INVALID_MESSAGE = "Invalid message";
 static SVRs_RequestMapping request_types[] = {
-    {"Stream.open", SVRs_Stream_open},
-    {"Stream.close", SVRs_Stream_close},
-    {"Stream.getProp", SVRs_Stream_getProp},
-    {"Stream.setProp", SVRs_Stream_setProp},
-    {"Source.open", SVRs_Source_open},
-    {"Source.close", SVRs_Source_close},
-    {"Source.getProp", SVRs_Source_getProp},
-    {"Source.setProp", SVRs_Source_setProp},
-    {"Data", SVRs_Source_data},
-    {"Event.register", SVRs_Event_register},
-    {"Event.unregister", SVRs_Event_unregister}
+    {"Stream.open", SVRs_Stream_rOpen},
+    {"Stream.close", SVRs_Stream_rClose},
+    {"Stream.getProp", SVRs_Stream_rGetProp},
+    {"Stream.setProp", SVRs_Stream_rSetProp},
+    {"Source.open", SVRs_Source_rOpen},
+    {"Source.close", SVRs_Source_rClose},
+    {"Source.getProp", SVRs_Source_rGetProp},
+    {"Source.setProp", SVRs_Source_rSetProp},
+    {"Data", SVRs_Source_rData},
+    {"Event.register", SVRs_Event_rRegister},
+    {"Event.unregister", SVRs_Event_rUnregister}
 };
 
 static int SVRs_compareRequestMapping(const void* v1, const void* v2);

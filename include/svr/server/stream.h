@@ -22,28 +22,35 @@ struct SVRs_Stream_s {
      * Frame properties. Inherited from Source by default
      */
     SVR_FrameProperties* frame_properties;
+
+    SVR_Stream_State state;
+
+    void* buffer;
+    size_t buffer_size;
+
+    char* name;
+
+    SVR_LOCKABLE;
 };
 
 /**
  * Create a new stream with the given client, source, and encoding
  */
-void SVRs_Stream_new(SVRs_Client* client, SVRs_Source* source, SVR_Encoding* encoding);
+void SVRs_Stream_destroy(SVRs_Stream* stream);
+void SVRs_Stream_setEncoding(SVRs_Stream* stream, SVR_Encoding* encoding);
 
 /**
  * Called by the source to provide raw data to the stream
  */
 void SVRs_Stream_inputSourceData(SVRs_Stream* stream, SVR_DataBuffer* data, size_t data_available);
 
-/**
- * Set the frame properties. Setting the frame properties will cause the stream
- * encoding and the reencoder to be reallocated which may cause brief frame
- * loss to the stream
- */
-void SVRs_Stream_setFrameProperties(SVRs_Stream* stream, SVR_FrameProperties* frame_properties);
+SVRs_Stream* SVRs_Stream_new(SVRs_Client* client, SVRs_Source* source);
+void SVRs_Stream_open(SVRs_Client* client, SVRs_Source* source, SVR_Encoding* encoding, const char* stream_name);
+void SVRs_Stream_inputSourceData(SVRs_Stream* stream, SVR_DataBuffer* data, size_t data_available);
+void SVRs_Stream_pause(SVRs_Stream* stream);
+void SVRs_Stream_start(SVRs_Stream* stream);
+void SVRs_Stream_close(SVRs_Stream* stream);
 
-void SVRs_Stream_open(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_close(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_getProp(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_setProp(SVRs_Client* client, SVR_Message* message);
+
 
 #endif // #ifndef __SVR_SERVER_STREAM_H

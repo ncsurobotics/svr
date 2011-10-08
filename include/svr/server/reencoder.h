@@ -34,6 +34,8 @@ struct SVRs_Reencoder_s {
  * Create a new reencoder using the most ideal reencoding mechanism for
  * adapting source to stream
  */
-SVRs_Reencoder* SVR_Reencoder_new(SVRs_Source* source, SVRs_Stream* stream);
+SVRs_Reencoder* SVRs_Reencoder_new(SVRs_Source* source, SVRs_Stream* stream);
+
+size_t SVRs_FullReencoder_reencode(SVRs_Reencoder* reencoder, SVR_DataBuffer* data, size_t data_available, SVR_DataBuffer* target_buffer, size_t buffer_size);
 
 #endif // #ifndef __SVR_REENCODER_H

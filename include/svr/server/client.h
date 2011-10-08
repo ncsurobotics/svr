@@ -65,6 +65,7 @@ struct SVRs_Client_s {
 void SVRs_Client_init(void);
 void SVRs_Client_close(void);
 SVRs_Client* SVRs_Client_new(int socket);
+void SVRs_Client_provideSource(SVRs_Client* client, SVRs_Source* source);
 void SVRs_Client_markForClosing(SVRs_Client* client);
 void SVRs_Client_kick(SVRs_Client* client, const char* reason);
 int SVRs_Client_sendMessage(SVRs_Client* client, SVR_Message* message);
@@ -96,5 +97,8 @@ int SVRs_Client_resizeStream(SVRs_Client* client, char* source_name, uint16_t he
 int SVRs_Client_closeStream(SVRs_Client* client, char* source_name);
 
 // void Client_newClientSource(Client* client, char* source_name,
+
+void SVRs_Client_replyError(SVRs_Client* client, SVR_Message* message, int error);
+void SVRs_Client_replySuccess(SVRs_Client* client, SVR_Message* message);
 
 #endif // #ifndef __SVR_SERVER_CLIENT_H

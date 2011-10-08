@@ -9,6 +9,9 @@ struct SVRs_Source_s {
     void* decoder_data;
     SVR_FrameProperties* frame_properties;
     List* streams;
+    char* name;
+
+    SVR_LOCKABLE;
 };
 
 /**
@@ -21,11 +24,13 @@ void SVRs_Source_registerStream(SVRs_Source* source, SVRs_Stream* stream);
  */
 void SVRs_Source_provideData(SVRs_Source* source, SVR_DataBuffer* data, size_t data_available);
 
-void SVRs_Source_open(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_close(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_getProp(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_setProp(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_data(SVRs_Client* client, SVR_Message* message);
+SVRs_Source* SVRs_getSourceByName(const char* name);
+
+void SVRs_Source_init(void);
+SVRs_Source* SVRs_Source_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_properties);
+SVRs_Source* SVRs_Source_open(SVR_Encoding* encoding, SVR_FrameProperties* frame_properties, const char* name);
+void SVRs_Source_registerStream(SVRs_Source* source, SVRs_Stream* stream);
+void SVRs_Source_provideData(SVRs_Source* source, SVR_DataBuffer* data, size_t data_available);
 
 #endif // #ifndef __SVR_SERVER_SOURCE_H
 

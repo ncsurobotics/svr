@@ -22,6 +22,8 @@
 #include <svr/mempool.h>
 #include <svr/blockalloc.h>
 #include <svr/pack.h>
+#include <svr/stream.h>
+#include <svr/errors.h>
 
 #include <svr/message.h>
 #include <svr/net.h>
