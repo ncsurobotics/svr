@@ -37,16 +37,14 @@ struct SVRs_Stream_s {
  * Create a new stream with the given client, source, and encoding
  */
 void SVRs_Stream_destroy(SVRs_Stream* stream);
-void SVRs_Stream_setEncoding(SVRs_Stream* stream, SVR_Encoding* encoding);
 
 /**
  * Called by the source to provide raw data to the stream
  */
-void SVRs_Stream_inputSourceData(SVRs_Stream* stream, SVR_DataBuffer* data, size_t data_available);
+void SVRs_Stream_inputSourceData(SVRs_Stream* stream, void* data, size_t data_available);
 
-SVRs_Stream* SVRs_Stream_new(SVRs_Client* client, SVRs_Source* source);
-void SVRs_Stream_open(SVRs_Client* client, SVRs_Source* source, SVR_Encoding* encoding, const char* stream_name);
-void SVRs_Stream_inputSourceData(SVRs_Stream* stream, SVR_DataBuffer* data, size_t data_available);
+SVRs_Stream* SVRs_Stream_new(SVRs_Client* client, SVRs_Source* source, const char* name);
+void SVRs_Stream_setEncoding(SVRs_Stream* stream, SVR_Encoding* encoding);
 void SVRs_Stream_pause(SVRs_Stream* stream);
 void SVRs_Stream_start(SVRs_Stream* stream);
 void SVRs_Stream_close(SVRs_Stream* stream);

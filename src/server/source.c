@@ -37,13 +37,17 @@ SVRs_Source* SVRs_Source_open(SVR_Encoding* encoding, SVR_FrameProperties* frame
     return source;
 }
 
+SVRs_Source* SVRs_getSourceByName(const char* source_name) {
+    return Dictionary_get(sources, source_name);
+}
+
 void SVRs_Source_registerStream(SVRs_Source* source, SVRs_Stream* stream) {
     SVR_LOCK(source);
     List_append(source->streams, stream);
     SVR_UNLOCK(source);
 }
 
-void SVRs_Source_provideData(SVRs_Source* source, SVR_DataBuffer* data, size_t data_available) {
+void SVRs_Source_provideData(SVRs_Source* source, void* data, size_t data_available) {
     SVRs_Stream* stream;
 
     SVR_LOCK(source);

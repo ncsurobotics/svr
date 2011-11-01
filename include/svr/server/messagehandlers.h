@@ -6,6 +6,8 @@ void SVRs_Stream_rOpen(SVRs_Client* client, SVR_Message* message);
 void SVRs_Stream_rClose(SVRs_Client* client, SVR_Message* message);
 void SVRs_Stream_rGetProp(SVRs_Client* client, SVR_Message* message);
 void SVRs_Stream_rSetProp(SVRs_Client* client, SVR_Message* message);
+void SVRs_Stream_rPause(SVRs_Client* client, SVR_Message* message);
+void SVRs_Stream_rStart(SVRs_Client* client, SVR_Message* message);
 void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message);
 void SVRs_Source_rClose(SVRs_Client* client, SVR_Message* message);
 void SVRs_Source_rGetProp(SVRs_Client* client, SVR_Message* message);

@@ -2,15 +2,16 @@
 include ../mk/config.base.mk
 include ../$(CONFIG)
 
-EXTRA_CFLAGS = -fPIC -I../include/ -I/usr/include/opencv
+EXTRA_CFLAGS = -fPIC -I../include/ $(CV_CFLAGS)
 
 SONAME = $(LIB_NAME).$(MAJOR)
 LDFLAGS += -lpthread -lseawolf --shared -Wl,-soname,$(SONAME)
+LDFLAGS += $(CV_LDFLAGS)
 LDFLAGS += $(EXTRA_LDFLAGS)
 
 INCLUDES= ../include/svr/*.h ../include/svr.h
 
-SRC = blockalloc.c mempool.c message.c pack.c net.c logging.c refcount.c
+SRC = blockalloc.c mempool.c message.c pack.c net.c logging.c refcount.c frameproperties.c encoding.c
 OBJ = $(SRC:.c=.o)
 
 all: $(LIB_NAME)

@@ -81,9 +81,9 @@ short SVR_Logging_getLevelFromName(const char* log_level) {
  * \param log_level One of the log levels specified above
  * \param msg The message to log
  */
-void SVR_log(short log_level, char* msg) {
+void SVR_log(short level, char* message) {
     /* Only log messages with a log level at least as high as min_debug_level */
-    if(log_level >= min_log_level) {
-        fprintf(stderr, "[%s][SVR] %s\n", level_names[log_level], msg);
+    if(level >= min_log_level) {
+        fprintf(stderr, "[%s][SVR] %s\n", level_names[level], message);
     }
 }

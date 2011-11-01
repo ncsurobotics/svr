@@ -2,8 +2,6 @@
 #ifndef __SVR_FORWARDDECLARATIONS_H
 #define __SVR_FORWARDDECLARATIONS_H
 
-typedef uint8_t SVR_DataBuffer;
-
 struct SVR_MemPool_s;
 struct SVR_MemPool_Block_s;
 struct SVR_Arena_s;

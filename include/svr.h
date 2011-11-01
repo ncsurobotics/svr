@@ -16,8 +16,10 @@
 #include <string.h>
 
 #include <svr/forward.h>
-#include <svr/refcount.h>
+
 #include <svr/lockable.h>
+#include <svr/refcount.h>
+
 #include <svr/logging.h>
 #include <svr/mempool.h>
 #include <svr/blockalloc.h>
@@ -30,5 +32,10 @@
 
 #include <svr/encoding.h>
 #include <svr/frameproperties.h>
+
+#define SVR_CRASH(m) { \
+    fprintf(stderr, "[SVR_CRASH in %s] %s\n", __func__, (m)); \
+    exit(-1); \
+}
 
 #endif // #ifndef __SVR_SVR_H

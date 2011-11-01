@@ -11,4 +11,6 @@ struct SVR_FrameProperties_s {
     uint8_t channels;
 };
 
+SVR_FrameProperties* SVR_FrameProperties_new(void);
+
 #endif // #ifndef __SVR_FRAMEPROPERTIES_H

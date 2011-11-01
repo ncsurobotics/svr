@@ -6,6 +6,7 @@
 void SVRs_Stream_rOpen(SVRs_Client* client, SVR_Message* message) {
     SVR_Encoding* encoding = NULL;
     SVRs_Source* source;
+    SVRs_Stream* stream;
     char* source_name;
     char* stream_name;
     char* encoding_name = NULL;
@@ -35,14 +36,20 @@ void SVRs_Stream_rOpen(SVRs_Client* client, SVR_Message* message) {
     }
 
     if(encoding_name) {
-        encoding = SVR_getEncoding(encoding_name);
+        encoding = SVR_Encoding_getByName(encoding_name);
         if(encoding == NULL) {
             SVRs_Client_replyError(client, message, SVR_NOSUCHENCODING);
             return;
         }
     }
 
-    SVRs_Stream_open(client, source, encoding, stream_name);
+    stream = SVRs_Stream_new(client, source, stream_name);
+    if(encoding) {
+        SVRs_Stream_setEncoding(stream, encoding);
+    }
+
+    Dictionary_set(client->streams, stream_name, stream);
+
     SVRs_Client_replySuccess(client, message);
 }
 
@@ -68,6 +75,57 @@ void SVRs_Stream_rClose(SVRs_Client* client, SVR_Message* message) {
     }
 
     SVRs_Stream_close(stream);
+    SVRs_Client_replySuccess(client, message);
+}
+
+/* stream_name */
+void SVRs_Stream_rPause(SVRs_Client* client, SVR_Message* message) {
+    SVRs_Stream* stream;
+    char* stream_name;
+
+    switch(message->count) {
+    case 2:
+        stream_name = message->components[1];
+        break;
+
+    default:
+        SVRs_Client_kick(client, "Invalid message");
+        return;
+    }
+
+    stream = Dictionary_get(client->streams, stream_name);
+    if(stream == NULL) {
+        SVRs_Client_replyError(client, message, SVR_NOSUCHSTREAM);
+        return;
+    }
+
+    SVRs_Stream_pause(stream);
+    SVRs_Client_replySuccess(client, message);
+}
+
+/* stream_name */
+void SVRs_Stream_rStart(SVRs_Client* client, SVR_Message* message) {
+    SVRs_Stream* stream;
+    char* stream_name;
+
+    switch(message->count) {
+    case 2:
+        stream_name = message->components[1];
+        break;
+
+    default:
+        SVRs_Client_kick(client, "Invalid message");
+        return;
+    }
+
+    stream = Dictionary_get(client->streams, stream_name);
+    if(stream == NULL) {
+        SVRs_Client_replyError(client, message, SVR_NOSUCHSTREAM);
+        return;
+    }
+
+    SVRs_Stream_start(stream);
+    SVRs_Client_replySuccess(client, message);
 }
 
 void SVRs_Stream_rGetProp(SVRs_Client* client, SVR_Message* message) {

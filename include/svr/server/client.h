@@ -70,6 +70,9 @@ void SVRs_Client_markForClosing(SVRs_Client* client);
 void SVRs_Client_kick(SVRs_Client* client, const char* reason);
 int SVRs_Client_sendMessage(SVRs_Client* client, SVR_Message* message);
 
+void SVRs_Client_replyError(SVRs_Client* client, SVR_Message* request, int error_code);
+void SVRs_Client_replySuccess(SVRs_Client* client, SVR_Message* request);
+
 void SVRs_addClient(int socket);
 List* SVRs_getAllClients(void);
 void SVRs_joinAllClientThreads(void);
@@ -82,7 +85,7 @@ void SVRs_releaseGlobalClientsLock(void);
  * Once data has been encoded by the stream it is passed to the client to be
  * written out as a frame data packet
  */
-size_t SVRs_Client_writeStreamData(SVRs_Client* client, SVRs_Stream* stream, SVR_DataBuffer* data, size_t data_available);
+size_t SVRs_Client_writeStreamData(SVRs_Client* client, SVRs_Stream* stream, void* data, size_t data_available);
 
 /**
  * Subscribe the client to the given source using the given encoding
@@ -97,8 +100,5 @@ int SVRs_Client_resizeStream(SVRs_Client* client, char* source_name, uint16_t he
 int SVRs_Client_closeStream(SVRs_Client* client, char* source_name);
 
 // void Client_newClientSource(Client* client, char* source_name,
-
-void SVRs_Client_replyError(SVRs_Client* client, SVR_Message* message, int error);
-void SVRs_Client_replySuccess(SVRs_Client* client, SVR_Message* message);
 
 #endif // #ifndef __SVR_SERVER_CLIENT_H

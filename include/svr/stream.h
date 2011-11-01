@@ -9,8 +9,8 @@ struct SVR_Stream_s {
 };
 
 typedef enum {
-    SVR_STREAM_PAUSED,
-    SVR_STREAM_RUNNING
+    SVR_PAUSED,
+    SVR_UNPAUSED
 } SVR_Stream_State;
 
 #endif // #ifndef __SVR_STREAM_H

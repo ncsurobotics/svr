@@ -2,7 +2,7 @@
 #include <svr.h>
 #include <svr/server/svr.h>
 
-size_t SVRs_FullReencoder_reencode(SVRs_Reencoder* reencoder, SVR_DataBuffer* data, size_t data_available, SVR_DataBuffer* target_buffer, size_t buffer_size) {
+size_t SVRs_FullReencoder_reencode(SVRs_Reencoder* reencoder, void* data, size_t data_available, void* target_buffer, size_t buffer_size) {
     IplImage* frame;
 
     frame = reencoder->source->encoding->decode(reencoder->source->decoder_data, data, data_available);

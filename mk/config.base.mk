@@ -9,6 +9,10 @@ CFLAGS = -std=gnu99 -Wall -Werror -pedantic -Wmissing-prototypes -g
 CFLAGS += -I/usr/local/include
 LDFLAGS += -L/usr/local/lib
 
+# OpenCV flags
+CV_CFLAGS ?= $(strip $(shell pkg-config --cflags opencv))
+CV_LDFLAGS ?= $(strip $(shell pkg-config --libs opencv)) 
+
 # Install prefix
 #PREFIX ?= /usr/local
 

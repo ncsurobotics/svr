@@ -110,6 +110,21 @@ void SVRs_Client_markForClosing(SVRs_Client* client) {
     SVR_UNLOCK(client);
 }
 
+void SVRs_Client_replyError(SVRs_Client* client, SVR_Message* request, int error_code) {
+    SVR_Message* message = SVR_Message_new(2);
+
+    message->request_id = request->request_id;
+    message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.Response");
+    message->components[1] = SVR_Arena_sprintf(message->alloc, "%d", error_code);
+
+    SVR_Net_sendMessage(client->socket, message);
+    SVR_Message_release(message);
+}
+
+void SVRs_Client_replySuccess(SVRs_Client* client, SVR_Message* request) {
+    SVRs_Client_replyError(client, request, SVR_SUCCESS);
+}
+
 /**
  * \brief Kick a client 
  */
