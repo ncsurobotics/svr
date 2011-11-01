@@ -7,5 +7,7 @@ SVRs_Reencoder* SVRs_Reencoder_new(SVRs_Source* source, SVRs_Stream* stream) {
     
     reencoder->source = source;
     reencoder->stream = stream;
-    reencoder->reencoder = &SVRs_FullReencoder_reencode;
+    reencoder->reencode = &SVRs_FullReencoder_reencode;
+
+    return reencoder;
 }
