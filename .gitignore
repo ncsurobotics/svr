@@ -4,3 +4,6 @@
 *.swp
 /src/server/svr
 /src/libsvr.so.0
+.cproject
+.project
+.settings
