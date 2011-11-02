@@ -114,7 +114,7 @@ void SVRs_Client_replyError(SVRs_Client* client, SVR_Message* request, int error
     SVR_Message* message = SVR_Message_new(2);
 
     message->request_id = request->request_id;
-    message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.Response");
+    message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.response");
     message->components[1] = SVR_Arena_sprintf(message->alloc, "%d", error_code);
 
     SVR_Net_sendMessage(client->socket, message);
@@ -131,7 +131,7 @@ void SVRs_Client_replySuccess(SVRs_Client* client, SVR_Message* request) {
 void SVRs_Client_kick(SVRs_Client* client, const char* reason) {
     SVR_Message* message = SVR_Message_new(2);
 
-    message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.Kick");
+    message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.kick");
     message->components[1] = SVR_Arena_strdup(message->alloc, reason);
 
     SVR_Net_sendMessage(client->socket, message);

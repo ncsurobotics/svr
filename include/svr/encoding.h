@@ -61,6 +61,7 @@ struct SVR_Encoder_s {
 struct SVR_Decoder_s {
     List* ready_frames;
     List* free_frames;
+    unsigned int write_offset;
 
     SVR_FrameProperties* frame_properties;
     SVR_Encoding* encoding;

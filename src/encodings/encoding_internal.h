@@ -9,10 +9,9 @@
 /* Provide encoded data for the encoder to buffer and provide via SVR_Encoder_readData */
 void SVR_Encoder_provideData(SVR_Encoder* encoder, void* data, size_t n);
 
-/* Get the frame currently being built/decoded */
-IplImage* SVR_Decoder_getCurrentFrame(SVR_Decoder* decoder);
-
-/* Signal that the current frame is completely decoded */
-void SVR_Decoder_currentFrameComplete(SVR_Decoder* decoder);
+/* Provide the next n bytes of decoded frame data. Assumes required frame padding is already included */
+void SVR_Decoder_writePaddedFrameData(SVR_Decoder* decoder, void* data, size_t n);
+void SVR_Decoder_writeUnpaddedFrameData(SVR_Decoder* decoder, void* data, size_t n);
+int SVR_Decoder_getRowPadding(SVR_Decoder* decoder);
 
 #endif // #ifndef __SVR_ENCODING_INTERNAL_H

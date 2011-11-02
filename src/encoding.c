@@ -140,6 +140,7 @@ SVR_Decoder* SVR_Decoder_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_
     decoder->encoding = encoding;
     decoder->ready_frames = List_new();
     decoder->free_frames = List_new();
+    decoder->write_offset = 0;
     decoder->frame_properties = SVR_FrameProperties_clone(frame_properties);
     SVR_LOCKABLE_INIT(decoder);
 
@@ -186,25 +187,84 @@ void SVR_Decoder_returnFrame(SVR_Decoder* decoder, IplImage* frame) {
 }
 
 /* Get the frame currently being built */
-IplImage* SVR_Decoder_getCurrentFrame(SVR_Decoder* decoder) {
+static IplImage* SVR_Decoder_getCurrentFrame(SVR_Decoder* decoder) {
     IplImage* frame;
 
-    SVR_LOCK(decoder);
     if(List_getSize(decoder->free_frames) == 0) {
         List_append(decoder->free_frames, SVR_FrameProperties_imageFromProperties(decoder->frame_properties));
     }
 
     frame = List_get(decoder->free_frames, 0);
-    SVR_UNLOCK(decoder);
-
     return frame;
 }
 
-void SVR_Decoder_currentFrameComplete(SVR_Decoder* decoder) {
-    SVR_LOCK(decoder);
+static void SVR_Decoder_currentFrameComplete(SVR_Decoder* decoder) {
     if(List_getSize(decoder->free_frames) > 0) {
         /* Move current item from free frames to end of ready frames */
         List_append(decoder->ready_frames, List_remove(decoder->free_frames, 0));
+        decoder->write_offset = 0;
+    }
+}
+
+void SVR_Decoder_writePaddedFrameData(SVR_Decoder* decoder, void* data, size_t n) {
+    IplImage* current_frame = SVR_Decoder_getCurrentFrame(decoder);
+    size_t image_size = current_frame->imageSize;
+    size_t chunk_size;
+    int offset = 0;
+
+    SVR_LOCK(decoder);
+    while(offset < n) {
+        current_frame = SVR_Decoder_getCurrentFrame(decoder);
+
+        chunk_size = Util_min(image_size - decoder->write_offset, n - offset);
+        memcpy(current_frame->imageData + decoder->write_offset, ((uint8_t*)data) + offset, chunk_size);
+        decoder->write_offset = (decoder->write_offset + chunk_size) % image_size;
+
+        if(decoder->write_offset == 0) {
+            SVR_Decoder_currentFrameComplete(decoder);
+        }
     }
     SVR_UNLOCK(decoder);
+}
+
+void SVR_Decoder_writeUnpaddedFrameData(SVR_Decoder* decoder, void* data, size_t n) {
+    IplImage* current_frame = SVR_Decoder_getCurrentFrame(decoder);
+    size_t image_size = current_frame->imageSize;
+    size_t width_step = current_frame->widthStep;
+    size_t row_width_remaining;
+    size_t copy_size;
+    int offset = 0;
+
+    while(offset < n) {
+        current_frame = SVR_Decoder_getCurrentFrame(decoder);
+
+        row_width_remaining = current_frame->widthStep - (decoder->write_offset % width_step);
+        copy_size = Util_min(row_width_remaining, n - offset);
+        memcpy(current_frame->imageData + decoder->write_offset, ((uint8_t*)data) + offset, copy_size);
+
+        decoder->write_offset += copy_size;
+        offset += copy_size;
+
+        /* Skip padding if we're at the end of a line */
+        if(decoder->write_offset % width_step == current_frame->width) {
+            decoder->write_offset = (decoder->write_offset + SVR_Decoder_getRowPadding(decoder)) % image_size;
+        }
+
+        /* Frame filled */
+        if(decoder->write_offset == 0) {
+            SVR_Decoder_currentFrameComplete(decoder);
+        }
+    }
+}
+
+int SVR_Decoder_getRowPadding(SVR_Decoder* decoder) {
+    IplImage* frame;
+    int padding;
+
+    SVR_LOCK(decoder);
+    frame = SVR_Decoder_getCurrentFrame(decoder);
+    padding = frame->widthStep - frame->width;
+    SVR_UNLOCK(decoder);
+
+    return padding;
 }

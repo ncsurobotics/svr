@@ -9,7 +9,7 @@
  * Source.{open,close,setProp,getProp}
  * Data
  * Event.{register,unregister,notify}
- * SVR.{kick}
+ * SVR.{kick,response}
  */
 
 typedef struct {
