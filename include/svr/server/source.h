@@ -5,8 +5,7 @@
 #include <svr/forward.h>
 
 struct SVRs_Source_s {
-    SVR_Encoding* encoding;
-    void* decoder_data;
+    SVR_Decoder* decoder;
     SVR_FrameProperties* frame_properties;
     List* streams;
     char* name;

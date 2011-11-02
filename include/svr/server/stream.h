@@ -9,9 +9,7 @@ struct SVRs_Stream_s {
     SVRs_Client* client;
     SVRs_Source* source;
 
-    SVR_Encoding* encoding;
-
-    void* encoder_data;
+    SVR_Encoder* encoder;
 
     /**
      * Takes raw data from a source and produces output data for the target encoding
@@ -25,8 +23,8 @@ struct SVRs_Stream_s {
 
     SVR_Stream_State state;
 
-    void* buffer;
-    size_t buffer_size;
+    void* payload_buffer;
+    size_t payload_buffer_size;
 
     char* name;
 

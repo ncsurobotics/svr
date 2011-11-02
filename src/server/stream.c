@@ -11,15 +11,13 @@ SVRs_Stream* SVRs_Stream_new(SVRs_Client* client, SVRs_Source* source, const cha
     stream->state = SVR_PAUSED;
 
     stream->frame_properties = source->frame_properties;
-
-    stream->encoding = NULL;
-    stream->encoder_data = NULL;
-    stream->buffer = stream->encoding->getOutputBuffer(stream->encoder_data, &stream->buffer_size);
-
+    stream->encoder = SVR_Encoder_new(source->decoder->encoding, source->frame_properties);
     stream->reencoder = SVRs_Reencoder_new(source, stream);
 
-    SVR_LOCKABLE_INIT(stream);
+    stream->payload_buffer_size = 1024;
+    stream->payload_buffer = malloc(stream->payload_buffer_size);
 
+    SVR_LOCKABLE_INIT(stream);
     SVRs_Source_registerStream(source, stream);
 
     return stream;
@@ -34,19 +32,18 @@ void SVRs_Stream_destroy(SVRs_Stream* stream) {
 }
 
 void SVRs_Stream_setEncoding(SVRs_Stream* stream, SVR_Encoding* encoding) {
-    if(stream->encoder_data) {
-        stream->encoding->closeEncoder(stream->encoder_data);
+    if(stream->encoder) {
+        SVR_Encoder_destroy(stream->encoder);
     }
 
-    stream->encoding = encoding;
-    stream->encoder_data = stream->encoding->openEncoder(stream->frame_properties);
-    //stream->buffer = stream->encoding->newOutputBuffer(stream->encoder_data, &stream->buffer_size);
+    stream->encoder = SVR_Encoder_new(encoding, stream->frame_properties);
+
+    /* TODO: Reallocate reencoder */
     SVR_CRASH("Not implemented");
 }
 
 void SVRs_Stream_inputSourceData(SVRs_Stream* stream, void* data, size_t data_available) {
-    SVR_Message* message = SVR_Message_new(2);
-    size_t n;
+    SVR_Message* message;
 
     SVR_LOCK(stream);
     
@@ -56,22 +53,28 @@ void SVRs_Stream_inputSourceData(SVRs_Stream* stream, void* data, size_t data_av
         return;
     }
 
+    /* Build the data message */
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Data");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->name);
+    message->payload = stream->payload_buffer;
+
     /* Reencode data from source encoding to stream encoding, writing data to
        the stream's output buffer */
-    n = stream->reencoder->reencode(stream->reencoder, data, data_available, stream->buffer, stream->buffer_size);
+    SVRs_Reencoder_reencode(stream->reencoder, data, data_available);
 
-    if(n > 0) {
-        /* Build the data message */
-        message->components[0] = SVR_Arena_strdup(message->alloc, "Data");
-        message->components[1] = SVR_Arena_strdup(message->alloc, stream->name);
-        message->payload = stream->buffer;
-        message->payload_size = n;
+    /* Send all the encoded data out in chunks */
+    while(SVR_Encoder_dataReady(stream->encoder) > 0) {
+        /* Get part of payload */
+        message->payload_size = SVR_Encoder_readData(stream->encoder,
+                                                     message->payload,
+                                                     stream->payload_buffer_size);
 
         /* Send message */
         SVRs_Client_sendMessage(stream->client, message);
-        SVR_Message_release(message);
     }
 
+    SVR_Message_release(message);
     SVR_UNLOCK(stream);
 }
 

@@ -15,8 +15,8 @@ void SVRs_Stream_rOpen(SVRs_Client* client, SVR_Message* message) {
     case 4:
         encoding_name = message->components[3];
     case 3:
-        source_name = message->components[1];
         stream_name = message->components[2];
+        source_name = message->components[1];
         break;
 
     default:

@@ -38,4 +38,6 @@
     exit(-1); \
 }
 
+void SVR_initCore(void);
+
 #endif // #ifndef __SVR_SVR_H

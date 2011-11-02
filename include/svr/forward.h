@@ -10,6 +10,8 @@ struct SVR_RefCounter_s;
 struct SVR_Message_s;
 struct SVR_PackedMessage_s;
 struct SVR_Encoding_s;
+struct SVR_Encoder_s;
+struct SVR_Decoder_s;
 struct SVR_Stream_s;
 struct SVR_FrameProperties_s;
 
@@ -21,6 +23,8 @@ typedef struct SVR_RefCounter_s SVR_RefCounter;
 typedef struct SVR_Message_s SVR_Message;
 typedef struct SVR_PackedMessage_s SVR_PackedMessage;
 typedef struct SVR_Encoding_s SVR_Encoding;
+typedef struct SVR_Encoder_s SVR_Encoder;
+typedef struct SVR_Decoder_s SVR_Decoder;
 typedef struct SVR_Stream_s SVR_Stream;
 typedef struct SVR_FrameProperties_s SVR_FrameProperties;
 

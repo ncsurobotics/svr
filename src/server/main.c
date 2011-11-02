@@ -11,12 +11,15 @@ void SVRs_exitError(void) {
 }
 
 int main(void) {
-    SVR_BlockAlloc_init();
-    SVR_MemPool_init();
-    SVR_Message_init();
+    SVR_initCore();
 
     SVRs_Client_init();
     SVRs_Source_init();
+    SVRs_MessageRouter_init();
+
+    /* Spawn the test source */
+    TestSource_open();
+
     SVRs_Server_mainLoop();
     
     return 0;

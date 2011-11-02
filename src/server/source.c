@@ -11,8 +11,7 @@ void SVRs_Source_init(void) {
 SVRs_Source* SVRs_Source_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_properties) {
     SVRs_Source* source = malloc(sizeof(SVRs_Source));
 
-    source->encoding = encoding;
-    source->decoder_data = source->encoding->openDecoder(frame_properties);
+    source->decoder = SVR_Decoder_new(encoding, frame_properties);
     source->frame_properties = frame_properties;
     source->streams = List_new();
     source->name = NULL;
