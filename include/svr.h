@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include <svr/forward.h>
+#include <svr/cv.h>
 
 #include <svr/lockable.h>
 #include <svr/refcount.h>

@@ -2,8 +2,6 @@
 #include "svr.h"
 #include "svr/server/svr.h"
 
-#include <svr/cv.h>
-
 static void* TestSource_background(void* _source);
 
 static pthread_t test_source_thread;
