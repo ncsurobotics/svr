@@ -30,6 +30,9 @@
 #include <svr/message.h>
 #include <svr/net.h>
 
+#include <svr/messagerouting.h>
+#include <svr/messagehandlers.h>
+
 #include <svr/encoding.h>
 #include <svr/frameproperties.h>
 #include <svr/responseset.h>
