@@ -32,6 +32,7 @@
 
 #include <svr/encoding.h>
 #include <svr/frameproperties.h>
+#include <svr/responseset.h>
 
 #define SVR_CRASH(m) { \
     fprintf(stderr, "[SVR_CRASH in %s] %s\n", __func__, (m)); \
