@@ -21,7 +21,7 @@ struct SVR_ResponseSet_s {
     SVR_LOCKABLE;
 };
 
-SVR_ResponseSet* SVR_ReponseSet_new(int max_request_id);
+SVR_ResponseSet* SVR_ResponseSet_new(int max_request_id);
 void SVR_ResponseSet_destroy(SVR_ResponseSet* response_set);
 int SVR_ResponseSet_getRequestId(SVR_ResponseSet* response_set);
 void* SVR_ResponseSet_getResponse(SVR_ResponseSet* response_set, int response_id);

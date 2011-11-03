@@ -3,7 +3,7 @@
 
 #define RESPONSE_SET_GROW 8
 
-SVR_ResponseSet* SVR_ReponseSet_new(int max_request_id) {
+SVR_ResponseSet* SVR_ResponseSet_new(int max_request_id) {
     SVR_ResponseSet* response_set = malloc(sizeof(SVR_ResponseSet));
 
     response_set->response_pending = calloc(RESPONSE_SET_GROW, sizeof(bool));

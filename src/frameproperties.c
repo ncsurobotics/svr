@@ -12,6 +12,10 @@ SVR_FrameProperties* SVR_FrameProperties_new(void) {
     return properties;
 }
 
+void SVR_FrameProperties_destroy(SVR_FrameProperties* properties) {
+    free(properties);
+}
+
 SVR_FrameProperties* SVR_FrameProperties_clone(SVR_FrameProperties* original_properties) {
     SVR_FrameProperties* cloned_properties = malloc(sizeof(SVR_FrameProperties));
     memcpy(cloned_properties, original_properties, sizeof(SVR_FrameProperties));

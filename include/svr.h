@@ -30,6 +30,7 @@
 
 #include <svr/message.h>
 #include <svr/net.h>
+#include <svr/comm.h>
 
 #include <svr/messagerouting.h>
 #include <svr/messagehandlers.h>
@@ -43,6 +44,7 @@
     exit(-1); \
 }
 
+void SVR_init(void);
 void SVR_initCore(void);
 
 #endif // #ifndef __SVR_SVR_H

@@ -10,3 +10,10 @@ void SVR_initCore(void) {
     SVR_Message_init();
     SVR_Encoding_init();
 }
+
+void SVR_init(void) {
+    SVR_initCore();
+
+    SVR_Stream_init();
+    SVR_Comm_init();
+}

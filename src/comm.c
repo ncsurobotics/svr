@@ -6,12 +6,12 @@
 #include <pthread.h>
 #include <sys/socket.h>
 
-#define MAX_REQUEST_ID ((unsigned int)0xffff);
+#define MAX_REQUEST_ID ((unsigned int)0xffff)
 
 static int client_sock = -1;
 static pthread_t receive_thread;
 static SVR_ResponseSet* response_set;
-static pthread_mutext_t send_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t send_lock = PTHREAD_MUTEX_INITIALIZER;
 static void* payload_buffer = NULL;
 static int payload_buffer_size = 0;
 
@@ -21,11 +21,11 @@ int SVR_Comm_init(void) {
     struct sockaddr_in addr;
 
     addr.sin_family = AF_INET;
-    addr.sin_addr = inet_addr("127.0.0.1");
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     addr.sin_port = htons(33560);
 
     client_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if(client_socket == -1) {
+    if(client_sock == -1) {
         SVR_log(SVR_ERROR, "Unable to create socket");
         return -1;
     }
@@ -57,7 +57,7 @@ static void* SVR_Comm_receiveThread(void* __unused) {
             }
 
             message->payload = payload_buffer;
-            SVR_Net_receivePayload(message);
+            SVR_Net_receivePayload(client_sock, message);
         }
 
         if(message->request_id) {
@@ -67,6 +67,7 @@ static void* SVR_Comm_receiveThread(void* __unused) {
             SVR_Message_release(message);
         }
     }
+
     return NULL;
 }
 
@@ -86,4 +87,12 @@ void* SVR_Comm_sendMessage(SVR_Message* message, bool is_request) {
     }
 
     return response;
+}
+
+int SVR_Comm_parseResponse(SVR_Message* response) {
+    if(response->count == 2 && strcmp(response->components[0], "SVR.response") == 0) {
+        return atoi(response->components[1]);
+    } else {
+        return -1;
+    }
 }
