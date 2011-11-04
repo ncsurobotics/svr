@@ -82,7 +82,7 @@ size_t SVR_Encoder_readData(SVR_Encoder* encoder, void* buffer, size_t buffer_si
 
     SVR_LOCK(encoder);
     read_size = Util_min(SVR_Encoder_dataReady(encoder), buffer_size);
-    first_chunk = Util_min(read_size, encoder->buffer_size - encoder->read_index + 1);
+    first_chunk = Util_min(read_size, encoder->buffer_size - encoder->read_index);
 
     memcpy(buffer, ((uint8_t*)encoder->buffer) + encoder->read_index, first_chunk);
     memcpy(((uint8_t*)buffer) + first_chunk, ((uint8_t*)encoder->buffer), read_size - first_chunk);
