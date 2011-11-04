@@ -8,7 +8,7 @@ SVRs_Stream* SVRs_Stream_new(SVRs_Client* client, SVRs_Source* source, const cha
     stream->client = client;
     stream->source = source;
     stream->name = strdup(name);
-    stream->state = SVR_PAUSED;
+    stream->state = SVR_UNPAUSED;
 
     stream->frame_properties = source->frame_properties;
     stream->encoder = SVR_Encoder_new(source->decoder->encoding, source->frame_properties);

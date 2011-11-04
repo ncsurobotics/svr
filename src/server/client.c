@@ -46,6 +46,7 @@ SVRs_Client* SVRs_Client_new(int socket) {
     client->socket = socket;
     client->streams = Dictionary_new();
     client->sources = Dictionary_new();
+    client->state = SVR_CONNECTED;
 
     SVR_REFCOUNTED_INIT(client, SVRs_Client_cleanup);
     SVR_LOCKABLE_INIT(client);

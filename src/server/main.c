@@ -2,6 +2,8 @@
 #include "svr.h"
 #include "svr/server/svr.h"
 
+#include <signal.h>
+
 void SVRs_exit(void) {
     exit(0);
 }
@@ -19,6 +21,10 @@ int main(void) {
 
     /* Spawn the test source */
     TestSource_open();
+
+    /* Please *ignore* SIGPIPE. It will cause the program to close in the case
+       of writing to a closed socket. We handle this ourselves. */
+    signal(SIGPIPE, SIG_IGN);
 
     SVRs_Server_mainLoop();
     

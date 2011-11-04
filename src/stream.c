@@ -37,11 +37,17 @@ int SVR_Stream_open(SVR_Stream* stream) {
     message->components[1] = SVR_Arena_strdup(message->alloc, stream->source_name);
     message->components[2] = SVR_Arena_strdup(message->alloc, stream->stream_name);
 
+    Dictionary_set(streams, stream->stream_name, stream);
+
     response = SVR_Comm_sendMessage(message, true);
     return_code = SVR_Comm_parseResponse(response);
 
     SVR_Message_release(message);
     SVR_Message_release(response);
+
+    if(return_code != SVR_SUCCESS) {
+        Dictionary_remove(streams, stream->stream_name);
+    }
 
     return return_code;
 }
@@ -71,6 +77,11 @@ void SVR_Stream_returnFrame(SVR_Stream* stream, IplImage* frame) {
 
 void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n) {
     SVR_Stream* stream = SVR_Stream_getByName(stream_name);
+
+    if(stream == NULL) {
+        SVR_log(WARNING, "Data arrived for unknown stream\n");
+        return;
+    }
 
     SVR_LOCK(stream);
     SVR_Decoder_decode(stream->decoder, buffer, n);

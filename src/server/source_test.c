@@ -15,7 +15,7 @@ SVRs_Source* TestSource_open(void) {
     frame_properties->channels = 1;
     frame_properties->depth = 8;
 
-    source = SVRs_Source_new(SVR_Encoding_getByName("raw"), frame_properties);
+    source = SVRs_Source_open(SVR_Encoding_getByName("raw"), frame_properties, "test");
 
     pthread_create(&test_source_thread, NULL, TestSource_background, source);
 

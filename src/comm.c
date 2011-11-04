@@ -61,7 +61,7 @@ static void* SVR_Comm_receiveThread(void* __unused) {
         }
 
         if(message->request_id) {
-            SVR_ResponseSet_setResponse(response_set, message->request_id, message);
+            SVR_ResponseSet_setResponse(response_set, message->request_id - 1, message);
         } else {
             SVR_MessageRouter_processMessage(message);
             SVR_Message_release(message);
@@ -83,7 +83,7 @@ void* SVR_Comm_sendMessage(SVR_Message* message, bool is_request) {
     pthread_mutex_unlock(&send_lock);
 
     if(is_request) {
-        response = SVR_ResponseSet_getResponse(response_set, message->request_id);
+        response = SVR_ResponseSet_getResponse(response_set, message->request_id - 1);
     }
 
     return response;

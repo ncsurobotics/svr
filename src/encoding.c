@@ -102,24 +102,24 @@ void SVR_Encoder_provideData(SVR_Encoder* encoder, void* data, size_t n) {
     used_space = SVR_Encoder_dataReady(encoder);
     free_space = encoder->buffer_size - used_space;
 
-    if(free_space < n) {
+    if(free_space <= n) {
         if(encoder->write_index < encoder->read_index) {
             /* Temporarily store unread data */
             temp_space = malloc(used_space);
             SVR_Encoder_readData(encoder, temp_space, used_space);
 
             /* Grow buffer and restore data */
-            encoder->buffer = realloc(encoder->buffer, used_space + n);
+            encoder->buffer = realloc(encoder->buffer, used_space + n + 1);
             memcpy(encoder->buffer, temp_space, used_space);
             encoder->read_index = 0;
             free(temp_space);
 
             encoder->write_index = used_space;
         } else{
-            encoder->buffer = realloc(encoder->buffer, used_space + n);
+            encoder->buffer = realloc(encoder->buffer, used_space + n + 1);
         }
 
-        encoder->buffer_size = used_space + n;
+        encoder->buffer_size = used_space + n + 1;
     }
 
     end_space = encoder->buffer_size - encoder->write_index;
@@ -129,6 +129,7 @@ void SVR_Encoder_provideData(SVR_Encoder* encoder, void* data, size_t n) {
         memcpy(((uint8_t*)encoder->buffer) + encoder->write_index, data, end_space);
         memcpy(encoder->buffer, ((uint8_t*)data) + end_space, n - end_space);
     }
+
     encoder->write_index = (encoder->write_index + n) % encoder->buffer_size;
 
     SVR_UNLOCK(encoder);
@@ -165,7 +166,7 @@ int SVR_Decoder_decode(SVR_Decoder* decoder, void* data, size_t n) {
 }
 
 int SVR_Decoder_framesReady(SVR_Decoder* decoder) {
-    return List_getSize(decoder->free_frames);
+    return List_getSize(decoder->ready_frames);
 }
 
 IplImage* SVR_Decoder_getFrame(SVR_Decoder* decoder) {
@@ -219,6 +220,7 @@ void SVR_Decoder_writePaddedFrameData(SVR_Decoder* decoder, void* data, size_t n
         chunk_size = Util_min(image_size - decoder->write_offset, n - offset);
         memcpy(current_frame->imageData + decoder->write_offset, ((uint8_t*)data) + offset, chunk_size);
         decoder->write_offset = (decoder->write_offset + chunk_size) % image_size;
+        offset += chunk_size;
 
         if(decoder->write_offset == 0) {
             SVR_Decoder_currentFrameComplete(decoder);

@@ -5,13 +5,16 @@ include $(CONFIG)
 # Ensure that PREFIX is saved as an absolute path
 export PREFIX := $(abspath $(PREFIX))
 
-all: $(LIB_NAME) $(SERVER_NAME)
+all: $(LIB_NAME) $(SERVER_NAME) tests
 
 $(LIB_NAME):
 	cd src && $(MAKE) $@
 
 $(SERVER_NAME):
 	cd src/server/ && $(MAKE) $@
+	
+tests:
+	cd test && $(MAKE)
 
 clean:
 	cd src && $(MAKE) $@

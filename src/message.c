@@ -20,7 +20,8 @@ void SVR_Message_init(void) {
  */
 SVR_PackedMessage* SVR_Message_pack(SVR_Message* message) {
     SVR_PackedMessage* packed_message;
-    size_t total_data_length = 0;
+    uint16_t total_data_length = 0;
+    size_t pack_offset = 0;
 
     /* Add length of each component and space for a null terminator for each */
     for(int i = 0; i < message->count; i++) {
@@ -30,9 +31,9 @@ SVR_PackedMessage* SVR_Message_pack(SVR_Message* message) {
     /* Constructed the empty, packed message */
     packed_message = SVR_PackedMessage_newWithAlloc(total_data_length + SVR_MESSAGE_PREFIX_LEN, message->alloc);
 
-    packed_message->length = SVR_pack(packed_message->data, packed_message->length, "hhhh", total_data_length, message->request_id, message->count, message->payload_size);
+    pack_offset = SVR_pack(packed_message->data, pack_offset, "hhhh", total_data_length, message->request_id, message->count, message->payload_size);
     for(int i = 0; i < message->count; i++) {
-        packed_message->length = SVR_pack(packed_message->data, packed_message->length, "s", message->components[i]);
+        pack_offset = SVR_pack(packed_message->data, pack_offset, "s", message->components[i]);
     }
 
     packed_message->payload = message->payload;
@@ -53,7 +54,7 @@ SVR_PackedMessage* SVR_Message_pack(SVR_Message* message) {
 SVR_Message* SVR_PackedMessage_unpack(SVR_PackedMessage* packed_message) {
     SVR_Message* message = SVR_Message_newWithAlloc(0, packed_message->alloc);
     size_t pack_offset = 0;
-    size_t data_length;
+    uint16_t data_length;
 
     /* Read header */
     pack_offset = SVR_unpack(packed_message->data, pack_offset, "hhhh", &data_length, &message->request_id, &message->count, &message->payload_size);
@@ -64,9 +65,6 @@ SVR_Message* SVR_PackedMessage_unpack(SVR_PackedMessage* packed_message) {
     for(int i = 0; i < message->count; i++) {
         pack_offset = SVR_unpack(packed_message->data, pack_offset, "s", &message->components[i]);
     }
-
-    message->payload = packed_message->payload;
-    message->payload_size = packed_message->payload_size;
 
     return message;
 }

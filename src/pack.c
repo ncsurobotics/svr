@@ -73,9 +73,9 @@ size_t SVR_unpack(void* buffer, size_t pack_offset, const char* format, ...) {
 
         case 's':
             *va_arg(ap, char**) = (char*) (p + pack_offset);
-            while(p[pack_offset]) {
+            do {
                 pack_offset += 1;
-            }
+            } while(p[pack_offset - 1] != '\0');
             break;
         }
     }
