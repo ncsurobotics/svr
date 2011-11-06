@@ -25,7 +25,7 @@ typedef enum {
 
 void SVR_Stream_init(void);
 SVR_Stream* SVR_Stream_new(const char* stream_name, const char* source);
-int SVR_Stream_open(SVR_Stream* stream);
+void SVR_Stream_destroy(SVR_Stream* stream);
 int SVR_Stream_resize(SVR_Stream* stream, int width, int height);
 int SVR_Stream_unpause(SVR_Stream* stream);
 int SVR_Stream_pause(SVR_Stream* stream);

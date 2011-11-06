@@ -1,12 +1,19 @@
 
 #include <svr.h>
 
-static int SVR_Stream_getInfo(SVR_Stream* stream);
+static SVR_Stream* SVR_Stream_getByName(const char* stream_name);
+static int SVR_Stream_updateInfo(SVR_Stream* stream);
+static int SVR_Stream_open(SVR_Stream* stream);
+static int SVR_Stream_close(SVR_Stream* stream);
 
 static Dictionary* streams;
 
 void SVR_Stream_init(void) {
     streams = Dictionary_new();
+}
+
+static SVR_Stream* SVR_Stream_getByName(const char* stream_name) {
+    return Dictionary_get(streams, stream_name);
 }
 
 SVR_Stream* SVR_Stream_new(const char* stream_name, const char* source_name) {
@@ -22,39 +29,33 @@ SVR_Stream* SVR_Stream_new(const char* stream_name, const char* source_name) {
     pthread_cond_init(&stream->new_frame, NULL);
     SVR_LOCKABLE_INIT(stream);
 
+    /* Communicate with server to open the stream */
+    SVR_Stream_open(stream);
+
     return stream;
 }
 
-static int SVR_Stream_getInfo(SVR_Stream* stream) {
-    SVR_Message* message;
-    SVR_Message* response;
-    int return_code;
+void SVR_Stream_destroy(SVR_Stream* stream) {
+    SVR_LOCK(stream);
+    SVR_Stream_close(stream);
 
-    /* Get encoding and frame properties */
-    message = SVR_Message_new(2);
-    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.getInfo");
-    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
-    response = SVR_Comm_sendMessage(message, true);
-
-    if(response->count == 4 && strcmp(response->components[0], "Stream.getInfo") == 0) {
-        if(stream->frame_properties) {
-            SVR_FrameProperties_destroy(stream->frame_properties);
-        }
-
-        stream->encoding = SVR_Encoding_getByName(response->components[2]);
-        stream->frame_properties = SVR_FrameProperties_fromString(response->components[3]);
-        return_code = 0;
-    } else {
-        return_code = SVR_Comm_parseResponse(response);
+    if(stream->frame_properties) {
+        SVR_FrameProperties_destroy(stream->frame_properties);
     }
 
-    SVR_Message_release(message);
-    SVR_Message_release(response);
+    if(stream->decoder) {
+        if(stream->current_frame) {
+            SVR_Decoder_returnFrame(stream->decoder, stream->current_frame);
+        }
 
-    return return_code;
+        SVR_Decoder_destroy(stream->decoder);
+    }
+
+    SVR_UNLOCK(stream);
+    free(stream);
 }
 
-int SVR_Stream_open(SVR_Stream* stream) {
+static int SVR_Stream_open(SVR_Stream* stream) {
     SVR_Message* message;
     SVR_Message* response;
     int return_code;
@@ -90,13 +91,61 @@ int SVR_Stream_open(SVR_Stream* stream) {
         return return_code;
     }
 
-    return_code = SVR_Stream_getInfo(stream);
+    return_code = SVR_Stream_updateInfo(stream);
     if(return_code != SVR_SUCCESS) {
         return return_code;
     }
 
     /* Save stream */
     Dictionary_set(streams, stream->stream_name, stream);
+
+    return return_code;
+}
+
+static int SVR_Stream_close(SVR_Stream* stream) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    /* Close stream */
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.close");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    return return_code;
+}
+
+static int SVR_Stream_updateInfo(SVR_Stream* stream) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    /* Get encoding and frame properties */
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.getInfo");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+    response = SVR_Comm_sendMessage(message, true);
+
+    if(response->count == 4 && strcmp(response->components[0], "Stream.getInfo") == 0) {
+        if(stream->frame_properties) {
+            SVR_FrameProperties_destroy(stream->frame_properties);
+        }
+
+        stream->encoding = SVR_Encoding_getByName(response->components[2]);
+        stream->frame_properties = SVR_FrameProperties_fromString(response->components[3]);
+        return_code = 0;
+    } else {
+        return_code = SVR_Comm_parseResponse(response);
+    }
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
 
     return return_code;
 }
@@ -123,11 +172,9 @@ int SVR_Stream_resize(SVR_Stream* stream, int width, int height) {
         return return_code;
     }
 
-    return SVR_Stream_getInfo(stream);
-}
+    return_code = SVR_Stream_updateInfo(stream);
 
-static SVR_Stream* SVR_Stream_getByName(const char* stream_name) {
-    return Dictionary_get(streams, stream_name);
+    return return_code;
 }
 
 int SVR_Stream_unpause(SVR_Stream* stream) {

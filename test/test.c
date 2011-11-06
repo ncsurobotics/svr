@@ -7,7 +7,6 @@ int main(void) {
     SVR_Stream* stream2;
     SVR_Stream* stream3;
     IplImage* frame;
-    int n;
 
     SVR_init();
 
@@ -15,18 +14,18 @@ int main(void) {
     stream2 = SVR_Stream_new("stream2", "cam0");
     stream3 = SVR_Stream_new("stream3", "cam0");
 
-    if((n = SVR_Stream_open(stream1))) {
-        fprintf(stderr, "Error opening stream1 (%d)\n", n);
+    if(stream1 == NULL) {
+        fprintf(stderr, "Error opening stream1\n");
         return -1;
     }
 
-    if((n = SVR_Stream_open(stream2))) {
-        fprintf(stderr, "Error opening stream2 (%d)\n", n);
+    if(stream2 == NULL) {
+        fprintf(stderr, "Error opening stream2\n");
         return -1;
     }
 
-    if((n = SVR_Stream_open(stream3))) {
-        fprintf(stderr, "Error opening stream3 (%d)\n", n);
+    if(stream3 == NULL) {
+        fprintf(stderr, "Error opening stream3\n");
         return -1;
     }
 
@@ -63,6 +62,24 @@ int main(void) {
         frame = SVR_Stream_getFrame(stream3, true);
         cvShowImage("stream3", frame);
         SVR_Stream_returnFrame(stream3, frame);
+    }
+
+    SVR_Stream_destroy(stream1);
+    SVR_Stream_destroy(stream2);
+    SVR_Stream_destroy(stream3);
+    cvDestroyAllWindows();
+
+    stream1 = SVR_Stream_new("stream1", "test");
+    if(stream1 == NULL) {
+        fprintf(stderr, "Error opening stream 1");
+    }
+
+    SVR_Stream_unpause(stream1);
+
+    while(cvWaitKey(10) != 'q') {
+        frame = SVR_Stream_getFrame(stream1, true);
+        cvShowImage("stream1", frame);
+        SVR_Stream_returnFrame(stream1, frame);
     }
 
     return 0;
