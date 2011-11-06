@@ -17,3 +17,7 @@ SVRs_Reencoder* SVRs_Reencoder_new(SVRs_Source* source, SVRs_Stream* stream) {
 size_t SVRs_Reencoder_reencode(SVRs_Reencoder* reencoder, void* data, size_t n) {
     return reencoder->reencode(reencoder, data, n);
 }
+
+void SVRs_Reencoder_destroy(SVRs_Reencoder* reencoder) {
+    free(reencoder);
+}

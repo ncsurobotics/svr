@@ -14,6 +14,7 @@ void SVRs_exitError(void) {
 
 int main(void) {
     SVR_initCore();
+    SVR_Logging_setThreshold(SVR_DEBUG);
 
     SVRs_Client_init();
     SVRs_Source_init();
@@ -21,6 +22,7 @@ int main(void) {
 
     /* Spawn the test source */
     TestSource_open();
+    CamSource_open();
 
     /* Please *ignore* SIGPIPE. It will cause the program to close in the case
        of writing to a closed socket. We handle this ourselves. */

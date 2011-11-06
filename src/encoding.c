@@ -43,7 +43,7 @@ SVR_Encoder* SVR_Encoder_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_
     encoder->buffer = NULL;
     encoder->write_index = 0;
     encoder->read_index = 0;
-    encoder->buffer_size = 0;
+    encoder->buffer_size = 1;
     SVR_LOCKABLE_INIT(encoder);
 
     if(encoding->openEncoder) {
@@ -58,6 +58,9 @@ SVR_Encoder* SVR_Encoder_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_
 void SVR_Encoder_destroy(SVR_Encoder* encoder) {
     if(encoder->encoding->closeEncoder) {
         encoder->encoding->closeEncoder(encoder);
+    }
+    if(encoder->buffer) {
+        free(encoder->buffer);
     }
 
     free(encoder);

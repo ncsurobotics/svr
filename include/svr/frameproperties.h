@@ -12,6 +12,7 @@ struct SVR_FrameProperties_s {
 };
 
 SVR_FrameProperties* SVR_FrameProperties_new(void);
+SVR_FrameProperties* SVR_FrameProperties_fromString(const char* string);
 void SVR_FrameProperties_destroy(SVR_FrameProperties* properties);
 SVR_FrameProperties* SVR_FrameProperties_clone(SVR_FrameProperties* orignal_properties);
 IplImage* SVR_FrameProperties_imageFromProperties(SVR_FrameProperties* properties);

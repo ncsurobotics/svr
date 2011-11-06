@@ -36,6 +36,10 @@ SVRs_Source* SVRs_Source_open(SVR_Encoding* encoding, SVR_FrameProperties* frame
     return source;
 }
 
+SVR_FrameProperties* SVRs_Source_getFrameProperties(SVRs_Source* source) {
+    return source->frame_properties;
+}
+
 SVRs_Source* SVRs_getSourceByName(const char* source_name) {
     return Dictionary_get(sources, source_name);
 }
@@ -46,12 +50,29 @@ void SVRs_Source_registerStream(SVRs_Source* source, SVRs_Stream* stream) {
     SVR_UNLOCK(source);
 }
 
+void SVRs_Source_unregisterStream(SVRs_Source* source, SVRs_Stream* stream) {
+    SVR_LOCK(source);
+    List_remove(source->streams, List_indexOf(source->streams, stream));
+    SVR_UNLOCK(source);
+}
+
 void SVRs_Source_provideData(SVRs_Source* source, void* data, size_t data_available) {
     SVRs_Stream* stream;
+    IplImage* frame;
+
+    /* TODO: Need to provide frame sync of some sort so that new streams
+     * don't start receiving data mid frame. This would be bad
+     */
 
     SVR_LOCK(source);
-    for(int i = 0; (stream = List_get(source->streams, i)) != NULL; i++) {
-        SVRs_Stream_inputSourceData(stream, data, data_available);
+
+    SVR_Decoder_decode(source->decoder, data, data_available);
+    while(SVR_Decoder_framesReady(source->decoder) > 0) {
+        frame = SVR_Decoder_getFrame(source->decoder);
+        for(int i = 0; (stream = List_get(source->streams, i)) != NULL; i++) {
+            SVRs_Stream_inputSourceFrame(stream, frame);
+        }
+        SVR_Decoder_returnFrame(source->decoder, frame);
     }
     SVR_UNLOCK(source);
 }

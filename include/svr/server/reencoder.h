@@ -35,6 +35,7 @@ struct SVRs_Reencoder_s {
  * adapting source to stream
  */
 SVRs_Reencoder* SVRs_Reencoder_new(SVRs_Source* source, SVRs_Stream* stream);
+void SVRs_Reencoder_destroy(SVRs_Reencoder* reencoder);
 size_t SVRs_Reencoder_reencode(SVRs_Reencoder* reencoder, void* data, size_t n);
 
 #endif // #ifndef __SVR_REENCODER_H

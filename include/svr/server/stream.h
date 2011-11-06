@@ -6,19 +6,16 @@
 #include <svr/server/forward.h>
 
 struct SVRs_Stream_s {
+    char* name;
+
     SVRs_Client* client;
     SVRs_Source* source;
 
-    SVR_Encoder* encoder;
+    //SVRs_Reencoder* reencoder;
+    List* frame_filters;
 
-    /**
-     * Takes raw data from a source and produces output data for the target encoding
-     */
-    SVRs_Reencoder* reencoder;
-    
-    /**
-     * Frame properties. Inherited from Source by default
-     */
+    SVR_Encoding* encoding;
+    SVR_Encoder* encoder;
     SVR_FrameProperties* frame_properties;
 
     SVR_Stream_State state;
@@ -26,27 +23,18 @@ struct SVRs_Stream_s {
     void* payload_buffer;
     size_t payload_buffer_size;
 
-    char* name;
-
     SVR_LOCKABLE;
 };
 
-/**
- * Create a new stream with the given client, source, and encoding
- */
+SVRs_Stream* SVRs_Stream_new(const char* name);
 void SVRs_Stream_destroy(SVRs_Stream* stream);
-
-/**
- * Called by the source to provide raw data to the stream
- */
-void SVRs_Stream_inputSourceData(SVRs_Stream* stream, void* data, size_t data_available);
-
-SVRs_Stream* SVRs_Stream_new(SVRs_Client* client, SVRs_Source* source, const char* name);
+void SVRs_Stream_setClient(SVRs_Stream* stream, SVRs_Client* client);
+void SVRs_Stream_attachSource(SVRs_Stream* stream, SVRs_Source* source);
+void SVRs_Stream_detachSource(SVRs_Stream* stream);
 void SVRs_Stream_setEncoding(SVRs_Stream* stream, SVR_Encoding* encoding);
+void SVRs_Stream_addFrameFilter(SVRs_Stream* stream, SVRs_FrameFilter* frame_filter);
 void SVRs_Stream_pause(SVRs_Stream* stream);
-void SVRs_Stream_start(SVRs_Stream* stream);
-void SVRs_Stream_close(SVRs_Stream* stream);
-
-
+void SVRs_Stream_unpause(SVRs_Stream* stream);
+void SVRs_Stream_inputSourceFrame(SVRs_Stream* stream, IplImage* frame);
 
 #endif // #ifndef __SVR_SERVER_STREAM_H

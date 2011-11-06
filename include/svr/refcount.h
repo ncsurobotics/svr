@@ -9,8 +9,8 @@ struct SVR_RefCounter_s {
     void* object;
 };
 
-#define SVR_REF(object) (SVR_RefCounter_ref((object)->ref_counter, (object)))
-#define SVR_UNREF(object) (SVR_RefCounter_unref((object)->ref_counter), (object))
+#define SVR_REF(object) (SVR_RefCounter_ref((object)->ref_counter))
+#define SVR_UNREF(object) (SVR_RefCounter_unref((object)->ref_counter))
 #define SVR_REFCOUNTED SVR_RefCounter* ref_counter
 #define SVR_REFCOUNTED_INIT(object, cleanup) ((object)->ref_counter = SVR_RefCounter_new((cleanup), (object)))
 

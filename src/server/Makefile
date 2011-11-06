@@ -10,7 +10,7 @@ INCLUDES= ../../include/svr/*.h ../../include/svr/server/*.h \
 
 SRC= client.c event.c main.c reencoders/fullreencoder.c messagehandlers.c \
 	messagerouting.c server.c source.c stream.c source_test.c \
-	reencoder.c
+	reencoder.c source_cam.c framefilter.c framefilters/resize.c
 OBJ= $(SRC:.c=.o)
 
 all: $(SERVER_NAME)

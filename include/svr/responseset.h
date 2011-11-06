@@ -1,9 +1,3 @@
-/*
- * responseset.h
- *
- *  Created on: Nov 2, 2011
- *      Author: christopher
- */
 
 #ifndef __SVR_RESPONSESET_H
 #define __SVR_RESPONSESET_H

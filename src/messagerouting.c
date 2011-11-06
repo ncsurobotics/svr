@@ -58,13 +58,13 @@ int SVR_MessageRouter_processMessage(SVR_Message* message) {
     SVR_RequestMapping* request_type;
     
     if(message->count == 0) {
-        SVR_log(ERROR, "Received empty message");
+        SVR_log(SVR_ERROR, "Received empty message");
         return -1;
     }
 
     request_type = SVR_findRequestMapping(message->components[0]);
     if(request_type == NULL) {
-        SVR_log(ERROR, Util_format("Unsupported message type: %s", message->components[0]));
+        SVR_log(SVR_ERROR, Util_format("Unsupported message type: %s", message->components[0]));
         return -1;
     }
 

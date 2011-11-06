@@ -53,7 +53,7 @@ static void SVRs_Server_initServerSocket(void) {
     /* Initialize the connection structure to bind the the correct port on all
        interfaces */
     svr_addr.sin_family = AF_INET;
-    svr_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    svr_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
     svr_addr.sin_port = htons(33560);
 
     /* Create the socket */

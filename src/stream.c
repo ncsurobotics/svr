@@ -1,6 +1,8 @@
 
 #include <svr.h>
 
+static int SVR_Stream_getInfo(SVR_Stream* stream);
+
 static Dictionary* streams;
 
 void SVR_Stream_init(void) {
@@ -9,35 +11,58 @@ void SVR_Stream_init(void) {
 
 SVR_Stream* SVR_Stream_new(const char* stream_name, const char* source_name) {
     SVR_Stream* stream = malloc(sizeof(SVR_Stream));
-    SVR_FrameProperties* properties = SVR_FrameProperties_new();
-
-    properties->width = 320;
-    properties->height = 240;
-    properties->channels = 1;
-    properties->depth = 8;
 
     stream->stream_name = stream_name;
     stream->source_name = source_name;
     stream->current_frame = NULL;
-    stream->decoder = SVR_Decoder_new(SVR_Encoding_getByName("raw"), properties);
+    stream->frame_properties = NULL;
+    stream->encoding = NULL;
+    stream->decoder = NULL;
+
     pthread_cond_init(&stream->new_frame, NULL);
     SVR_LOCKABLE_INIT(stream);
-
-    SVR_FrameProperties_destroy(properties);
 
     return stream;
 }
 
-int SVR_Stream_open(SVR_Stream* stream) {
-    SVR_Message* message = SVR_Message_new(3);
+static int SVR_Stream_getInfo(SVR_Stream* stream) {
+    SVR_Message* message;
     SVR_Message* response;
     int return_code;
 
-    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.open");
-    message->components[1] = SVR_Arena_strdup(message->alloc, stream->source_name);
-    message->components[2] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+    /* Get encoding and frame properties */
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.getInfo");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+    response = SVR_Comm_sendMessage(message, true);
 
-    Dictionary_set(streams, stream->stream_name, stream);
+    if(response->count == 4 && strcmp(response->components[0], "Stream.getInfo") == 0) {
+        if(stream->frame_properties) {
+            SVR_FrameProperties_destroy(stream->frame_properties);
+        }
+
+        stream->encoding = SVR_Encoding_getByName(response->components[2]);
+        stream->frame_properties = SVR_FrameProperties_fromString(response->components[3]);
+        return_code = 0;
+    } else {
+        return_code = SVR_Comm_parseResponse(response);
+    }
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    return return_code;
+}
+
+int SVR_Stream_open(SVR_Stream* stream) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    /* Open stream */
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.open");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
 
     response = SVR_Comm_sendMessage(message, true);
     return_code = SVR_Comm_parseResponse(response);
@@ -46,14 +71,107 @@ int SVR_Stream_open(SVR_Stream* stream) {
     SVR_Message_release(response);
 
     if(return_code != SVR_SUCCESS) {
-        Dictionary_remove(streams, stream->stream_name);
+        return return_code;
     }
+
+    /* Attach source to stream */
+    message = SVR_Message_new(3);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.attachSource");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+    message->components[2] = SVR_Arena_strdup(message->alloc, stream->source_name);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    if(return_code != SVR_SUCCESS) {
+        return return_code;
+    }
+
+    return_code = SVR_Stream_getInfo(stream);
+    if(return_code != SVR_SUCCESS) {
+        return return_code;
+    }
+
+    /* Save stream */
+    Dictionary_set(streams, stream->stream_name, stream);
 
     return return_code;
 }
 
+int SVR_Stream_resize(SVR_Stream* stream, int width, int height) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    /* Open stream */
+    message = SVR_Message_new(4);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.addFrameFilter");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+    message->components[2] = SVR_Arena_strdup(message->alloc, "resize");
+    message->components[3] = SVR_Arena_sprintf(message->alloc, "%d %d", width, height);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    if(return_code != SVR_SUCCESS) {
+        return return_code;
+    }
+
+    return SVR_Stream_getInfo(stream);
+}
+
 static SVR_Stream* SVR_Stream_getByName(const char* stream_name) {
     return Dictionary_get(streams, stream_name);
+}
+
+int SVR_Stream_unpause(SVR_Stream* stream) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    /* Reopen decoder */
+    if(stream->decoder) {
+        SVR_Decoder_destroy(stream->decoder);
+    }
+    stream->decoder = SVR_Decoder_new(stream->encoding, stream->frame_properties);
+
+    /* Open stream */
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.unpause");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    return return_code;
+}
+
+int SVR_Stream_pause(SVR_Stream* stream) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    /* Open stream */
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.pause");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    return return_code;
 }
 
 IplImage* SVR_Stream_getFrame(SVR_Stream* stream, bool wait) {
@@ -79,7 +197,7 @@ void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n) {
     SVR_Stream* stream = SVR_Stream_getByName(stream_name);
 
     if(stream == NULL) {
-        SVR_log(WARNING, "Data arrived for unknown stream\n");
+        SVR_log(SVR_WARNING, "Data arrived for unknown stream\n");
         return;
     }
 
