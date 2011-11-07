@@ -16,10 +16,6 @@ SVR_Encoding SVR_ENCODING(raw) = {
         .decode = decode
 };
 
-typedef struct {
-    int write_index;
-} SVR_RawEncoding_Decoder;
-
 static void encode(SVR_Encoder* encoder, IplImage* frame) {
     SVR_Encoder_provideData(encoder, frame->imageData, frame->imageSize);
 }
