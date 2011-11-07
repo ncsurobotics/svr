@@ -21,6 +21,9 @@ SVRs_Stream* SVRs_Stream_new(const char* name) {
     stream->payload_buffer_size = 8 * 1024;
     stream->payload_buffer = malloc(stream->payload_buffer_size);
 
+    stream->temp_frame[0] = NULL;
+    stream->temp_frame[1] = NULL;
+
     SVR_LOCKABLE_INIT(stream);
 
     return stream;
