@@ -16,6 +16,7 @@ void SVR_Encoding_init(void) {
 
 static void SVR_Encoding_registerDefaultEncodings(void) {
     SVR_Encoding_register(&SVR_ENCODING(raw));
+    SVR_Encoding_register(&SVR_ENCODING(jpeg));
 }
 
 void SVR_Encoding_close(void) {
@@ -233,17 +234,28 @@ void SVR_Decoder_writePaddedFrameData(SVR_Decoder* decoder, void* data, size_t n
 }
 
 void SVR_Decoder_writeUnpaddedFrameData(SVR_Decoder* decoder, void* data, size_t n) {
-    IplImage* current_frame = SVR_Decoder_getCurrentFrame(decoder);
-    size_t image_size = current_frame->imageSize;
-    size_t width_step = current_frame->widthStep;
+    IplImage* current_frame;
+    size_t image_size;
+    size_t width_step;
     size_t row_width_remaining;
     size_t copy_size;
     int offset = 0;
 
+    /* Not only is this faster, but it's necessary since the "end-of-row"
+       calculations will fail for 0 padding */
+    if(SVR_Decoder_getRowPadding(decoder) == 0) {
+        SVR_Decoder_writePaddedFrameData(decoder, data, n);
+        return;
+    }
+
+    current_frame = SVR_Decoder_getCurrentFrame(decoder);
+    image_size = current_frame->imageSize;
+    width_step = current_frame->widthStep;
+
     while(offset < n) {
         current_frame = SVR_Decoder_getCurrentFrame(decoder);
 
-        row_width_remaining = current_frame->widthStep - (decoder->write_offset % width_step);
+        row_width_remaining = (current_frame->width * current_frame->nChannels) - (decoder->write_offset % width_step);
         copy_size = Util_min(row_width_remaining, n - offset);
         memcpy(current_frame->imageData + decoder->write_offset, ((uint8_t*)data) + offset, copy_size);
 
@@ -251,7 +263,7 @@ void SVR_Decoder_writeUnpaddedFrameData(SVR_Decoder* decoder, void* data, size_t
         offset += copy_size;
 
         /* Skip padding if we're at the end of a line */
-        if(decoder->write_offset % width_step == current_frame->width) {
+        if(decoder->write_offset % width_step == (current_frame->width * current_frame->nChannels)) {
             decoder->write_offset = (decoder->write_offset + SVR_Decoder_getRowPadding(decoder)) % image_size;
         }
 
@@ -268,7 +280,7 @@ int SVR_Decoder_getRowPadding(SVR_Decoder* decoder) {
 
     SVR_LOCK(decoder);
     frame = SVR_Decoder_getCurrentFrame(decoder);
-    padding = frame->widthStep - frame->width;
+    padding = frame->widthStep - (frame->width * frame->nChannels);
     SVR_UNLOCK(decoder);
 
     return padding;
