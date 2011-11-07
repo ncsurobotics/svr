@@ -11,8 +11,7 @@ void SVRs_Stream_rResize(SVRs_Client* client, SVR_Message* message);
 void SVRs_Stream_rSetChannels(SVRs_Client* client, SVR_Message* message);
 void SVRs_Stream_rAttachSource(SVRs_Client* client, SVR_Message* message);
 void SVRs_Stream_rSetEncoding(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rGetProp(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rSetProp(SVRs_Client* client, SVR_Message* message);
+void SVRs_Stream_rSetDropRate(SVRs_Client* client, SVR_Message* message);
 
 void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message);
 void SVRs_Source_rClose(SVRs_Client* client, SVR_Message* message);

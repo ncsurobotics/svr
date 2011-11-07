@@ -25,6 +25,7 @@ static SVRs_RequestMapping request_types[] = {
     {"Stream.resize", SVRs_Stream_rResize},
     {"Stream.setChannels", SVRs_Stream_rSetChannels},
     {"Stream.setEncoding", SVRs_Stream_rSetEncoding},
+    {"Stream.setDropRate", SVRs_Stream_rSetDropRate},
     {"Stream.getInfo", SVRs_Stream_rGetInfo},
     {"Stream.pause", SVRs_Stream_rPause},
     {"Stream.unpause", SVRs_Stream_rUnpause},

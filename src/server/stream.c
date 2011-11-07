@@ -24,6 +24,9 @@ SVRs_Stream* SVRs_Stream_new(const char* name) {
     stream->temp_frame[0] = NULL;
     stream->temp_frame[1] = NULL;
 
+    stream->drop_counter = 0;
+    stream->drop_rate = 0;
+
     SVR_LOCKABLE_INIT(stream);
 
     return stream;
@@ -88,6 +91,14 @@ int SVRs_Stream_setEncoding(SVRs_Stream* stream, SVR_Encoding* encoding) {
     }
 
     stream->encoding = encoding;
+    return SVR_SUCCESS;
+}
+
+/* Only process 1 of every rate frames */
+int SVRs_Stream_setDropRate(SVRs_Stream* stream, int rate) {
+    stream->drop_rate = rate;
+    stream->drop_counter = 0;
+
     return SVR_SUCCESS;
 }
 
@@ -248,6 +259,15 @@ void SVRs_Stream_inputSourceFrame(SVRs_Stream* stream, IplImage* frame) {
     if(stream->state == SVR_PAUSED || stream->client == NULL) {
         SVR_UNLOCK(stream);
         return;
+    }
+
+    if(stream->drop_rate) {
+        stream->drop_counter = (stream->drop_counter + 1) % stream->drop_rate;
+
+        if(stream->drop_counter != 0) {
+            SVR_UNLOCK(stream);
+            return;
+        }
     }
 
     /* Build the data message */

@@ -20,6 +20,9 @@ struct SVRs_Stream_s {
     void* payload_buffer;
     size_t payload_buffer_size;
 
+    int drop_rate;
+    int drop_counter;
+
     IplImage* temp_frame[2];
 
     SVR_LOCKABLE;
@@ -32,6 +35,7 @@ int SVRs_Stream_attachSource(SVRs_Stream* stream, SVRs_Source* source);
 int SVRs_Stream_detachSource(SVRs_Stream* stream);
 int SVRs_Stream_setEncoding(SVRs_Stream* stream, SVR_Encoding* encoding);
 int SVRs_Stream_setChannels(SVRs_Stream* stream, int channels);
+int SVRs_Stream_setDropRate(SVRs_Stream* stream, int rate);
 int SVRs_Stream_resize(SVRs_Stream* stream, int width, int height);
 
 void SVRs_Stream_pause(SVRs_Stream* stream);

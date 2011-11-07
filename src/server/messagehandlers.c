@@ -222,6 +222,31 @@ void SVRs_Stream_rAttachSource(SVRs_Client* client, SVR_Message* message) {
     SVRs_Client_replyCode(client, message, SVRs_Stream_attachSource(stream, source));
 }
 
+void SVRs_Stream_rSetDropRate(SVRs_Client* client, SVR_Message* message) {
+    SVRs_Stream* stream;
+    char* stream_name;
+    int drop_rate;
+
+    switch(message->count) {
+    case 3:
+        stream_name = message->components[1];
+        drop_rate = atoi(message->components[2]);
+        break;
+
+    default:
+        SVRs_Client_kick(client, "Invalid message");
+        return;
+    }
+
+    stream = SVRs_Client_getStream(client, stream_name);
+    if(stream == NULL) {
+        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        return;
+    }
+
+    SVRs_Client_replyCode(client, message, SVRs_Stream_setDropRate(stream, drop_rate));
+}
+
 void SVRs_Stream_rSetEncoding(SVRs_Client* client, SVR_Message* message) {
     SVRs_Stream* stream;
     SVR_Encoding* encoding;
@@ -252,14 +277,6 @@ void SVRs_Stream_rSetEncoding(SVRs_Client* client, SVR_Message* message) {
     }
 
     SVRs_Client_replyCode(client, message, SVRs_Stream_setEncoding(stream, encoding));
-}
-
-void SVRs_Stream_rGetProp(SVRs_Client* client, SVR_Message* message) {
-    // --
-}
-
-void SVRs_Stream_rSetProp(SVRs_Client* client, SVR_Message* message) {
-    // --
 }
 
 void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message) {

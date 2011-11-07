@@ -243,6 +243,32 @@ int SVR_Stream_setGrayscale(SVR_Stream* stream, bool grayscale) {
     return return_code;
 }
 
+int SVR_Stream_setDropRate(SVR_Stream* stream, int drop_rate) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    /* Open stream */
+    message = SVR_Message_new(3);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.setDropRate");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+    message->components[2] = SVR_Arena_sprintf(message->alloc, "%d", drop_rate);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    if(return_code != SVR_SUCCESS) {
+        return return_code;
+    }
+
+    return_code = SVR_Stream_updateInfo(stream);
+
+    return return_code;
+}
+
 int SVR_Stream_unpause(SVR_Stream* stream) {
     SVR_Message* message;
     SVR_Message* response;
