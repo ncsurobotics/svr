@@ -5,7 +5,7 @@ include ../$(CONFIG)
 EXTRA_CFLAGS = -fPIC -I../include/ $(CV_CFLAGS)
 
 SONAME = $(LIB_NAME).$(MAJOR)
-LDFLAGS += -lpthread -lseawolf --shared -Wl,-soname,$(SONAME)
+LDFLAGS += -lpthread -lseawolf -ljpeg --shared -Wl,-soname,$(SONAME)
 LDFLAGS += $(CV_LDFLAGS)
 LDFLAGS += $(EXTRA_LDFLAGS)
 
@@ -13,7 +13,8 @@ INCLUDES= ../include/svr/*.h ../include/svr.h
 
 SRC = blockalloc.c mempool.c message.c pack.c net.c logging.c refcount.c \
 	frameproperties.c encoding.c lockable.c main.c encodings/raw.c \
-	responseset.c messagerouting.c messagehandlers.c stream.c comm.c
+	responseset.c messagerouting.c messagehandlers.c stream.c comm.c \
+	encodings/jpeg.c
 OBJ = $(SRC:.c=.o)
 
 all: $(LIB_NAME)
