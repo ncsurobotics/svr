@@ -60,13 +60,10 @@ void SVRs_Source_provideData(SVRs_Source* source, void* data, size_t data_availa
     SVRs_Stream* stream;
     IplImage* frame;
 
-    /* TODO: Need to provide frame sync of some sort so that new streams
-     * don't start receiving data mid frame. This would be bad
-     */
-
     SVR_LOCK(source);
 
     SVR_Decoder_decode(source->decoder, data, data_available);
+
     while(SVR_Decoder_framesReady(source->decoder) > 0) {
         frame = SVR_Decoder_getFrame(source->decoder);
         for(int i = 0; (stream = List_get(source->streams, i)) != NULL; i++) {

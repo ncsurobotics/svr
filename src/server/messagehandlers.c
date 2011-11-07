@@ -166,6 +166,11 @@ void SVRs_Stream_rAddFrameFilter(SVRs_Client* client, SVR_Message* message) {
         return;
     }
 
+    if(stream->source == NULL) {
+        SVRs_Client_replyError(client, message, SVR_INVALIDSTATE);
+        return;
+    }
+
     if(strcmp(filter_name, "resize") == 0) {
         if(sscanf(filter_arguments, "%d %d", &arg1, &arg2) == 2) {
             SVRs_Stream_addFrameFilter(stream, SVRs_ResizeFilter_new(stream->frame_properties, arg1, arg2));

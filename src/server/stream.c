@@ -40,11 +40,9 @@ static void SVRs_Stream_initializeEncoder(SVRs_Stream* stream) {
     SVR_LOCK(stream);
     if(stream->encoder) {
         SVR_Encoder_destroy(stream->encoder);
-        //SVR_Reencoder_destroy(stream->reencoder);
     }
 
     stream->encoder = SVR_Encoder_new(stream->encoding, stream->frame_properties);
-    //stream->reencoder = SVRs_Reencoder_new(stream->source, stream);
     SVR_UNLOCK(stream);
 }
 
@@ -68,8 +66,10 @@ void SVRs_Stream_setEncoding(SVRs_Stream* stream, SVR_Encoding* encoding) {
 }
 
 void SVRs_Stream_addFrameFilter(SVRs_Stream* stream, SVRs_FrameFilter* frame_filter) {
+    SVR_LOCK(stream);
     List_append(stream->frame_filters, frame_filter);
     stream->frame_properties = frame_filter->output_properties;
+    SVR_UNLOCK(stream);
 }
 
 /**
@@ -95,8 +95,10 @@ void SVRs_Stream_unpause(SVRs_Stream* stream) {
 void SVRs_Stream_destroy(SVRs_Stream* stream) {
     SVRs_FrameFilter* filter;
 
-    SVR_LOCK(stream);
+    /* Detach the source without a lock to avoid a deadlock */
     SVRs_Stream_detachSource(stream);
+
+    SVR_LOCK(stream);
 
     if(stream->name) {
         free(stream->name);
@@ -128,7 +130,6 @@ void SVRs_Stream_inputSourceFrame(SVRs_Stream* stream, IplImage* frame) {
     SVRs_FrameFilter* frame_filter;
 
     SVR_LOCK(stream);
-    
     /* Ignore data if paused */
     if(stream->state == SVR_PAUSED || stream->client == NULL) {
         SVR_UNLOCK(stream);

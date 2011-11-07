@@ -63,13 +63,15 @@ void SVRs_Client_provideSource(SVRs_Client* client, SVRs_Source* source) {
 }
 
 void SVRs_Client_openStream(SVRs_Client* client, const char* stream_name) {
-    SVRs_Stream* stream = SVRs_Stream_new(stream_name);
+    SVRs_Stream* stream;
 
     SVR_LOCK(client);
-    Dictionary_set(client->streams, stream_name, stream);
+    if(client->state == SVR_CONNECTED) {
+        stream = SVRs_Stream_new(stream_name);
+        Dictionary_set(client->streams, stream_name, stream);
+        SVRs_Stream_setClient(stream, client);
+    }
     SVR_UNLOCK(client);
-
-    SVRs_Stream_setClient(stream, client);
 }
 
 void SVRs_Client_closeStream(SVRs_Client* client, const char* stream_name) {
@@ -80,12 +82,11 @@ void SVRs_Client_closeStream(SVRs_Client* client, const char* stream_name) {
     if(stream == NULL) {
         return;
     }
+    Dictionary_remove(client->streams, stream_name);
+    SVR_UNLOCK(client);
 
     SVRs_Stream_pause(stream);
-    Dictionary_remove(client->streams, stream_name);
-
     SVRs_Stream_destroy(stream);
-    SVR_UNLOCK(client);
 }
 
 SVRs_Stream* SVRs_Client_getStream(SVRs_Client* client, const char* stream_name) {
@@ -136,6 +137,7 @@ void SVRs_Client_markForClosing(SVRs_Client* client) {
     SVR_LOCK(client);
     if(client->state != SVR_CLOSED) {
         client->state = SVR_CLOSED;
+        SVR_UNLOCK(client);
 
         /* Immediately close the socket. The client can not longer generate requests */
         shutdown(client->socket, SHUT_RDWR);
@@ -152,13 +154,14 @@ void SVRs_Client_markForClosing(SVRs_Client* client) {
             SVRs_Client_closeStream(client, stream_name);
         }
         List_destroy(streams);
+    } else {
+        SVR_UNLOCK(client);
     }
-    SVR_UNLOCK(client);
 }
 
 void SVRs_Client_reply(SVRs_Client* client, SVR_Message* request, SVR_Message* response) {
     response->request_id = request->request_id;
-    SVR_Net_sendMessage(client->socket, response);
+    SVRs_Client_sendMessage(client, response);
 }
 
 void SVRs_Client_replyError(SVRs_Client* client, SVR_Message* request, int error_code) {
@@ -183,7 +186,7 @@ void SVRs_Client_kick(SVRs_Client* client, const char* reason) {
     message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.kick");
     message->components[1] = SVR_Arena_strdup(message->alloc, reason);
 
-    SVR_Net_sendMessage(client->socket, message);
+    SVRs_Client_sendMessage(client, message);
     SVR_Message_release(message);
 
     SVRs_Client_markForClosing(client);
@@ -238,7 +241,9 @@ int SVRs_Client_sendMessage(SVRs_Client* client, SVR_Message* message) {
     int n;
 
     SVR_LOCK(client);
-    n = SVR_Net_sendMessage(client->socket, message);
+    if(client->state != SVR_CLOSED) {
+        n = SVR_Net_sendMessage(client->socket, message);
+    }
     SVR_UNLOCK(client);
 
     return n;

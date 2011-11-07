@@ -6,6 +6,8 @@ static int SVR_Stream_updateInfo(SVR_Stream* stream);
 static int SVR_Stream_open(SVR_Stream* stream);
 static int SVR_Stream_close(SVR_Stream* stream);
 
+static pthread_mutex_t stream_list_lock = PTHREAD_MUTEX_INITIALIZER;
+
 static Dictionary* streams;
 
 void SVR_Stream_init(void) {
@@ -30,14 +32,21 @@ SVR_Stream* SVR_Stream_new(const char* stream_name, const char* source_name) {
     SVR_LOCKABLE_INIT(stream);
 
     /* Communicate with server to open the stream */
-    SVR_Stream_open(stream);
+    if(SVR_Stream_open(stream) != SVR_SUCCESS) {
+        free(stream);
+        return NULL;
+    }
 
     return stream;
 }
 
 void SVR_Stream_destroy(SVR_Stream* stream) {
-    SVR_LOCK(stream);
     SVR_Stream_close(stream);
+
+    pthread_mutex_lock(&stream_list_lock);
+    Dictionary_remove(streams, stream->stream_name);
+    SVR_LOCK(stream);
+    pthread_mutex_unlock(&stream_list_lock);
 
     if(stream->frame_properties) {
         SVR_FrameProperties_destroy(stream->frame_properties);
@@ -97,7 +106,9 @@ static int SVR_Stream_open(SVR_Stream* stream) {
     }
 
     /* Save stream */
+    pthread_mutex_lock(&stream_list_lock);
     Dictionary_set(streams, stream->stream_name, stream);
+    pthread_mutex_unlock(&stream_list_lock);
 
     return return_code;
 }
@@ -241,14 +252,17 @@ void SVR_Stream_returnFrame(SVR_Stream* stream, IplImage* frame) {
 }
 
 void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n) {
-    SVR_Stream* stream = SVR_Stream_getByName(stream_name);
+    SVR_Stream* stream;
 
+    pthread_mutex_lock(&stream_list_lock);
+    stream = SVR_Stream_getByName(stream_name);
     if(stream == NULL) {
         SVR_log(SVR_WARNING, "Data arrived for unknown stream\n");
         return;
     }
-
     SVR_LOCK(stream);
+    pthread_mutex_unlock(&stream_list_lock);
+
     SVR_Decoder_decode(stream->decoder, buffer, n);
 
     if(SVR_Decoder_framesReady(stream->decoder)) {
