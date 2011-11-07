@@ -168,10 +168,40 @@ int SVR_Stream_resize(SVR_Stream* stream, int width, int height) {
 
     /* Open stream */
     message = SVR_Message_new(4);
-    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.addFrameFilter");
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.resize");
     message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
-    message->components[2] = SVR_Arena_strdup(message->alloc, "resize");
-    message->components[3] = SVR_Arena_sprintf(message->alloc, "%d %d", width, height);
+    message->components[2] = SVR_Arena_sprintf(message->alloc, "%d", width);
+    message->components[3] = SVR_Arena_sprintf(message->alloc, "%d", height);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    if(return_code != SVR_SUCCESS) {
+        return return_code;
+    }
+
+    return_code = SVR_Stream_updateInfo(stream);
+
+    return return_code;
+}
+
+int SVR_Stream_setGrayscale(SVR_Stream* stream, bool grayscale) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    /* Open stream */
+    message = SVR_Message_new(3);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.setChannels");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+    if(grayscale) {
+        message->components[2] = SVR_Arena_strdup(message->alloc, "1");
+    } else {
+        message->components[2] = SVR_Arena_strdup(message->alloc, "0");
+    }
 
     response = SVR_Comm_sendMessage(message, true);
     return_code = SVR_Comm_parseResponse(response);

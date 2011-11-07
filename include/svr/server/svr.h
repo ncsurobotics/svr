@@ -6,8 +6,6 @@
 
 #include "svr/server/forward.h"
 #include "svr/server/client.h"
-#include "svr/server/framefilter.h"
-#include "svr/server/reencoder.h"
 #include "svr/server/server.h"
 #include "svr/server/source.h"
 #include "svr/server/stream.h"

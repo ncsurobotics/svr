@@ -11,7 +11,7 @@
 
 #define SVR_INVALIDDIM         5
 #define SVR_NAMECLASH          6
-#define SVR_INVALIDARGUMENTS   7
+#define SVR_INVALIDARGUMENT    7
 #define SVR_INVALIDSTATE       8
 
 #endif // #ifndef __SVR_ERRORS_H

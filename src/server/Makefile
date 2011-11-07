@@ -6,11 +6,10 @@ EXTRA_CFLAGS = -I../../include/ $(CV_CFLAGS)
 LDFLAGS += -L../ -l$(LIB_NAME:lib%.so=%) -lpthread $(CV_LDFLAGS)
 
 INCLUDES= ../../include/svr/*.h ../../include/svr/server/*.h \
-	../../include/svr.h reencoders/reencoders.h
+	../../include/svr.h
 
-SRC= client.c event.c main.c reencoders/fullreencoder.c messagehandlers.c \
-	messagerouting.c server.c source.c stream.c source_test.c \
-	reencoder.c source_cam.c framefilter.c framefilters/resize.c
+SRC= client.c event.c main.c messagehandlers.c messagerouting.c server.c \
+	source.c stream.c source_test.c	source_cam.c
 OBJ= $(SRC:.c=.o)
 
 all: $(SERVER_NAME)

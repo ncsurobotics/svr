@@ -72,8 +72,7 @@ SVRs_Stream* SVRs_Client_getStream(SVRs_Client* client, const char* stream_name)
 void SVRs_addClient(int socket);
 void SVRs_Client_markForClosing(SVRs_Client* client);
 void SVRs_Client_reply(SVRs_Client* client, SVR_Message* request, SVR_Message* response);
-void SVRs_Client_replyError(SVRs_Client* client, SVR_Message* request, int error_code);
-void SVRs_Client_replySuccess(SVRs_Client* client, SVR_Message* request);
+void SVRs_Client_replyCode(SVRs_Client* client, SVR_Message* request, int error_code);
 void SVRs_Client_kick(SVRs_Client* client, const char* reason);
 void SVRs_joinAllClientThreads(void);
 List* SVRs_getAllClients(void);

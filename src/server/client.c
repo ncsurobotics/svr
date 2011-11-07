@@ -164,17 +164,13 @@ void SVRs_Client_reply(SVRs_Client* client, SVR_Message* request, SVR_Message* r
     SVRs_Client_sendMessage(client, response);
 }
 
-void SVRs_Client_replyError(SVRs_Client* client, SVR_Message* request, int error_code) {
+void SVRs_Client_replyCode(SVRs_Client* client, SVR_Message* request, int error_code) {
     SVR_Message* message = SVR_Message_new(2);
 
     message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.response");
     message->components[1] = SVR_Arena_sprintf(message->alloc, "%d", error_code);
     SVRs_Client_reply(client, request, message);
     SVR_Message_release(message);
-}
-
-void SVRs_Client_replySuccess(SVRs_Client* client, SVR_Message* request) {
-    SVRs_Client_replyError(client, request, SVR_SUCCESS);
 }
 
 /**

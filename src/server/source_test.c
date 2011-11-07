@@ -33,7 +33,7 @@ static void* TestSource_background(void* __unused) {
     frame = SVR_FrameProperties_imageFromProperties(frame_properties);
 
     while(true) {
-        Util_usleep(0.10);
+        Util_usleep(1.0/25.0);
 
         /* Generate image with a single white rectangle that moves */
         cvRectangle(frame, cvPoint(0, 0), cvPoint(WIDTH - 1, HEIGHT - 1), CV_RGB(0, 0, 0), CV_FILLED, 8, 0);
