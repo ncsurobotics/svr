@@ -161,12 +161,37 @@ static int SVR_Stream_updateInfo(SVR_Stream* stream) {
     return return_code;
 }
 
-int SVR_Stream_resize(SVR_Stream* stream, int width, int height) {
+int SVR_Stream_setEncoding(SVR_Stream* stream, const char* encoding) {
     SVR_Message* message;
     SVR_Message* response;
     int return_code;
 
     /* Open stream */
+    message = SVR_Message_new(3);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.setEncoding");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+    message->components[2] = SVR_Arena_strdup(message->alloc, encoding);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    if(return_code != SVR_SUCCESS) {
+        return return_code;
+    }
+
+    return_code = SVR_Stream_updateInfo(stream);
+
+    return return_code;
+}
+
+int SVR_Stream_resize(SVR_Stream* stream, int width, int height) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
     message = SVR_Message_new(4);
     message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.resize");
     message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);

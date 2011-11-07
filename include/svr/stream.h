@@ -26,6 +26,7 @@ typedef enum {
 void SVR_Stream_init(void);
 SVR_Stream* SVR_Stream_new(const char* stream_name, const char* source);
 void SVR_Stream_destroy(SVR_Stream* stream);
+int SVR_Stream_setEncoding(SVR_Stream* stream, const char* encoding);
 int SVR_Stream_resize(SVR_Stream* stream, int width, int height);
 int SVR_Stream_setGrayscale(SVR_Stream* stream, bool grayscale);
 int SVR_Stream_unpause(SVR_Stream* stream);
