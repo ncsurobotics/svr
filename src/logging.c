@@ -8,7 +8,7 @@
 #include <ctype.h>
 
 /** Minimum level at which to log messages */
-static short min_log_level = NORMAL;
+static short min_log_level = SVR_ERROR;
 
 /** String names for log levels */
 static char* level_names[] = {"DEBUG",

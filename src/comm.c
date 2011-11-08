@@ -17,11 +17,11 @@ static int payload_buffer_size = 0;
 
 static void* SVR_Comm_receiveThread(void* __unused);
 
-int SVR_Comm_init(void) {
+int SVR_Comm_init(const char* server_address) {
     struct sockaddr_in addr;
 
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    addr.sin_addr.s_addr = inet_addr(server_address);
     addr.sin_port = htons(33560);
 
     client_sock = socket(AF_INET, SOCK_STREAM, 0);

@@ -35,6 +35,11 @@
  */
 #define SVR_CRITICAL  0x05
 
+/**
+ * All logging disabled
+ */
+#define SVR_LOGGING_OFF 0xff
+
 void SVR_Logging_setThreshold(short level);
 char* SVR_Logging_getLevelName(short log_level);
 short SVR_Logging_getLevelFromName(const char* log_level);

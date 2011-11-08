@@ -32,7 +32,7 @@ static bool mainloop_running = false;
 static pthread_cond_t mainloop_done = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t mainloop_done_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void SVRs_Server_initServerSocket(void);
+static void SVRs_Server_initServerSocket(const char* bind_address);
 
 /**
  * \defgroup netloop Net loop
@@ -46,14 +46,14 @@ static void SVRs_Server_initServerSocket(void);
  * Perform all required initialization of the server socket so that it is
  * prepared to being accepting connections
  */
-static void SVRs_Server_initServerSocket(void) {
+static void SVRs_Server_initServerSocket(const char* bind_address) {
     /* Used to set the SO_REUSEADDR socket option on the server socket */
     const int reuse = 1;
 
     /* Initialize the connection structure to bind the the correct port on all
        interfaces */
     svr_addr.sin_family = AF_INET;
-    svr_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
+    svr_addr.sin_addr.s_addr = inet_addr(bind_address);
     svr_addr.sin_port = htons(33560);
 
     /* Create the socket */
@@ -121,13 +121,13 @@ void SVRs_Server_close(void) {
  *
  * Main loop which processes client requests and handles all client connections
  */
-void SVRs_Server_mainLoop(void) {
+void SVRs_Server_mainLoop(const char* bind_address) {
     /* Temporary storage for new client connections until a SVR_Client structure
        can be allocated for them */
     int client_new = 0;
 
     /* Create and ready the server socket */
-    SVRs_Server_initServerSocket();
+    SVRs_Server_initServerSocket(bind_address);
 
     /* Begin accepting connections */
     SVR_log(SVR_INFO, "Accepting client connections");
