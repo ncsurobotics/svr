@@ -2,7 +2,7 @@
 *.so
 *~
 *.swp
-/src/server/svr
+/src/server/svrd
 /src/libsvr.so.0
 /.cproject
 /.project
