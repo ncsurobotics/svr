@@ -75,7 +75,7 @@ static void* CamSource_background(void* _source) {
     while(source_data->close == false) {
         frame = cvQueryFrame(source_data->capture);
         if(frame == NULL) {
-            SVR_log(CRITICAL, "Error retrieving frame from camera!");
+            SVR_log(SVR_CRITICAL, Util_format("Error retrieving frame from camera! (%s)", source->name));
             Util_usleep(1.0);
         } else {
             SVRs_Source_provideData(source, (void*) frame->imageData, frame->imageSize);

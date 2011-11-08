@@ -82,12 +82,17 @@ static void* TestSource_background(void* _source) {
     int height = source_data->height;
     int block_x = 0;
     int block_y = 0;
+    float sleep = 0;
     CvScalar colors[] = {CV_RGB(255, 0, 0),
                          CV_RGB(0, 255, 0),
                          CV_RGB(0, 0, 255)
     };
     
     frame = SVR_FrameProperties_imageFromProperties(SVRs_Source_getFrameProperties(source));
+
+    if(source_data->rate > 0) {
+        sleep = 1.0 / source_data->rate;
+    }
 
     while(source_data->close == false) {
         /* Generate image with a single white rectangle that moves */
@@ -101,7 +106,7 @@ static void* TestSource_background(void* _source) {
         }
 
         SVRs_Source_provideData(source, (void*) frame->imageData, frame->imageSize);
-        Util_usleep(1.0/source_data->rate);
+        Util_usleep(sleep);
     }
 
     cvReleaseImage(&frame);
