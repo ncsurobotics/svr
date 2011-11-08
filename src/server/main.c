@@ -72,15 +72,8 @@ int main(int argc, char** argv) {
     SVRs_MessageRouter_init();
 
     if(source_conf_file) {
-        printf("Conf file\n");
-#if 0
-        SVRs_openSourcesFromFile(source_conf_file);
-#endif
+        SVRs_Source_fromFile(source_conf_file);
     }
-
-    /* Spawn the test source */
-    TestSource_open();
-    CamSource_open();
 
     /* Please *ignore* SIGPIPE. It will cause the program to close in the case
        of writing to a closed socket. We handle this ourselves. */

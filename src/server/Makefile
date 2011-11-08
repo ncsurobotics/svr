@@ -9,7 +9,7 @@ INCLUDES= ../../include/svr/*.h ../../include/svr/server/*.h \
 	../../include/svr.h
 
 SRC= client.c event.c main.c messagehandlers.c messagerouting.c server.c \
-	source.c stream.c source_test.c	source_cam.c
+	source.c stream.c sources/test.c sources/cam.c
 OBJ= $(SRC:.c=.o)
 
 all: $(SERVER_NAME)
