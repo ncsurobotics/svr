@@ -17,6 +17,7 @@ void SVRs_Source_init(void) {
 
     SVRs_Source_addType(&SVR_SOURCE(test));
     SVRs_Source_addType(&SVR_SOURCE(cam));
+    SVRs_Source_addType(&SVR_SOURCE(file));
 }
 
 static void SVRs_Source_addType(SVRs_SourceType* source_type) {
@@ -90,7 +91,7 @@ SVRs_Source* SVRs_Source_openInstance(const char* source_name, const char* descr
     offset++;
 
     arguments = Dictionary_new();
-    while(true) {
+    while(descriptor[offset] != '\0') {
         /* Consume whitespace */
         while(isspace(descriptor[offset])) {
             offset++;

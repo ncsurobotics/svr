@@ -4,5 +4,6 @@
 
 extern SVRs_SourceType SVR_SOURCE(test);
 extern SVRs_SourceType SVR_SOURCE(cam);
+extern SVRs_SourceType SVR_SOURCE(file);
 
 #endif // #ifndef __SVR_SERVER_SOURCES_H
