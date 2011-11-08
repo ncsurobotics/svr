@@ -34,7 +34,7 @@ install: $(LIB_NAME)
 	install -m 0755 -d $(PREFIX)/include $(PREFIX)/include/svr $(PREFIX)/bin $(PREFIX)/lib
 	install -m 0644 $(LIB_NAME) $(PREFIX)/lib/$(LIB_NAME).$(MAJOR).$(MINOR).$(REV)
 	install -m 0644 ../include/svr.h $(PREFIX)/include/
-	install -m 0644 ../include/svr/* $(PREFIX)/include/svr/
+	install -m 0644 ../include/svr/*.h $(PREFIX)/include/svr/
 	ln -sf $(PREFIX)/lib/$(LIB_NAME).$(MAJOR).$(MINOR).$(REV) $(PREFIX)/lib/$(LIB_NAME).$(MAJOR)
 	ln -sf $(PREFIX)/lib/$(LIB_NAME).$(MAJOR).$(MINOR).$(REV) $(PREFIX)/lib/$(LIB_NAME)
 

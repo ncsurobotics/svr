@@ -24,8 +24,8 @@ clean:
 
 install uninstall:
 	cd src && $(MAKE) $@
-ifneq ($(strip $(HUB_NAME)),)
-	cd src/hub/ && $(MAKE) $@
+ifneq ($(strip $(SERVER_NAME)),)
+	cd src/server/ && $(MAKE) $@
 endif
 
 doc:
