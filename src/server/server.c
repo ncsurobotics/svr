@@ -20,7 +20,7 @@
 static int svr_sock = -1;
 
 /** Server socket bind address */
-struct sockaddr_in svr_addr;
+static struct sockaddr_in svr_addr;
 
 /** Flag to keep SVR_mainLoop running */
 static bool run_mainloop = true;
