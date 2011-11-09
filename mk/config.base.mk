@@ -5,6 +5,9 @@
 CC ?= gcc
 CFLAGS = -std=gnu99 -Wall -Werror -Wno-unused-function -pedantic -Wmissing-prototypes -g
 
+# Python executable
+PYTHON ?= python
+
 # Include /usr/local in include and library search paths
 CFLAGS += -I/usr/local/include
 LDFLAGS += -L/usr/local/lib

@@ -2,9 +2,11 @@
 *.so
 *~
 *.swp
+*.pyc
 /src/server/svrd
 /src/libsvr.so.0
 /.cproject
 /.project
 /.settings
 /test/test
+/python/build
