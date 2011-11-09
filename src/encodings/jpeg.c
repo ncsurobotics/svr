@@ -6,6 +6,7 @@
 #include "encoding_internal.h"
 
 #define BUFFER_GROW_SIZE 1024
+#define JPEG_QUALITY 50
 
 static void* openEncoder(SVR_FrameProperties* frame_properties);
 static void closeEncoder(SVR_Encoder* encoder);
@@ -91,7 +92,7 @@ static void* openEncoder(SVR_FrameProperties* frame_properties) {
     }
 
     jpeg_set_defaults(&private_data->cinfo);
-    jpeg_set_quality(&private_data->cinfo, 75, true);
+    jpeg_set_quality(&private_data->cinfo, JPEG_QUALITY, true);
 
     private_data->cinfo.dest = (struct jpeg_destination_mgr*) private_data;
     private_data->buffer_size = BUFFER_GROW_SIZE;

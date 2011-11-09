@@ -7,8 +7,8 @@ static int SVR_Stream_open(SVR_Stream* stream);
 static int SVR_Stream_close(SVR_Stream* stream);
 
 static pthread_mutex_t stream_list_lock = PTHREAD_MUTEX_INITIALIZER;
-
 static Dictionary* streams;
+static unsigned int last_stream_num = 0;
 
 void SVR_Stream_init(void) {
     streams = Dictionary_new();
@@ -18,11 +18,12 @@ static SVR_Stream* SVR_Stream_getByName(const char* stream_name) {
     return Dictionary_get(streams, stream_name);
 }
 
-SVR_Stream* SVR_Stream_new(const char* stream_name, const char* source_name) {
+SVR_Stream* SVR_Stream_new(const char* source_name) {
     SVR_Stream* stream = malloc(sizeof(SVR_Stream));
 
-    stream->stream_name = stream_name;
-    stream->source_name = source_name;
+    stream->stream_name = strdup(Util_format("stream%u", last_stream_num++));
+    stream->source_name = strdup(source_name);
+    stream->state = SVR_PAUSED;
     stream->current_frame = NULL;
     stream->frame_properties = NULL;
     stream->encoding = NULL;
@@ -59,6 +60,9 @@ void SVR_Stream_destroy(SVR_Stream* stream) {
 
         SVR_Decoder_destroy(stream->decoder);
     }
+
+    free(stream->stream_name);
+    free(stream->source_name);
 
     SVR_UNLOCK(stream);
     free(stream);
@@ -291,6 +295,10 @@ int SVR_Stream_unpause(SVR_Stream* stream) {
     SVR_Message_release(message);
     SVR_Message_release(response);
 
+    if(return_code == 0) {
+        stream->state = SVR_UNPAUSED;
+    }
+
     return return_code;
 }
 
@@ -310,14 +318,22 @@ int SVR_Stream_pause(SVR_Stream* stream) {
     SVR_Message_release(message);
     SVR_Message_release(response);
 
+    if(return_code == 0) {
+        stream->state = SVR_PAUSED;
+    }
+
     return return_code;
+}
+
+SVR_FrameProperties* SVR_Stream_getFrameProperties(SVR_Stream* stream) {
+    return stream->frame_properties;
 }
 
 IplImage* SVR_Stream_getFrame(SVR_Stream* stream, bool wait) {
     IplImage* frame;
 
     SVR_LOCK(stream);
-    while(stream->current_frame == NULL && wait) {
+    while(stream->current_frame == NULL && wait && stream->state == SVR_UNPAUSED) {
         SVR_LOCK_WAIT(stream, &stream->new_frame);
     }
 
@@ -329,7 +345,9 @@ IplImage* SVR_Stream_getFrame(SVR_Stream* stream, bool wait) {
 }
 
 void SVR_Stream_returnFrame(SVR_Stream* stream, IplImage* frame) {
-    SVR_Decoder_returnFrame(stream->decoder, frame);
+    if(stream->decoder) {
+        SVR_Decoder_returnFrame(stream->decoder, frame);
+    }
 }
 
 void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n) {

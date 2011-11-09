@@ -95,9 +95,11 @@ static void* TestSource_background(void* _source) {
     }
 
     while(source_data->close == false) {
-        /* Generate image with a single white rectangle that moves */
-        cvRectangle(frame, cvPoint(0, 0), cvPoint(width - 1, height - 1), CV_RGB(0, 0, 0), CV_FILLED, 8, 0);
-        cvRectangle(frame, cvPoint(block_x, block_y), cvPoint(block_x + 64, block_y + 48), colors[rand() % 3], CV_FILLED, 8, 0);
+        /* Generate image with a colored rectangle that moves */
+        cvSetImageROI(frame, cvRect(0, 0, width, height));
+        cvSet(frame, CV_RGB(0, 0, 0), NULL);
+        cvSetImageROI(frame, cvRect(block_x, block_y, 64, 48));
+        cvSet(frame, colors[rand() % 3], NULL);
         
         /* Move to next block */
         block_x = (block_x + 64) % width;

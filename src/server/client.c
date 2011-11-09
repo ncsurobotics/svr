@@ -234,7 +234,7 @@ void SVRs_releaseGlobalClientsLock(void) {
 }
 
 int SVRs_Client_sendMessage(SVRs_Client* client, SVR_Message* message) {
-    int n;
+    int n = -1;
 
     SVR_LOCK(client);
     if(client->state != SVR_CLOSED) {

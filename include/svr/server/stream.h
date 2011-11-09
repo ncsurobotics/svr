@@ -15,7 +15,7 @@ struct SVRs_Stream_s {
     SVR_Encoder* encoder;
     SVR_FrameProperties* frame_properties;
 
-    SVR_Stream_State state;
+    SVR_StreamState state;
 
     void* payload_buffer;
     size_t payload_buffer_size;
