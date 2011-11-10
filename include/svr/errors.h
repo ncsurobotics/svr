@@ -14,4 +14,6 @@
 #define SVR_INVALIDARGUMENT    7
 #define SVR_INVALIDSTATE       8
 
+#define SVR_UNKNOWNERROR       9
+
 #endif // #ifndef __SVR_ERRORS_H

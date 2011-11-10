@@ -26,6 +26,7 @@
 #include <svr/blockalloc.h>
 #include <svr/pack.h>
 #include <svr/stream.h>
+#include <svr/source.h>
 #include <svr/errors.h>
 
 #include <svr/message.h>

@@ -45,12 +45,14 @@ static SVRs_Source* FileSource_open(const char* name, Dictionary* arguments) {
 
     if(source_data->capture == NULL) {
         SVR_log(SVR_ERROR, Util_format("Could not open capture with file %s", filename));
+        free(source_data);
         return NULL;
     }
 
     frame = cvQueryFrame(source_data->capture);
     if(frame == NULL) {
         SVR_log(SVR_ERROR, Util_format("Could not query frame from capture with file %s", filename));
+        free(source_data);
         return NULL;
     }
 
@@ -60,11 +62,14 @@ static SVRs_Source* FileSource_open(const char* name, Dictionary* arguments) {
     frame_properties->channels = 3;
     frame_properties->depth = 8;
 
-    source = SVRs_Source_new(name, SVR_Encoding_getByName("raw"), frame_properties);
+    source = SVRs_Source_new(name);
+    SVRs_Source_setEncoding(source, SVR_Encoding_getByName("raw"));
+    SVRs_Source_setFrameProperties(source, frame_properties);
     SVR_FrameProperties_destroy(frame_properties);
 
     if(source == NULL) {
         SVR_log(SVR_ERROR, Util_format("Error creating source '%s'", name));
+        free(source_data);
         return NULL;
     }
 

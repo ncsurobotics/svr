@@ -64,11 +64,20 @@ static SVRs_Source* TestSource_open(const char* name, Dictionary* arguments) {
     frame_properties->channels = source_data->grayscale ? 1 : 3;
     frame_properties->depth = 8;
 
-    source = SVRs_Source_new(name, SVR_Encoding_getByName("raw"), frame_properties);
+    source = SVRs_Source_new(name);
+    SVRs_Source_setEncoding(source, SVR_Encoding_getByName("raw"));
+    SVRs_Source_setFrameProperties(source, frame_properties);
+    SVR_FrameProperties_destroy(frame_properties);
+
+    if(source == NULL) {
+        SVR_log(SVR_ERROR, Util_format("Error creating source '%s'", name));
+        free(source_data);
+        return NULL;
+    }
+
     source->cleanup = TestSource_close;
     source->private_data = source_data;
 
-    SVR_FrameProperties_destroy(frame_properties);
     pthread_create(&source_data->thread, NULL, TestSource_background, source);
 
     return source;

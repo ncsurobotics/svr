@@ -29,10 +29,12 @@ static SVRs_RequestMapping request_types[] = {
     {"Stream.getInfo", SVRs_Stream_rGetInfo},
     {"Stream.pause", SVRs_Stream_rPause},
     {"Stream.unpause", SVRs_Stream_rUnpause},
+
     {"Source.open", SVRs_Source_rOpen},
+    {"Source.setEncoding", SVRs_Source_rSetEncoding},
+    {"Source.setFrameProperties", SVRs_Source_rSetFrameProperties},
     {"Source.close", SVRs_Source_rClose},
-    {"Source.getProp", SVRs_Source_rGetProp},
-    {"Source.setProp", SVRs_Source_rSetProp},
+
     {"Data", SVRs_Source_rData},
     {"Event.register", SVRs_Event_rRegister},
     {"Event.unregister", SVRs_Event_rUnregister}

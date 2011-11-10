@@ -93,6 +93,10 @@ SVRs_Stream* SVRs_Client_getStream(SVRs_Client* client, const char* stream_name)
     return Dictionary_get(client->streams, stream_name);
 }
 
+SVRs_Source* SVRs_Client_getSource(SVRs_Client* client, const char* source_name) {
+    return Dictionary_get(client->sources, source_name);
+}
+
 static void SVRs_Client_cleanup(void* _client) {
     SVRs_Client* client = (SVRs_Client*) _client;
 

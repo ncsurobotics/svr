@@ -10,6 +10,7 @@ static void SVRs_Source_addType(SVRs_SourceType* source_type);
 
 static Dictionary* sources = NULL;
 static Dictionary* source_types = NULL;
+static pthread_mutex_t sources_lock = PTHREAD_MUTEX_INITIALIZER;
 
 void SVRs_Source_init(void) {
     sources = Dictionary_new();
@@ -20,36 +21,7 @@ void SVRs_Source_init(void) {
     SVRs_Source_addType(&SVR_SOURCE(file));
 }
 
-static void SVRs_Source_addType(SVRs_SourceType* source_type) {
-    Dictionary_set(source_types, source_type->name, source_type);
-}
-
-SVRs_Source* SVRs_Source_new(const char* name, SVR_Encoding* encoding, SVR_FrameProperties* frame_properties) {
-    SVRs_Source* source;
-
-    if(Dictionary_exists(sources, name)) {
-        return NULL;
-    }
-
-    source = malloc(sizeof(SVRs_Source));
-    source->decoder = SVR_Decoder_new(encoding, frame_properties);
-    source->frame_properties = SVR_FrameProperties_clone(frame_properties);
-    source->streams = List_new();
-    source->name = strdup(name);
-    source->cleanup = NULL;
-    source->private_data = NULL;
-    SVR_LOCKABLE_INIT(source);
-
-    Dictionary_set(sources, name, source);
-
-    return source;
-}
-
-SVR_FrameProperties* SVRs_Source_getFrameProperties(SVRs_Source* source) {
-    return source->frame_properties;
-}
-
-SVRs_Source* SVRs_getSourceByName(const char* source_name) {
+SVRs_Source* SVRs_Source_getByName(const char* source_name) {
     return Dictionary_get(sources, source_name);
 }
 
@@ -207,6 +179,62 @@ void SVRs_Source_fromFile(const char* filename) {
     Dictionary_destroy(source_descriptions);
 }
 
+static void SVRs_Source_addType(SVRs_SourceType* source_type) {
+    Dictionary_set(source_types, source_type->name, source_type);
+}
+
+SVRs_Source* SVRs_Source_new(const char* name) {
+    SVRs_Source* source;
+
+    pthread_mutex_lock(&sources_lock);
+    if(Dictionary_exists(sources, name)) {
+        pthread_mutex_unlock(&sources_lock);
+        return NULL;
+    }
+
+    source = malloc(sizeof(SVRs_Source));
+    source->name = strdup(name);
+    source->streams = List_new();
+    source->frame_properties = NULL;
+    source->decoder = NULL;
+    source->cleanup = NULL;
+    source->private_data = NULL;
+    SVR_LOCKABLE_INIT(source);
+
+    Dictionary_set(sources, name, source);
+    pthread_mutex_unlock(&sources_lock);
+
+    return source;
+}
+
+int SVRs_Source_setEncoding(SVRs_Source* source, SVR_Encoding* encoding) {
+    if(source->decoder) {
+        /* Source already started */
+        return SVR_INVALIDSTATE;
+    }
+
+    source->encoding = encoding;
+    return SVR_SUCCESS;
+}
+
+int SVRs_Source_setFrameProperties(SVRs_Source* source, SVR_FrameProperties* frame_properties) {
+    if(source->decoder) {
+        /* Source already started */
+        return SVR_INVALIDSTATE;
+    }
+
+    if(source->frame_properties) {
+        SVR_FrameProperties_destroy(source->frame_properties);
+    }
+
+    source->frame_properties = SVR_FrameProperties_clone(frame_properties);
+    return SVR_SUCCESS;
+}
+
+SVR_FrameProperties* SVRs_Source_getFrameProperties(SVRs_Source* source) {
+    return source->frame_properties;
+}
+
 void SVRs_Source_registerStream(SVRs_Source* source, SVRs_Stream* stream) {
     SVR_LOCK(source);
     List_append(source->streams, stream);
@@ -219,11 +247,20 @@ void SVRs_Source_unregisterStream(SVRs_Source* source, SVRs_Stream* stream) {
     SVR_UNLOCK(source);
 }
 
-void SVRs_Source_provideData(SVRs_Source* source, void* data, size_t data_available) {
+int SVRs_Source_provideData(SVRs_Source* source, void* data, size_t data_available) {
     SVRs_Stream* stream;
     IplImage* frame;
 
     SVR_LOCK(source);
+    if(source->decoder == NULL) {
+        if(source->encoding == NULL || source->frame_properties == NULL) {
+            SVR_UNLOCK(source);
+            return SVR_INVALIDSTATE;
+        }
+
+        source->decoder = SVR_Decoder_new(source->encoding, source->frame_properties);
+    }
+
     SVR_Decoder_decode(source->decoder, data, data_available);
     while(SVR_Decoder_framesReady(source->decoder) > 0) {
         frame = SVR_Decoder_getFrame(source->decoder);
@@ -233,4 +270,6 @@ void SVRs_Source_provideData(SVRs_Source* source, void* data, size_t data_availa
         SVR_Decoder_returnFrame(source->decoder, frame);
     }
     SVR_UNLOCK(source);
+
+    return SVR_SUCCESS;
 }

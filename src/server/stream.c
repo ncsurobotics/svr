@@ -56,7 +56,7 @@ static void SVRs_Stream_initializeEncoder(SVRs_Stream* stream) {
 
 
 int SVRs_Stream_attachSource(SVRs_Stream* stream, SVRs_Source* source) {
-    if(stream->state == SVR_UNPAUSED) {
+    if(stream->state == SVR_UNPAUSED || SVRs_Source_getFrameProperties(source) == NULL) {
         return SVR_INVALIDSTATE;
     }
 

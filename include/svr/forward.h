@@ -15,6 +15,7 @@ struct SVR_Decoder_s;
 struct SVR_Stream_s;
 struct SVR_FrameProperties_s;
 struct SVR_ResponseSet_s;
+struct SVR_Source_s;
 
 typedef struct SVR_MemPool_s SVR_MemPool;
 typedef struct SVR_MemPool_Block_s SVR_MemPool_Block;
@@ -29,5 +30,6 @@ typedef struct SVR_Decoder_s SVR_Decoder;
 typedef struct SVR_Stream_s SVR_Stream;
 typedef struct SVR_FrameProperties_s SVR_FrameProperties;
 typedef struct SVR_ResponseSet_s SVR_ResponseSet;
+typedef struct SVR_Source_s SVR_Source;
 
 #endif // #ifndef __SVR_FORWARDDECLARATIONS_H

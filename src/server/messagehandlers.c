@@ -213,7 +213,7 @@ void SVRs_Stream_rAttachSource(SVRs_Client* client, SVR_Message* message) {
         return;
     }
 
-    source = SVRs_getSourceByName(source_name);
+    source = SVRs_Source_getByName(source_name);
     if(source == NULL) {
         SVRs_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
         return;
@@ -280,18 +280,127 @@ void SVRs_Stream_rSetEncoding(SVRs_Client* client, SVR_Message* message) {
 }
 
 void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message) {
-    // --
+    SVRs_Source* source;
+    bool client_source;
+    char* source_name;
+    char* source_descriptor;
+
+    switch(message->count) {
+    case 3:
+        if(strcmp(message->components[1], "client") != 0) {
+            SVRs_Client_replyCode(client, message, SVR_INVALIDARGUMENT);
+            return;
+        }
+        client_source = true;
+        source_name = message->components[2];
+        break;
+
+    case 4:
+        if(strcmp(message->components[1], "server") != 0) {
+            SVRs_Client_replyCode(client, message, SVR_INVALIDARGUMENT);
+            return;
+        }
+        client_source = false;
+        source_name = message->components[2];
+        source_descriptor = message->components[3];
+        break;
+
+    default:
+        SVRs_Client_kick(client, "Invalid message");
+        return;
+    }
+
+    if(SVRs_Source_getByName(source_name)) {
+        SVRs_Client_replyCode(client, message, SVR_NAMECLASH);
+        return;
+    }
+
+    if(client_source) {
+        source = SVRs_Source_new(source_name);
+
+        if(source == NULL) {
+            SVRs_Client_replyCode(client, message, SVR_NAMECLASH);
+            return;
+        }
+
+        SVRs_Source_setEncoding(source, SVR_Encoding_getByName("jpeg"));
+        SVRs_Client_provideSource(client, source);
+    } else {
+        source = SVRs_Source_openInstance(source_name, source_descriptor);
+
+        if(source == NULL) {
+            SVRs_Client_replyCode(client, message, SVR_UNKNOWNERROR);
+            return;
+        }
+    }
+
+    SVRs_Client_replyCode(client, message, SVR_SUCCESS);
+}
+
+void SVRs_Source_rSetEncoding(SVRs_Client* client, SVR_Message* message) {
+    SVRs_Source* source;
+    SVR_Encoding* encoding;
+    char* source_name;
+    char* encoding_name;
+
+    switch(message->count) {
+    case 3:
+        source_name = message->components[1];
+        encoding_name = message->components[2];
+        break;
+
+    default:
+        SVRs_Client_kick(client, "Invalid message");
+        return;
+    }
+
+    source = SVRs_Client_getSource(client, source_name);
+    if(source == NULL) {
+        SVRs_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
+        return;
+    }
+
+    encoding = SVR_Encoding_getByName(encoding_name);
+    if(encoding == NULL) {
+        SVRs_Client_replyCode(client, message, SVR_NOSUCHENCODING);
+        return;
+    }
+
+    SVRs_Client_replyCode(client, message, SVRs_Source_setEncoding(source, encoding));
+}
+
+void SVRs_Source_rSetFrameProperties(SVRs_Client* client, SVR_Message* message) {
+    SVRs_Source* source;
+    SVR_FrameProperties* frame_properties;
+    char* source_name;
+    char* frame_properties_string;
+    int return_code;
+
+    switch(message->count) {
+    case 3:
+        source_name = message->components[1];
+        frame_properties_string = message->components[2];
+        break;
+
+    default:
+        SVRs_Client_kick(client, "Invalid message");
+        return;
+    }
+
+    source = SVRs_Client_getSource(client, source_name);
+    if(source == NULL) {
+        SVRs_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
+        return;
+    }
+
+    frame_properties = SVR_FrameProperties_fromString(frame_properties_string);
+    return_code = SVRs_Source_setFrameProperties(source, frame_properties);
+    SVR_FrameProperties_destroy(frame_properties);
+
+    SVRs_Client_replyCode(client, message, return_code);
 }
 
 void SVRs_Source_rClose(SVRs_Client* client, SVR_Message* message) {
-    // --
-}
-
-void SVRs_Source_rGetProp(SVRs_Client* client, SVR_Message* message) {
-    // --
-}
-
-void SVRs_Source_rSetProp(SVRs_Client* client, SVR_Message* message) {
     // --
 }
 

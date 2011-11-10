@@ -14,9 +14,9 @@ void SVRs_Stream_rSetEncoding(SVRs_Client* client, SVR_Message* message);
 void SVRs_Stream_rSetDropRate(SVRs_Client* client, SVR_Message* message);
 
 void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message);
+void SVRs_Source_rSetEncoding(SVRs_Client* client, SVR_Message* message);
+void SVRs_Source_rSetFrameProperties(SVRs_Client* client, SVR_Message* message);
 void SVRs_Source_rClose(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_rGetProp(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_rSetProp(SVRs_Client* client, SVR_Message* message);
 void SVRs_Source_rData(SVRs_Client* client, SVR_Message* message);
 
 void SVRs_Event_rRegister(SVRs_Client* client, SVR_Message* message);
