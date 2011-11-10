@@ -56,6 +56,9 @@ class Stream(object):
         if self.handle == 0:
             raise Exception("Error opening stream")
 
+    def __del__(self):
+        _svr.SVR_Stream_destroy(self.handle)
+
     def set_encoding(self, encoding):
         return _svr.SVR_Stream_setEncoding(self.handle, encoding)
 
