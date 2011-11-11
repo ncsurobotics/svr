@@ -50,7 +50,8 @@ _svr.SVR_Source_destroy.restype = _check_source_call
 _svr.SVR_Source_setEncoding.restype = _check_source_call
 _svr.SVR_Source_setFrameProperties.restype = _check_source_call
 _svr.SVR_Source_sendFrame.restype = _check_source_call
-_svr.SVR_Source_spawn.restype = _check_source_call
+_svr.SVR_openServerSource.restype = _check_source_call
+_svr.SVR_closeServerSource.restype = _check_source_call
 
 class StreamException(Exception):
     pass
@@ -143,5 +144,8 @@ def debug(source_name, frame):
 
     debug_sources[source_name].send_frame(frame)
 
-def spawn_source(source_name, source_description):
-    return _svr.SVR_Source_spawn(source_name, source_description)
+def open_server_source(source_name, source_description):
+    return _svr.SVR_openServerSource(source_name, source_description)
+
+def close_server_source(source_name):
+    return _svr.SVR_closeServerSource(source_name)

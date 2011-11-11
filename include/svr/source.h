@@ -19,6 +19,7 @@ int SVR_Source_destroy(SVR_Source* source);
 int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_name);
 int SVR_Source_setFrameProperties(SVR_Source* source, SVR_FrameProperties* frame_properties);
 int SVR_Source_sendFrame(SVR_Source* source, IplImage* frame);
-int SVR_Source_spawn(const char* name, const char* descriptor);
+int SVR_openServerSource(const char* name, const char* descriptor);
+int SVR_closeServerSource(const char* name);
 
 #endif // #ifndef __SVR_SOURCE_H

@@ -423,13 +423,22 @@ void SVRD_Source_rClose(SVRD_Client* client, SVR_Message* message) {
         return;
     }
 
-    source = SVRD_Client_getSource(client, source_name);
+    source = SVRD_Source_getByName(source_name);
     if(source == NULL) {
         SVRD_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
         return;
     }
+
+    /* Client source, verify it belongs to this client */
+    if(source->type == NULL) {
+        if(SVRD_Client_getSource(client, source_name) == NULL) {
+            SVRD_Client_replyCode(client, message, SVR_INVALIDARGUMENT);
+            return;
+        }
+
+        SVRD_Client_unprovideSource(client, source);
+    }
     
-    SVRD_Client_unprovideSource(client, source);
     SVRD_Source_destroy(source);
     SVRD_Client_replyCode(client, message, SVR_SUCCESS);
 }

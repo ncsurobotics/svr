@@ -205,17 +205,34 @@ int SVR_Source_sendFrame(SVR_Source* source, IplImage* frame) {
     return SVR_SUCCESS;
 }
 
-int SVR_Source_spawn(const char* name, const char* descriptor) {
+int SVR_openServerSource(const char* name, const char* descriptor) {
     SVR_Message* message;
     SVR_Message* response;
     int return_code;
 
-    /* Open stream */
     message = SVR_Message_new(4);
     message->components[0] = SVR_Arena_strdup(message->alloc, "Source.open");
     message->components[1] = SVR_Arena_strdup(message->alloc, "server");
     message->components[2] = SVR_Arena_strdup(message->alloc, name);
     message->components[3] = SVR_Arena_strdup(message->alloc, descriptor);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    return return_code;
+}
+
+int SVR_closeServerSource(const char* name) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Source.close");
+    message->components[1] = SVR_Arena_strdup(message->alloc, name);
 
     response = SVR_Comm_sendMessage(message, true);
     return_code = SVR_Comm_parseResponse(response);
