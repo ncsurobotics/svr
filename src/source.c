@@ -39,6 +39,40 @@ SVR_Source* SVR_Source_new(const char* name) {
     return source;
 }
 
+int SVR_Source_destroy(SVR_Source* source) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Source.close");
+    message->components[1] = SVR_Arena_strdup(message->alloc, source->name);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    free(source->name);
+
+    if(source->encoder) {
+        SVR_Encoder_destroy(source->encoder);
+    }
+
+    if(source->frame_properties) {
+        SVR_FrameProperties_destroy(source->frame_properties);
+    }
+
+    if(source->payload_buffer) {
+        free(source->payload_buffer);
+    }
+
+    free(source);
+
+    return return_code;
+}
+
 int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_name) {
     SVR_Encoding* encoding;
     SVR_Message* message;

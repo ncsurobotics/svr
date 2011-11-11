@@ -64,6 +64,10 @@ void SVRs_Client_provideSource(SVRs_Client* client, SVRs_Source* source) {
     Dictionary_set(client->sources, source->name, source);
 }
 
+void SVRs_Client_unprovideSource(SVRs_Client* client, SVRs_Source* source) {
+    Dictionary_remove(client->sources, source->name);
+}
+
 void SVRs_Client_openStream(SVRs_Client* client, const char* stream_name) {
     SVRs_Stream* stream;
 

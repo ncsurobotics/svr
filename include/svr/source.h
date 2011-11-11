@@ -14,6 +14,7 @@ struct SVR_Source_s {
 };
 
 SVR_Source* SVR_Source_new(const char* name);
+int SVR_Source_destroy(SVR_Source* source);
 int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_name);
 int SVR_Source_setFrameProperties(SVR_Source* source, SVR_FrameProperties* frame_properties);
 int SVR_Source_sendFrame(SVR_Source* source, IplImage* frame);

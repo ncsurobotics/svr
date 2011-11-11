@@ -424,7 +424,28 @@ void SVRs_Source_rData(SVRs_Client* client, SVR_Message* message) {
 }
 
 void SVRs_Source_rClose(SVRs_Client* client, SVR_Message* message) {
-    SVR_CRASH("Not implemented");
+    SVRs_Source* source;
+    char* source_name;
+
+    switch(message->count) {
+    case 2:
+        source_name = message->components[1];
+        break;
+
+    default:
+        SVRs_Client_kick(client, "Invalid message");
+        return;
+    }
+
+    source = SVRs_Client_getSource(client, source_name);
+    if(source == NULL) {
+        SVRs_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
+        return;
+    }
+    
+    SVRs_Client_unprovideSource(client, source);
+    SVRs_Source_destroy(source);
+    SVRs_Client_replyCode(client, message, SVR_SUCCESS);
 }
 
 void SVRs_Event_rRegister(SVRs_Client* client, SVR_Message* message) {

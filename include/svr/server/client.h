@@ -69,6 +69,7 @@ void SVRs_Client_init(void);
 void SVRs_Client_close(void);
 SVRs_Client* SVRs_Client_new(int socket);
 void SVRs_Client_provideSource(SVRs_Client* client, SVRs_Source* source);
+void SVRs_Client_unprovideSource(SVRs_Client* client, SVRs_Source* source);
 void SVRs_Client_openStream(SVRs_Client* client, const char* stream_name);
 void SVRs_Client_closeStream(SVRs_Client* client, const char* stream_name);
 SVRs_Stream* SVRs_Client_getStream(SVRs_Client* client, const char* stream_name);
