@@ -25,118 +25,31 @@ SVRD_Source* SVRD_Source_getByName(const char* source_name) {
     return Dictionary_get(sources, source_name);
 }
 
-SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descriptor_orig) {
+SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descriptor) {
+    Dictionary* options;
     SVRD_Source* source;
-    Dictionary* arguments;
     SVRD_SourceType* source_type;
-    char* descriptor;
-    char* name;
-    char* arg_name;
-    char* arg_value;
-    int offset;
-    int end;
+    int err;
 
-    offset = 0;
-    descriptor = strdup(descriptor_orig);
-
-    while(isspace(descriptor[offset])) {
-        offset++;
-    }
-
-    name = descriptor + offset;
-    while(isalnum(descriptor[offset]) || descriptor[offset] == '_') {
-        offset++;
-    }
-    end = offset;
-
-    /* Consume whitespace */
-    while(isspace(descriptor[offset])) {
-        offset++;
-    }
-
-    if(descriptor[offset] != ':') {
-        SVR_log(SVR_DEBUG, "Syntax error before ':'");
-        free(descriptor);
+    options = SVR_parseOptionString(descriptor);
+    if(options == NULL) {
+        err = SVR_getOptionStringErrorPosition();
+        SVR_log(SVR_ERROR, Util_format("Error parsing source descriptor \"%s\" at position %d, character '%c'",
+                                       descriptor, err, descriptor[err]));
         return NULL;
     }
-    descriptor[end] = '\0';
-    offset++;
 
-    arguments = Dictionary_new();
-    while(descriptor[offset] != '\0') {
-        /* Consume whitespace */
-        while(isspace(descriptor[offset])) {
-            offset++;
-        }
-
-        arg_name = descriptor + offset;
-        while(isalpha(descriptor[offset])) {
-            offset++;
-        }
-        end = offset;
-
-        /* Consume whitespace */
-        while(isspace(descriptor[offset])) {
-            offset++;
-        }
-
-        if(descriptor[offset] != '=') {
-            SVR_log(SVR_DEBUG, Util_format("Expected '=' at %d", offset));
-            Dictionary_destroy(arguments);
-            free(descriptor);
-            return NULL;
-        }
-        offset++;
-
-        /* Terminate argument name */
-        descriptor[end] = '\0';
-
-        /* Consume whitespace */
-        while(isspace(descriptor[offset])) {
-            offset++;
-        }
-
-        arg_value = descriptor + offset;
-        while(strchr(", \t", descriptor[offset]) == NULL) {
-            offset++;
-        }
-        end = offset;
-
-        /* Consume whitespace */
-        while(isspace(descriptor[offset])) {
-            offset++;
-        }
-
-        if(descriptor[offset] == '\0') {
-            descriptor[end] = '\0';
-            Dictionary_set(arguments, arg_name, arg_value);
-            break;
-        }
-
-        if(descriptor[offset] != ',') {
-            SVR_log(SVR_DEBUG, Util_format("Expected ',' at %d", offset));
-            Dictionary_destroy(arguments);
-            free(descriptor);
-            return NULL;
-        }
-
-        descriptor[end] = '\0';
-        Dictionary_set(arguments, arg_name, arg_value);
-        offset++;
-    }
-
-    source_type = Dictionary_get(source_types, name);
+    source_type = Dictionary_get(source_types, Dictionary_get(options, "%name"));
     if(source_type == NULL) {
-        SVR_log(SVR_DEBUG, Util_format("No such source type '%s'", name));
-        Dictionary_destroy(arguments);
-        free(descriptor);
+        SVR_log(SVR_DEBUG, Util_format("No such source type '%s'", Dictionary_get(options, "%name")));
+        SVR_freeParsedOptionString(options);
         return NULL;
     }
 
-    source = source_type->open(source_name, arguments);
+    source = source_type->open(source_name, options);
+    source->type = source_type;
 
-    Dictionary_destroy(arguments);
-    free(descriptor);
+    SVR_freeParsedOptionString(options);
 
     return source;
 }
@@ -197,7 +110,7 @@ SVRD_Source* SVRD_Source_new(const char* name) {
     source->streams = List_new();
     source->frame_properties = NULL;
     source->decoder = NULL;
-    source->cleanup = NULL;
+    source->type = NULL;
     source->private_data = NULL;
     SVR_LOCKABLE_INIT(source);
 
@@ -218,8 +131,8 @@ void SVRD_Source_destroy(SVRD_Source* source) {
     pthread_mutex_unlock(&sources_lock);
 
     SVR_LOCK(source);
-    if(source->cleanup) {
-        source->cleanup(source);
+    if(source->type && source->type->close) {
+        source->type->close(source);
     }
 
     /* Send signals to streams first? */

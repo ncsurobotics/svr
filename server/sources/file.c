@@ -5,10 +5,12 @@
 #include <highgui.h>
 
 static SVRD_Source* FileSource_open(const char* name, Dictionary* arguments);
+static void FileSource_close(SVRD_Source* source);
 
 SVRD_SourceType SVR_SOURCE(file) = {
         .name = "file",
         .open = FileSource_open,
+        .close = FileSource_close
 };
 
 typedef struct {
@@ -19,7 +21,6 @@ typedef struct {
 } SVRD_FileSource;
 
 static void* FileSource_background(void* _source);
-static void FileSource_close(SVRD_Source* source);
 
 static SVRD_Source* FileSource_open(const char* name, Dictionary* arguments) {
     SVRD_FileSource* source_data;
@@ -73,7 +74,6 @@ static SVRD_Source* FileSource_open(const char* name, Dictionary* arguments) {
         return NULL;
     }
 
-    source->cleanup = FileSource_close;
     source->private_data = source_data;
 
     pthread_create(&source_data->thread, NULL, FileSource_background, source);

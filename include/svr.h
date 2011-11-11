@@ -28,6 +28,7 @@
 #include <svr/stream.h>
 #include <svr/source.h>
 #include <svr/errors.h>
+#include <svr/optionstring.h>
 
 #include <svr/message.h>
 #include <svr/net.h>

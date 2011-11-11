@@ -13,7 +13,7 @@ struct SVRD_Source_s {
 
     List* streams;
 
-    void (*cleanup)(SVRD_Source*);
+    SVRD_SourceType* type;
     void* private_data;
 
     SVR_LOCKABLE;
@@ -22,6 +22,7 @@ struct SVRD_Source_s {
 struct SVRD_SourceType_s {
     const char* name;
     SVRD_Source* (*open)(const char* name, Dictionary* arguments);
+    void (*close)(SVRD_Source* source);
 };
 
 #define SVR_SOURCE(name) __svr_##name##_source

@@ -3,10 +3,12 @@
 #include "svrd.h"
 
 static SVRD_Source* TestSource_open(const char* name, Dictionary* arguments);
+static void TestSource_close(SVRD_Source* source);
 
 SVRD_SourceType SVR_SOURCE(test) = {
         .name = "test",
         .open = TestSource_open,
+        .close = TestSource_close
 };
 
 typedef struct {
@@ -19,7 +21,6 @@ typedef struct {
 } SVRD_TestSource;
 
 static void* TestSource_background(void* _source);
-static void TestSource_close(SVRD_Source* source);
 
 static SVRD_Source* TestSource_open(const char* name, Dictionary* arguments) {
     SVRD_TestSource* source_data = malloc(sizeof(SVRD_TestSource));
@@ -75,7 +76,6 @@ static SVRD_Source* TestSource_open(const char* name, Dictionary* arguments) {
         return NULL;
     }
 
-    source->cleanup = TestSource_close;
     source->private_data = source_data;
 
     pthread_create(&source_data->thread, NULL, TestSource_background, source);

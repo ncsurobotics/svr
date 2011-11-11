@@ -5,10 +5,12 @@
 #include <highgui.h>
 
 static SVRD_Source* CamSource_open(const char* name, Dictionary* arguments);
+static void CamSource_close(SVRD_Source* source);
 
 SVRD_SourceType SVR_SOURCE(cam) = {
         .name = "cam",
         .open = CamSource_open,
+        .close = CamSource_close
 };
 
 typedef struct {
@@ -18,7 +20,6 @@ typedef struct {
 } SVRD_CamSource;
 
 static void* CamSource_background(void* _source);
-static void CamSource_close(SVRD_Source* source);
 
 static SVRD_Source* CamSource_open(const char* name, Dictionary* arguments) {
     SVRD_CamSource* source_data = malloc(sizeof(SVRD_CamSource));
@@ -39,7 +40,7 @@ static SVRD_Source* CamSource_open(const char* name, Dictionary* arguments) {
         return NULL;
     }
 
-    frame = cvQueryFrame(source_data->capture);
+    for(int i = 0; (frame = cvQueryFrame(source_data->capture)) == NULL && i < 5; i++);
     if(frame == NULL) {
         SVR_log(SVR_ERROR, Util_format("Could not query frame from device with index %d", index));
         return NULL;
@@ -63,7 +64,6 @@ static SVRD_Source* CamSource_open(const char* name, Dictionary* arguments) {
         return NULL;
     }
 
-    source->cleanup = CamSource_close;
     source->private_data = source_data;
 
     pthread_create(&source_data->thread, NULL, CamSource_background, source);
