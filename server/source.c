@@ -53,12 +53,18 @@ SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descr
     }
 
     source = source_type->open(source_name, options);
-    source->type = source_type;
-
     SVR_freeParsedOptionString(options);
-    
+
+    if(source) {
+        source->type = source_type;
+    }
+
     if(return_code) {
-        *return_code = SVR_SUCCESS;
+        if(source) {
+            *return_code = SVR_SUCCESS;
+        } else {
+            *return_code = SVR_UNKNOWNERROR;
+        }
     }
 
     return source;
