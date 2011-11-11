@@ -3,8 +3,8 @@
 *~
 *.swp
 *.pyc
-/src/server/svrd
-/src/libsvr.so.0
+/server/svrd
+/lib/libsvr.so.0
 /.cproject
 /.project
 /.settings
