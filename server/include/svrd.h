@@ -4,16 +4,16 @@
 
 #include "svr.h"
 
-#include "svr/server/forward.h"
-#include "svr/server/client.h"
-#include "svr/server/server.h"
-#include "svr/server/source.h"
-#include "svr/server/stream.h"
-#include "svr/server/event.h"
-#include "svr/server/messagerouting.h"
-#include "svr/server/messagehandlers.h"
+#include "svrd/forward.h"
+#include "svrd/client.h"
+#include "svrd/server.h"
+#include "svrd/source.h"
+#include "svrd/stream.h"
+#include "svrd/event.h"
+#include "svrd/messagerouting.h"
+#include "svrd/messagehandlers.h"
 
-void SVRs_exit(void);
-void SVRs_exitError(void);
+void SVRD_exit(void);
+void SVRD_exitError(void);
 
 #endif // #ifndef __SVR_SERVER_SVR_H

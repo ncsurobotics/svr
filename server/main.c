@@ -1,20 +1,20 @@
 
 #include "svr.h"
-#include "svr/server/svr.h"
+#include "svrd.h"
 
 #include <signal.h>
 
-static void SVRs_usage(const char* argv0);
+static void SVRD_usage(const char* argv0);
 
-void SVRs_exit(void) {
+void SVRD_exit(void) {
     exit(0);
 }
 
-void SVRs_exitError(void) {
+void SVRD_exitError(void) {
     exit(-1);
 }
 
-static void SVRs_usage(const char* argv0) {
+static void SVRD_usage(const char* argv0) {
     printf("Usage: %s [-hd] [-b ADDRESS] [-l LOG_LEVEL] [-s SOURCES_CONFIG]\n"
            "Seawolf Video Router\n"
            "\n"
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
     while((opt = getopt(argc, argv, ":hdl:s:b:")) != -1) {
         switch(opt) {
         case 'h':
-            SVRs_usage(argv[0]);
+            SVRD_usage(argv[0]);
             return 0;
         case 'd':
             debug_level = SVR_DEBUG;
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
             debug_level = SVR_Logging_getLevelFromName(optarg);
             if(debug_level < 0) {
                 fprintf(stderr, "Invalid logging level '%s'\n", optarg);
-                SVRs_usage(argv[0]);
+                SVRD_usage(argv[0]);
                 return -1;
             }
             break;
@@ -55,11 +55,11 @@ int main(int argc, char** argv) {
             break;
         case ':':
             fprintf(stderr, "Missing argument parameter\n");
-            SVRs_usage(argv[0]);
+            SVRD_usage(argv[0]);
             return -1;
         case '?':
             fprintf(stderr, "Unknown switch '%s'\n", argv[optind - 1]);
-            SVRs_usage(argv[0]);
+            SVRD_usage(argv[0]);
             return -1;
         }
     }
@@ -67,19 +67,19 @@ int main(int argc, char** argv) {
     SVR_initCore();
     SVR_Logging_setThreshold(debug_level);
 
-    SVRs_Client_init();
-    SVRs_Source_init();
-    SVRs_MessageRouter_init();
+    SVRD_Client_init();
+    SVRD_Source_init();
+    SVRD_MessageRouter_init();
 
     if(source_conf_file) {
-        SVRs_Source_fromFile(source_conf_file);
+        SVRD_Source_fromFile(source_conf_file);
     }
 
     /* Please *ignore* SIGPIPE. It will cause the program to close in the case
        of writing to a closed socket. We handle this ourselves. */
     signal(SIGPIPE, SIG_IGN);
 
-    SVRs_Server_mainLoop(bind_address);
+    SVRD_Server_mainLoop(bind_address);
     
     return 0;
 }

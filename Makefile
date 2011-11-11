@@ -8,10 +8,10 @@ export PREFIX := $(abspath $(PREFIX))
 all: $(LIB_NAME) $(SERVER_NAME)
 
 $(LIB_NAME):
-	cd src && $(MAKE) $@
+	cd lib && $(MAKE) $@
 
 $(SERVER_NAME):
-	cd src/server/ && $(MAKE) $@
+	cd server && $(MAKE) $@
 
 python:
 	cd python && $(PYTHON) setup.py build
@@ -23,15 +23,15 @@ tests:
 	cd test && $(MAKE)
 
 clean:
-	cd src && $(MAKE) $@
-	cd src/server/ && $(MAKE) $@
+	cd lib && $(MAKE) $@
+	cd server && $(MAKE) $@
 	-rm -rf doc/html/ 2> /dev/null
 	-rm -rf doc/server/html/ 2> /dev/null
 
 install uninstall:
-	cd src && $(MAKE) $@
+	cd lib && $(MAKE) $@
 ifneq ($(strip $(SERVER_NAME)),)
-	cd src/server/ && $(MAKE) $@
+	cd server && $(MAKE) $@
 endif
 
 doc:

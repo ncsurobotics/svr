@@ -1,6 +1,6 @@
 
 #include "svr.h"
-#include "svr/server/svr.h"
+#include "svrd.h"
 
 /*
  * Messages
@@ -14,45 +14,45 @@
 
 typedef struct {
     const char* request_string;
-    void (*callback)(SVRs_Client* client, SVR_Message* message);
-} SVRs_RequestMapping;
+    void (*callback)(SVRD_Client* client, SVR_Message* message);
+} SVRD_RequestMapping;
 
 static const char* INVALID_MESSAGE = "Invalid message";
-static SVRs_RequestMapping request_types[] = {
-    {"Stream.open", SVRs_Stream_rOpen},
-    {"Stream.close", SVRs_Stream_rClose},
-    {"Stream.attachSource", SVRs_Stream_rAttachSource},
-    {"Stream.resize", SVRs_Stream_rResize},
-    {"Stream.setChannels", SVRs_Stream_rSetChannels},
-    {"Stream.setEncoding", SVRs_Stream_rSetEncoding},
-    {"Stream.setDropRate", SVRs_Stream_rSetDropRate},
-    {"Stream.getInfo", SVRs_Stream_rGetInfo},
-    {"Stream.pause", SVRs_Stream_rPause},
-    {"Stream.unpause", SVRs_Stream_rUnpause},
+static SVRD_RequestMapping request_types[] = {
+    {"Stream.open", SVRD_Stream_rOpen},
+    {"Stream.close", SVRD_Stream_rClose},
+    {"Stream.attachSource", SVRD_Stream_rAttachSource},
+    {"Stream.resize", SVRD_Stream_rResize},
+    {"Stream.setChannels", SVRD_Stream_rSetChannels},
+    {"Stream.setEncoding", SVRD_Stream_rSetEncoding},
+    {"Stream.setDropRate", SVRD_Stream_rSetDropRate},
+    {"Stream.getInfo", SVRD_Stream_rGetInfo},
+    {"Stream.pause", SVRD_Stream_rPause},
+    {"Stream.unpause", SVRD_Stream_rUnpause},
 
-    {"Source.open", SVRs_Source_rOpen},
-    {"Source.setEncoding", SVRs_Source_rSetEncoding},
-    {"Source.setFrameProperties", SVRs_Source_rSetFrameProperties},
-    {"Source.close", SVRs_Source_rClose},
-    {"Data", SVRs_Source_rData},
+    {"Source.open", SVRD_Source_rOpen},
+    {"Source.setEncoding", SVRD_Source_rSetEncoding},
+    {"Source.setFrameProperties", SVRD_Source_rSetFrameProperties},
+    {"Source.close", SVRD_Source_rClose},
+    {"Data", SVRD_Source_rData},
 
-    {"Event.register", SVRs_Event_rRegister},
-    {"Event.unregister", SVRs_Event_rUnregister}
+    {"Event.register", SVRD_Event_rRegister},
+    {"Event.unregister", SVRD_Event_rUnregister}
 };
 
-static int SVRs_compareRequestMapping(const void* v1, const void* v2);
-static SVRs_RequestMapping* SVRs_findRequestMapping(const char* request_string);
+static int SVRD_compareRequestMapping(const void* v1, const void* v2);
+static SVRD_RequestMapping* SVRD_findRequestMapping(const char* request_string);
 
-static int SVRs_compareRequestMapping(const void* v1, const void* v2) {
-    return strcmp(((SVRs_RequestMapping*)v1)->request_string, ((SVRs_RequestMapping*)v2)->request_string);
+static int SVRD_compareRequestMapping(const void* v1, const void* v2) {
+    return strcmp(((SVRD_RequestMapping*)v1)->request_string, ((SVRD_RequestMapping*)v2)->request_string);
 }
 
-void SVRs_MessageRouter_init(void) {
+void SVRD_MessageRouter_init(void) {
     /* Sort request types so they can be efficiently searched */
-    qsort(request_types, sizeof(request_types) / sizeof(request_types[0]), sizeof(request_types[0]), SVRs_compareRequestMapping);
+    qsort(request_types, sizeof(request_types) / sizeof(request_types[0]), sizeof(request_types[0]), SVRD_compareRequestMapping);
 }
 
-static SVRs_RequestMapping* SVRs_findRequestMapping(const char* request_string) {
+static SVRD_RequestMapping* SVRD_findRequestMapping(const char* request_string) {
     int lower = 0;
     int upper = (sizeof(request_types) / sizeof(request_types[0])) - 1;
     int sindex = 0;
@@ -84,17 +84,17 @@ static SVRs_RequestMapping* SVRs_findRequestMapping(const char* request_string) 
     return NULL;
 }
 
-void SVRs_processMessage(SVRs_Client* client, SVR_Message* message) {
-    SVRs_RequestMapping* request_type;
+void SVRD_processMessage(SVRD_Client* client, SVR_Message* message) {
+    SVRD_RequestMapping* request_type;
     
     if(message->count == 0) {
-        SVRs_Client_kick(client, INVALID_MESSAGE);
+        SVRD_Client_kick(client, INVALID_MESSAGE);
         return;
     }
 
-    request_type = SVRs_findRequestMapping(message->components[0]);
+    request_type = SVRD_findRequestMapping(message->components[0]);
     if(request_type == NULL) {
-        SVRs_Client_kick(client, INVALID_MESSAGE);
+        SVRD_Client_kick(client, INVALID_MESSAGE);
         return;
     }
 

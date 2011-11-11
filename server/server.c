@@ -4,7 +4,7 @@
  */
 
 #include "svr.h"
-#include "svr/server/svr.h"
+#include "svrd.h"
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -32,7 +32,7 @@ static bool mainloop_running = false;
 static pthread_cond_t mainloop_done = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t mainloop_done_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void SVRs_Server_initServerSocket(const char* bind_address);
+static void SVRD_Server_initServerSocket(const char* bind_address);
 
 /**
  * \defgroup netloop Net loop
@@ -46,7 +46,7 @@ static void SVRs_Server_initServerSocket(const char* bind_address);
  * Perform all required initialization of the server socket so that it is
  * prepared to being accepting connections
  */
-static void SVRs_Server_initServerSocket(const char* bind_address) {
+static void SVRD_Server_initServerSocket(const char* bind_address) {
     /* Used to set the SO_REUSEADDR socket option on the server socket */
     const int reuse = 1;
 
@@ -60,7 +60,7 @@ static void SVRs_Server_initServerSocket(const char* bind_address) {
     svr_sock = socket(AF_INET, SOCK_STREAM, 0);
     if(svr_sock == -1) {
         SVR_log(SVR_CRITICAL, Util_format("Error creating socket: %s", strerror(errno)));
-        SVRs_exitError();
+        SVRD_exitError();
     }
 
     /* Allow localhost address reuse. This allows us to restart the hub after it
@@ -70,13 +70,13 @@ static void SVRs_Server_initServerSocket(const char* bind_address) {
     /* Bind the socket to the server port/address */
     if(bind(svr_sock, (struct sockaddr*) &svr_addr, sizeof(svr_addr)) == -1) {
         SVR_log(SVR_CRITICAL, Util_format("Error binding socket: %s", strerror(errno)));
-        SVRs_exitError();
+        SVRD_exitError();
     }
 
     /* Start listening */
     if(listen(svr_sock, MAX_CLIENTS)) {
         SVR_log(SVR_CRITICAL, Util_format("Error setting socket to listen: %s", strerror(errno)));
-        SVRs_exitError();
+        SVRD_exitError();
     }
 }
 
@@ -88,7 +88,7 @@ static void SVRs_Server_initServerSocket(const char* bind_address) {
  * condition. Signal handlers can call this before starting a asychronous
  * shutdown to avoid this issue.
  */
-void SVRs_Server_preClose(void) {
+void SVRD_Server_preClose(void) {
     /* Set main loop to terminate */
     run_mainloop = false;
 }
@@ -99,13 +99,13 @@ void SVRs_Server_preClose(void) {
  * Perform a controlled shutdown of the net subsystem. Free all associated
  * memory and properly shutdown all associated sockets
  */
-void SVRs_Server_close(void) {
+void SVRD_Server_close(void) {
     /* Synchronize exit with mainLoop */
     pthread_mutex_lock(&mainloop_done_lock);
 
     if(mainloop_running) {
         /* Instruct mainLoop to terminate */
-        SVRs_Server_preClose();
+        SVRD_Server_preClose();
 
         /* Now wait for SVR_mainLoop to terminate */
         while(mainloop_running) {
@@ -121,13 +121,13 @@ void SVRs_Server_close(void) {
  *
  * Main loop which processes client requests and handles all client connections
  */
-void SVRs_Server_mainLoop(const char* bind_address) {
+void SVRD_Server_mainLoop(const char* bind_address) {
     /* Temporary storage for new client connections until a SVR_Client structure
        can be allocated for them */
     int client_new = 0;
 
     /* Create and ready the server socket */
-    SVRs_Server_initServerSocket(bind_address);
+    SVRD_Server_initServerSocket(bind_address);
 
     /* Begin accepting connections */
     SVR_log(SVR_INFO, "Accepting client connections");
@@ -148,7 +148,7 @@ void SVRs_Server_mainLoop(const char* bind_address) {
             continue;
         }
 
-        SVRs_addClient(client_new);
+        SVRD_addClient(client_new);
     }
 
     /* Signal loop as ended */

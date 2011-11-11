@@ -1,10 +1,10 @@
 
 #include "svr.h"
-#include "svr/server/svr.h"
+#include "svrd.h"
 
-static SVRs_Source* TestSource_open(const char* name, Dictionary* arguments);
+static SVRD_Source* TestSource_open(const char* name, Dictionary* arguments);
 
-SVRs_SourceType SVR_SOURCE(test) = {
+SVRD_SourceType SVR_SOURCE(test) = {
         .name = "test",
         .open = TestSource_open,
 };
@@ -16,15 +16,15 @@ typedef struct {
     int rate;
     pthread_t thread;
     bool close;
-} SVRs_TestSource;
+} SVRD_TestSource;
 
 static void* TestSource_background(void* _source);
-static void TestSource_close(SVRs_Source* source);
+static void TestSource_close(SVRD_Source* source);
 
-static SVRs_Source* TestSource_open(const char* name, Dictionary* arguments) {
-    SVRs_TestSource* source_data = malloc(sizeof(SVRs_TestSource));
+static SVRD_Source* TestSource_open(const char* name, Dictionary* arguments) {
+    SVRD_TestSource* source_data = malloc(sizeof(SVRD_TestSource));
     SVR_FrameProperties* frame_properties;
-    SVRs_Source* source;
+    SVRD_Source* source;
     char* arg;
 
     source_data->width = 640;
@@ -64,9 +64,9 @@ static SVRs_Source* TestSource_open(const char* name, Dictionary* arguments) {
     frame_properties->channels = source_data->grayscale ? 1 : 3;
     frame_properties->depth = 8;
 
-    source = SVRs_Source_new(name);
-    SVRs_Source_setEncoding(source, SVR_Encoding_getByName("raw"));
-    SVRs_Source_setFrameProperties(source, frame_properties);
+    source = SVRD_Source_new(name);
+    SVRD_Source_setEncoding(source, SVR_Encoding_getByName("raw"));
+    SVRD_Source_setFrameProperties(source, frame_properties);
     SVR_FrameProperties_destroy(frame_properties);
 
     if(source == NULL) {
@@ -84,8 +84,8 @@ static SVRs_Source* TestSource_open(const char* name, Dictionary* arguments) {
 }
 
 static void* TestSource_background(void* _source) {
-    SVRs_Source* source = (SVRs_Source*) _source;
-    SVRs_TestSource* source_data = (SVRs_TestSource*) source->private_data;
+    SVRD_Source* source = (SVRD_Source*) _source;
+    SVRD_TestSource* source_data = (SVRD_TestSource*) source->private_data;
     IplImage* frame;
     int width = source_data->width;
     int height = source_data->height;
@@ -97,7 +97,7 @@ static void* TestSource_background(void* _source) {
                          CV_RGB(0, 0, 255)
     };
     
-    frame = SVR_FrameProperties_imageFromProperties(SVRs_Source_getFrameProperties(source));
+    frame = SVR_FrameProperties_imageFromProperties(SVRD_Source_getFrameProperties(source));
 
     if(source_data->rate > 0) {
         sleep = 1.0 / source_data->rate;
@@ -116,7 +116,7 @@ static void* TestSource_background(void* _source) {
             block_y = (block_y + 48) % height;
         }
 
-        SVRs_Source_provideData(source, (void*) frame->imageData, frame->imageSize);
+        SVRD_Source_provideData(source, (void*) frame->imageData, frame->imageSize);
         Util_usleep(sleep);
     }
 
@@ -125,8 +125,8 @@ static void* TestSource_background(void* _source) {
     return NULL;
 }
 
-static void TestSource_close(SVRs_Source* source) {
-    SVRs_TestSource* source_data = (SVRs_TestSource*) source->private_data;
+static void TestSource_close(SVRD_Source* source) {
+    SVRD_TestSource* source_data = (SVRD_TestSource*) source->private_data;
 
     source_data->close = true;
     pthread_join(source_data->thread, NULL);

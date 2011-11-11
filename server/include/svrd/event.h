@@ -3,9 +3,9 @@
 #define __SVR_SERVER_EVENT_H
 
 #include <svr/forward.h>
-#include <svr/server/forward.h>
+#include <svrd/forward.h>
 
-void SVRs_Event_register(SVRs_Client* client, SVR_Message* message);
-void SVRs_Event_unregister(SVRs_Client* client, SVR_Message* message);
+void SVRD_Event_register(SVRD_Client* client, SVR_Message* message);
+void SVRD_Event_unregister(SVRD_Client* client, SVR_Message* message);
 
 #endif // #ifndef __SVR_SERVER_EVENT_H

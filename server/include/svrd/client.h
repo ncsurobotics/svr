@@ -5,7 +5,7 @@
 #include <seawolf.h>
 
 #include <svr/forward.h>
-#include <svr/server/forward.h>
+#include <svrd/forward.h>
 
 /**
  * Client state
@@ -30,15 +30,15 @@ typedef enum {
      * Client connection is closed
      */
     SVR_CLOSED
-} SVRs_Client_State;
+} SVRD_Client_State;
 
-struct SVRs_Client_s {
+struct SVRD_Client_s {
     /**
      * Socket file descriptor
      */
     int socket;
 
-    SVRs_Client_State state;
+    SVRD_Client_State state;
 
     /**
      * Client's thread
@@ -65,24 +65,24 @@ struct SVRs_Client_s {
     SVR_LOCKABLE;
 };
 
-void SVRs_Client_init(void);
-void SVRs_Client_close(void);
-SVRs_Client* SVRs_Client_new(int socket);
-void SVRs_Client_provideSource(SVRs_Client* client, SVRs_Source* source);
-void SVRs_Client_unprovideSource(SVRs_Client* client, SVRs_Source* source);
-void SVRs_Client_openStream(SVRs_Client* client, const char* stream_name);
-void SVRs_Client_closeStream(SVRs_Client* client, const char* stream_name);
-SVRs_Stream* SVRs_Client_getStream(SVRs_Client* client, const char* stream_name);
-SVRs_Source* SVRs_Client_getSource(SVRs_Client* client, const char* source_name);
-void SVRs_addClient(int socket);
-void SVRs_Client_markForClosing(SVRs_Client* client);
-void SVRs_Client_reply(SVRs_Client* client, SVR_Message* request, SVR_Message* response);
-void SVRs_Client_replyCode(SVRs_Client* client, SVR_Message* request, int error_code);
-void SVRs_Client_kick(SVRs_Client* client, const char* reason);
-void SVRs_joinAllClientThreads(void);
-List* SVRs_getAllClients(void);
-void SVRs_acquireGlobalClientsLock(void);
-void SVRs_releaseGlobalClientsLock(void);
-int SVRs_Client_sendMessage(SVRs_Client* client, SVR_Message* message);
+void SVRD_Client_init(void);
+void SVRD_Client_close(void);
+SVRD_Client* SVRD_Client_new(int socket);
+void SVRD_Client_provideSource(SVRD_Client* client, SVRD_Source* source);
+void SVRD_Client_unprovideSource(SVRD_Client* client, SVRD_Source* source);
+void SVRD_Client_openStream(SVRD_Client* client, const char* stream_name);
+void SVRD_Client_closeStream(SVRD_Client* client, const char* stream_name);
+SVRD_Stream* SVRD_Client_getStream(SVRD_Client* client, const char* stream_name);
+SVRD_Source* SVRD_Client_getSource(SVRD_Client* client, const char* source_name);
+void SVRD_addClient(int socket);
+void SVRD_Client_markForClosing(SVRD_Client* client);
+void SVRD_Client_reply(SVRD_Client* client, SVR_Message* request, SVR_Message* response);
+void SVRD_Client_replyCode(SVRD_Client* client, SVR_Message* request, int error_code);
+void SVRD_Client_kick(SVRD_Client* client, const char* reason);
+void SVRD_joinAllClientThreads(void);
+List* SVRD_getAllClients(void);
+void SVRD_acquireGlobalClientsLock(void);
+void SVRD_releaseGlobalClientsLock(void);
+int SVRD_Client_sendMessage(SVRD_Client* client, SVR_Message* message);
 
 #endif // #ifndef __SVR_SERVER_CLIENT_H

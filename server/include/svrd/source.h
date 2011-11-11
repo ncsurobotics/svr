@@ -4,7 +4,7 @@
 
 #include <svr/forward.h>
 
-struct SVRs_Source_s {
+struct SVRD_Source_s {
     char* name;
 
     SVR_Encoding* encoding;
@@ -13,31 +13,31 @@ struct SVRs_Source_s {
 
     List* streams;
 
-    void (*cleanup)(SVRs_Source*);
+    void (*cleanup)(SVRD_Source*);
     void* private_data;
 
     SVR_LOCKABLE;
 };
 
-struct SVRs_SourceType_s {
+struct SVRD_SourceType_s {
     const char* name;
-    SVRs_Source* (*open)(const char* name, Dictionary* arguments);
+    SVRD_Source* (*open)(const char* name, Dictionary* arguments);
 };
 
 #define SVR_SOURCE(name) __svr_##name##_source
 
-void SVRs_Source_init(void);
-SVRs_Source* SVRs_Source_getByName(const char* source_name);
-SVRs_Source* SVRs_Source_openInstance(const char* source_name, const char* descriptor_orig);
-void SVRs_Source_fromFile(const char* filename);
+void SVRD_Source_init(void);
+SVRD_Source* SVRD_Source_getByName(const char* source_name);
+SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descriptor_orig);
+void SVRD_Source_fromFile(const char* filename);
 
-SVRs_Source* SVRs_Source_new(const char* name);
-void SVRs_Source_destroy(SVRs_Source* source);
-SVR_FrameProperties* SVRs_Source_getFrameProperties(SVRs_Source* source);
-int SVRs_Source_setEncoding(SVRs_Source* source, SVR_Encoding* encoding);
-int SVRs_Source_setFrameProperties(SVRs_Source* source, SVR_FrameProperties* frame_properties);
-void SVRs_Source_registerStream(SVRs_Source* source, SVRs_Stream* stream);
-void SVRs_Source_unregisterStream(SVRs_Source* source, SVRs_Stream* stream);
-int SVRs_Source_provideData(SVRs_Source* source, void* data, size_t data_available);
+SVRD_Source* SVRD_Source_new(const char* name);
+void SVRD_Source_destroy(SVRD_Source* source);
+SVR_FrameProperties* SVRD_Source_getFrameProperties(SVRD_Source* source);
+int SVRD_Source_setEncoding(SVRD_Source* source, SVR_Encoding* encoding);
+int SVRD_Source_setFrameProperties(SVRD_Source* source, SVR_FrameProperties* frame_properties);
+void SVRD_Source_registerStream(SVRD_Source* source, SVRD_Stream* stream);
+void SVRD_Source_unregisterStream(SVRD_Source* source, SVRD_Stream* stream);
+int SVRD_Source_provideData(SVRD_Source* source, void* data, size_t data_available);
 
 #endif // #ifndef __SVR_SERVER_SOURCE_H

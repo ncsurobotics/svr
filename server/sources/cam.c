@@ -1,12 +1,12 @@
 
 #include "svr.h"
-#include "svr/server/svr.h"
+#include "svrd.h"
 
 #include <highgui.h>
 
-static SVRs_Source* CamSource_open(const char* name, Dictionary* arguments);
+static SVRD_Source* CamSource_open(const char* name, Dictionary* arguments);
 
-SVRs_SourceType SVR_SOURCE(cam) = {
+SVRD_SourceType SVR_SOURCE(cam) = {
         .name = "cam",
         .open = CamSource_open,
 };
@@ -15,15 +15,15 @@ typedef struct {
     CvCapture* capture;
     pthread_t thread;
     bool close;
-} SVRs_CamSource;
+} SVRD_CamSource;
 
 static void* CamSource_background(void* _source);
-static void CamSource_close(SVRs_Source* source);
+static void CamSource_close(SVRD_Source* source);
 
-static SVRs_Source* CamSource_open(const char* name, Dictionary* arguments) {
-    SVRs_CamSource* source_data = malloc(sizeof(SVRs_CamSource));
+static SVRD_Source* CamSource_open(const char* name, Dictionary* arguments) {
+    SVRD_CamSource* source_data = malloc(sizeof(SVRD_CamSource));
     SVR_FrameProperties* frame_properties;
-    SVRs_Source* source;
+    SVRD_Source* source;
     IplImage* frame;
     int index = -1;
 
@@ -51,9 +51,9 @@ static SVRs_Source* CamSource_open(const char* name, Dictionary* arguments) {
     frame_properties->channels = 3;
     frame_properties->depth = 8;
 
-    source = SVRs_Source_new(name);
-    SVRs_Source_setEncoding(source, SVR_Encoding_getByName("raw"));
-    SVRs_Source_setFrameProperties(source, frame_properties);
+    source = SVRD_Source_new(name);
+    SVRD_Source_setEncoding(source, SVR_Encoding_getByName("raw"));
+    SVRD_Source_setFrameProperties(source, frame_properties);
     SVR_FrameProperties_destroy(frame_properties);
 
     if(source == NULL) {
@@ -71,8 +71,8 @@ static SVRs_Source* CamSource_open(const char* name, Dictionary* arguments) {
 }
 
 static void* CamSource_background(void* _source) {
-    SVRs_Source* source = (SVRs_Source*) _source;
-    SVRs_CamSource* source_data = (SVRs_CamSource*) source->private_data;
+    SVRD_Source* source = (SVRD_Source*) _source;
+    SVRD_CamSource* source_data = (SVRD_CamSource*) source->private_data;
     IplImage* frame;
 
     while(source_data->close == false) {
@@ -81,7 +81,7 @@ static void* CamSource_background(void* _source) {
             SVR_log(SVR_CRITICAL, Util_format("Error retrieving frame from camera! (%s)", source->name));
             Util_usleep(1.0);
         } else {
-            SVRs_Source_provideData(source, (void*) frame->imageData, frame->imageSize);
+            SVRD_Source_provideData(source, (void*) frame->imageData, frame->imageSize);
         }
     }
 
@@ -90,8 +90,8 @@ static void* CamSource_background(void* _source) {
     return NULL;
 }
 
-static void CamSource_close(SVRs_Source* source) {
-    SVRs_CamSource* source_data = (SVRs_CamSource*) source->private_data;
+static void CamSource_close(SVRD_Source* source) {
+    SVRD_CamSource* source_data = (SVRD_CamSource*) source->private_data;
 
     source_data->close = true;
     pthread_join(source_data->thread, NULL);

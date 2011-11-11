@@ -2,24 +2,24 @@
 #ifndef __SVR_SERVER_MESSAGE_HANDLERS_H
 #define __SVR_SERVER_MESSAGE_HANDLERS_H
 
-void SVRs_Stream_rOpen(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rClose(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rGetInfo(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rPause(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rUnpause(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rResize(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rSetChannels(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rAttachSource(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rSetEncoding(SVRs_Client* client, SVR_Message* message);
-void SVRs_Stream_rSetDropRate(SVRs_Client* client, SVR_Message* message);
+void SVRD_Stream_rOpen(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rClose(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rGetInfo(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rPause(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rUnpause(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rResize(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rSetChannels(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rAttachSource(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rSetEncoding(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rSetDropRate(SVRD_Client* client, SVR_Message* message);
 
-void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_rSetEncoding(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_rSetFrameProperties(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_rClose(SVRs_Client* client, SVR_Message* message);
-void SVRs_Source_rData(SVRs_Client* client, SVR_Message* message);
+void SVRD_Source_rOpen(SVRD_Client* client, SVR_Message* message);
+void SVRD_Source_rSetEncoding(SVRD_Client* client, SVR_Message* message);
+void SVRD_Source_rSetFrameProperties(SVRD_Client* client, SVR_Message* message);
+void SVRD_Source_rClose(SVRD_Client* client, SVR_Message* message);
+void SVRD_Source_rData(SVRD_Client* client, SVR_Message* message);
 
-void SVRs_Event_rRegister(SVRs_Client* client, SVR_Message* message);
-void SVRs_Event_rUnregister(SVRs_Client* client, SVR_Message* message);
+void SVRD_Event_rRegister(SVRD_Client* client, SVR_Message* message);
+void SVRD_Event_rUnregister(SVRD_Client* client, SVR_Message* message);
 
 #endif // #ifndef __SVR_SERVER_MESSAGE_HANDLERS_H

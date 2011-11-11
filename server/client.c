@@ -2,10 +2,10 @@
 #include <seawolf.h>
 
 #include "svr.h"
-#include "svr/server/svr.h"
+#include "svrd.h"
 
-static void* SVRs_Client_worker(void* _client);
-static void SVRs_Client_cleanup(void* _client);
+static void* SVRD_Client_worker(void* _client);
+static void SVRD_Client_cleanup(void* _client);
 
 /* List of active clients */
 static List* clients = NULL;
@@ -17,31 +17,31 @@ static int client_thread_count = 0;
 static pthread_mutex_t client_thread_count_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t client_thread_count_zero = PTHREAD_COND_INITIALIZER;
 
-void SVRs_Client_init(void) {
+void SVRD_Client_init(void) {
     clients = List_new();
 }
 
-void SVRs_Client_close(void) {
-    SVRs_Client* client;
+void SVRD_Client_close(void) {
+    SVRD_Client* client;
 
     if(clients) {
         /* Kick all still attached clients */
-        SVRs_acquireGlobalClientsLock();
+        SVRD_acquireGlobalClientsLock();
         for(int i = 0; (client = List_get(clients, i)) != NULL; i++) {
-            SVRs_Client_kick(client, "SVR closing");
+            SVRD_Client_kick(client, "SVR closing");
         }
-        SVRs_releaseGlobalClientsLock();
+        SVRD_releaseGlobalClientsLock();
 
         /* Wait for all client threads to complete */
-        SVRs_joinAllClientThreads();
+        SVRD_joinAllClientThreads();
         
         /* Free the clients lists */
         List_destroy(clients);
     }
 }
 
-SVRs_Client* SVRs_Client_new(int socket) {
-    SVRs_Client* client = malloc(sizeof(SVRs_Client));
+SVRD_Client* SVRD_Client_new(int socket) {
+    SVRD_Client* client = malloc(sizeof(SVRD_Client));
 
     client->socket = socket;
     client->streams = Dictionary_new();
@@ -50,7 +50,7 @@ SVRs_Client* SVRs_Client_new(int socket) {
     client->payload_buffer = NULL;
     client->payload_buffer_size = 0;
 
-    SVR_REFCOUNTED_INIT(client, SVRs_Client_cleanup);
+    SVR_REFCOUNTED_INIT(client, SVRD_Client_cleanup);
     SVR_LOCKABLE_INIT(client);
 
     pthread_mutex_lock(&client_thread_count_lock);
@@ -60,28 +60,28 @@ SVRs_Client* SVRs_Client_new(int socket) {
     return client;
 }
 
-void SVRs_Client_provideSource(SVRs_Client* client, SVRs_Source* source) {
+void SVRD_Client_provideSource(SVRD_Client* client, SVRD_Source* source) {
     Dictionary_set(client->sources, source->name, source);
 }
 
-void SVRs_Client_unprovideSource(SVRs_Client* client, SVRs_Source* source) {
+void SVRD_Client_unprovideSource(SVRD_Client* client, SVRD_Source* source) {
     Dictionary_remove(client->sources, source->name);
 }
 
-void SVRs_Client_openStream(SVRs_Client* client, const char* stream_name) {
-    SVRs_Stream* stream;
+void SVRD_Client_openStream(SVRD_Client* client, const char* stream_name) {
+    SVRD_Stream* stream;
 
     SVR_LOCK(client);
     if(client->state == SVR_CONNECTED) {
-        stream = SVRs_Stream_new(stream_name);
+        stream = SVRD_Stream_new(stream_name);
         Dictionary_set(client->streams, stream_name, stream);
-        SVRs_Stream_setClient(stream, client);
+        SVRD_Stream_setClient(stream, client);
     }
     SVR_UNLOCK(client);
 }
 
-void SVRs_Client_closeStream(SVRs_Client* client, const char* stream_name) {
-    SVRs_Stream* stream;
+void SVRD_Client_closeStream(SVRD_Client* client, const char* stream_name) {
+    SVRD_Stream* stream;
 
     SVR_LOCK(client);
     stream = Dictionary_get(client->streams, stream_name);
@@ -91,20 +91,20 @@ void SVRs_Client_closeStream(SVRs_Client* client, const char* stream_name) {
     Dictionary_remove(client->streams, stream_name);
     SVR_UNLOCK(client);
 
-    SVRs_Stream_pause(stream);
-    SVRs_Stream_destroy(stream);
+    SVRD_Stream_pause(stream);
+    SVRD_Stream_destroy(stream);
 }
 
-SVRs_Stream* SVRs_Client_getStream(SVRs_Client* client, const char* stream_name) {
+SVRD_Stream* SVRD_Client_getStream(SVRD_Client* client, const char* stream_name) {
     return Dictionary_get(client->streams, stream_name);
 }
 
-SVRs_Source* SVRs_Client_getSource(SVRs_Client* client, const char* source_name) {
+SVRD_Source* SVRD_Client_getSource(SVRD_Client* client, const char* source_name) {
     return Dictionary_get(client->sources, source_name);
 }
 
-static void SVRs_Client_cleanup(void* _client) {
-    SVRs_Client* client = (SVRs_Client*) _client;
+static void SVRD_Client_cleanup(void* _client) {
+    SVRD_Client* client = (SVRD_Client*) _client;
 
     SVR_log(SVR_DEBUG, "Cleaning up client");
 
@@ -122,26 +122,26 @@ static void SVRs_Client_cleanup(void* _client) {
     pthread_mutex_unlock(&client_thread_count_lock);
 }
 
-void SVRs_addClient(int socket) {
-    SVRs_Client* client = SVRs_Client_new(socket);
+void SVRD_addClient(int socket) {
+    SVRD_Client* client = SVRD_Client_new(socket);
 
-    SVRs_acquireGlobalClientsLock();
+    SVRD_acquireGlobalClientsLock();
     List_append(clients, client);
-    SVRs_releaseGlobalClientsLock();
+    SVRD_releaseGlobalClientsLock();
 
-    pthread_create(&client->thread, NULL, &SVRs_Client_worker, client);
+    pthread_create(&client->thread, NULL, &SVRD_Client_worker, client);
 }
 
 /**
  * \brief Mark a client as closed
  *
  * Mark a client as closed. It's resources will be released on the next call to
- * SVRs_Client_removeMarkedClosedClients()
+ * SVRD_Client_removeMarkedClosedClients()
  *
  * \param client Mark the given client as closed
  */
-void SVRs_Client_markForClosing(SVRs_Client* client) {
-    SVRs_Source* source;
+void SVRD_Client_markForClosing(SVRD_Client* client) {
+    SVRD_Source* source;
     List* streams;
     List* sources;
     char* stream_name;
@@ -157,14 +157,14 @@ void SVRs_Client_markForClosing(SVRs_Client* client) {
         close(client->socket);
         
         /* Remove client from clients list */
-        SVRs_acquireGlobalClientsLock();
+        SVRD_acquireGlobalClientsLock();
         List_remove(clients, List_indexOf(clients, client));
-        SVRs_releaseGlobalClientsLock();
+        SVRD_releaseGlobalClientsLock();
 
         /* Destroy all streams */
         streams = Dictionary_getKeys(client->streams);
         for(int i = 0; (stream_name = List_get(streams, i)) != NULL; i++) {
-            SVRs_Client_closeStream(client, stream_name);
+            SVRD_Client_closeStream(client, stream_name);
         }
         List_destroy(streams);
 
@@ -172,7 +172,7 @@ void SVRs_Client_markForClosing(SVRs_Client* client) {
         sources = Dictionary_getKeys(client->sources);
         for(int i = 0; (source_name = List_get(sources, i)) != NULL; i++) {
             source = Dictionary_get(client->sources, source_name);
-            SVRs_Source_destroy(source);
+            SVRD_Source_destroy(source);
         }
         List_destroy(sources);
     } else {
@@ -180,33 +180,33 @@ void SVRs_Client_markForClosing(SVRs_Client* client) {
     }
 }
 
-void SVRs_Client_reply(SVRs_Client* client, SVR_Message* request, SVR_Message* response) {
+void SVRD_Client_reply(SVRD_Client* client, SVR_Message* request, SVR_Message* response) {
     response->request_id = request->request_id;
-    SVRs_Client_sendMessage(client, response);
+    SVRD_Client_sendMessage(client, response);
 }
 
-void SVRs_Client_replyCode(SVRs_Client* client, SVR_Message* request, int error_code) {
+void SVRD_Client_replyCode(SVRD_Client* client, SVR_Message* request, int error_code) {
     SVR_Message* message = SVR_Message_new(2);
 
     message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.response");
     message->components[1] = SVR_Arena_sprintf(message->alloc, "%d", error_code);
-    SVRs_Client_reply(client, request, message);
+    SVRD_Client_reply(client, request, message);
     SVR_Message_release(message);
 }
 
 /**
  * \brief Kick a client 
  */
-void SVRs_Client_kick(SVRs_Client* client, const char* reason) {
+void SVRD_Client_kick(SVRD_Client* client, const char* reason) {
     SVR_Message* message = SVR_Message_new(2);
 
     message->components[0] = SVR_Arena_strdup(message->alloc, "SVR.kick");
     message->components[1] = SVR_Arena_strdup(message->alloc, reason);
 
-    SVRs_Client_sendMessage(client, message);
+    SVRD_Client_sendMessage(client, message);
     SVR_Message_release(message);
 
-    SVRs_Client_markForClosing(client);
+    SVRD_Client_markForClosing(client);
 }
 
 /**
@@ -214,7 +214,7 @@ void SVRs_Client_kick(SVRs_Client* client, const char* reason) {
  *
  * Wait for all client threads to shutdown and be destroyed
  */
-void SVRs_joinAllClientThreads(void) {
+void SVRD_joinAllClientThreads(void) {
     pthread_mutex_lock(&client_thread_count_lock);
     while(client_thread_count > 0) {
         pthread_cond_wait(&client_thread_count_zero, &client_thread_count_lock);
@@ -226,11 +226,11 @@ void SVRs_joinAllClientThreads(void) {
  * \brief Get clients
  *
  * Get a list of all clients. Access to the list should be proteced by calls to
- * SVRs_Client_acquireGlobalClientsLock and SVRs_Client_releaseGlobalClientsLock
+ * SVRD_Client_acquireGlobalClientsLock and SVRD_Client_releaseGlobalClientsLock
  *
  * \return The list of clients
  */
-List* SVRs_getAllClients(void) {
+List* SVRD_getAllClients(void) {
     return clients;
 }
 
@@ -240,7 +240,7 @@ List* SVRs_getAllClients(void) {
  * Acquire a global lock on the clients list. This lock should only be held for
  * a short amount of time if necessary.
  */
-void SVRs_acquireGlobalClientsLock(void) {
+void SVRD_acquireGlobalClientsLock(void) {
     pthread_mutex_lock(&global_clients_lock);
 }
 
@@ -250,11 +250,11 @@ void SVRs_acquireGlobalClientsLock(void) {
  * Release the global lock on the clients list. This lock should only be held
  * for a short amount of time if necessary.
  */
-void SVRs_releaseGlobalClientsLock(void) {
+void SVRD_releaseGlobalClientsLock(void) {
     pthread_mutex_unlock(&global_clients_lock);
 }
 
-int SVRs_Client_sendMessage(SVRs_Client* client, SVR_Message* message) {
+int SVRD_Client_sendMessage(SVRD_Client* client, SVR_Message* message) {
     int n = -1;
 
     SVR_LOCK(client);
@@ -271,11 +271,11 @@ int SVRs_Client_sendMessage(SVRs_Client* client, SVR_Message* message) {
  *
  * Handle requests from a single client until the client closes
  *
- * \param _client Pointer to a SVRs_Client structure
+ * \param _client Pointer to a SVRD_Client structure
  * \return Always returns NULL
  */
-static void* SVRs_Client_worker(void* _client) {
-    SVRs_Client* client = (SVRs_Client*) _client;
+static void* SVRD_Client_worker(void* _client) {
+    SVRD_Client* client = (SVRD_Client*) _client;
     SVR_Message* message;
  
     while(client->state != SVR_CLOSED) {
@@ -284,7 +284,7 @@ static void* SVRs_Client_worker(void* _client) {
 
         if(message == NULL) {
             SVR_log(SVR_WARNING, "Lost client connection");
-            SVRs_Client_markForClosing(client);
+            SVRD_Client_markForClosing(client);
             break;
         }
 
@@ -299,7 +299,7 @@ static void* SVRs_Client_worker(void* _client) {
         }
 
         /* Process message */
-        SVRs_processMessage(client, message);
+        SVRD_processMessage(client, message);
 
         /* Destroy client message */
         SVR_Message_release(message);

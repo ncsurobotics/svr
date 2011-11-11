@@ -1,11 +1,11 @@
 
 #include <svr.h>
-#include <svr/server/svr.h>
+#include <svrd.h>
 
-void SVRs_Event_register(SVRs_Client* client, SVR_Message* message) {
+void SVRD_Event_register(SVRD_Client* client, SVR_Message* message) {
 
 }
 
-void SVRs_Event_unregister(SVRs_Client* client, SVR_Message* message) {
+void SVRD_Event_unregister(SVRD_Client* client, SVR_Message* message) {
 
 }

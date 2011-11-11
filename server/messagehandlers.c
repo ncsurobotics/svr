@@ -1,9 +1,9 @@
 
 #include <svr.h>
-#include <svr/server/svr.h>
+#include <svrd.h>
 
 /* source_name stream_name [encoding] */
-void SVRs_Stream_rOpen(SVRs_Client* client, SVR_Message* message) {
+void SVRD_Stream_rOpen(SVRD_Client* client, SVR_Message* message) {
     char* stream_name;
 
     switch(message->count) {
@@ -12,21 +12,21 @@ void SVRs_Stream_rOpen(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    if(SVRs_Client_getStream(client, stream_name)) {
-        SVRs_Client_replyCode(client, message, SVR_NAMECLASH);
+    if(SVRD_Client_getStream(client, stream_name)) {
+        SVRD_Client_replyCode(client, message, SVR_NAMECLASH);
         return;
     }
 
-    SVRs_Client_openStream(client, stream_name);
-    SVRs_Client_replyCode(client, message, SVR_SUCCESS);
+    SVRD_Client_openStream(client, stream_name);
+    SVRD_Client_replyCode(client, message, SVR_SUCCESS);
 }
 
 /* stream_name */
-void SVRs_Stream_rClose(SVRs_Client* client, SVR_Message* message) {
+void SVRD_Stream_rClose(SVRD_Client* client, SVR_Message* message) {
     char* stream_name;
 
     switch(message->count) {
@@ -35,23 +35,23 @@ void SVRs_Stream_rClose(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    if(SVRs_Client_getStream(client, stream_name) == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+    if(SVRD_Client_getStream(client, stream_name) == NULL) {
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
         return;
     }
 
-    SVRs_Client_closeStream(client, stream_name);
-    SVRs_Client_replyCode(client, message, SVR_SUCCESS);
+    SVRD_Client_closeStream(client, stream_name);
+    SVRD_Client_replyCode(client, message, SVR_SUCCESS);
 }
 
 /* stream_name */
-void SVRs_Stream_rGetInfo(SVRs_Client* client, SVR_Message* message) {
+void SVRD_Stream_rGetInfo(SVRD_Client* client, SVR_Message* message) {
     SVR_Message* response;
-    SVRs_Stream* stream;
+    SVRD_Stream* stream;
     char* stream_name;
 
     switch(message->count) {
@@ -60,13 +60,13 @@ void SVRs_Stream_rGetInfo(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    stream = SVRs_Client_getStream(client, stream_name);
+    stream = SVRD_Client_getStream(client, stream_name);
     if(stream == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
         return;
     }
 
@@ -85,13 +85,13 @@ void SVRs_Stream_rGetInfo(SVRs_Client* client, SVR_Message* message) {
                                                                                 stream->frame_properties->depth,
                                                                                 stream->frame_properties->channels);
 
-    SVRs_Client_reply(client, message, response);
+    SVRD_Client_reply(client, message, response);
     SVR_Message_release(response);
 }
 
 /* stream_name */
-void SVRs_Stream_rPause(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Stream* stream;
+void SVRD_Stream_rPause(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Stream* stream;
     char* stream_name;
 
     switch(message->count) {
@@ -100,23 +100,23 @@ void SVRs_Stream_rPause(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    stream = SVRs_Client_getStream(client, stream_name);
+    stream = SVRD_Client_getStream(client, stream_name);
     if(stream == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
         return;
     }
 
-    SVRs_Stream_pause(stream);
-    SVRs_Client_replyCode(client, message, SVR_SUCCESS);
+    SVRD_Stream_pause(stream);
+    SVRD_Client_replyCode(client, message, SVR_SUCCESS);
 }
 
 /* stream_name */
-void SVRs_Stream_rUnpause(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Stream* stream;
+void SVRD_Stream_rUnpause(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Stream* stream;
     char* stream_name;
 
     switch(message->count) {
@@ -125,22 +125,22 @@ void SVRs_Stream_rUnpause(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    stream = SVRs_Client_getStream(client, stream_name);
+    stream = SVRD_Client_getStream(client, stream_name);
     if(stream == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
         return;
     }
 
-    SVRs_Stream_unpause(stream);
-    SVRs_Client_replyCode(client, message, SVR_SUCCESS);
+    SVRD_Stream_unpause(stream);
+    SVRD_Client_replyCode(client, message, SVR_SUCCESS);
 }
 
-void SVRs_Stream_rResize(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Stream* stream;
+void SVRD_Stream_rResize(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Stream* stream;
     char* stream_name;
     int width, height;
 
@@ -152,21 +152,21 @@ void SVRs_Stream_rResize(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    stream = SVRs_Client_getStream(client, stream_name);
+    stream = SVRD_Client_getStream(client, stream_name);
     if(stream == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
         return;
     }
 
-    SVRs_Client_replyCode(client, message, SVRs_Stream_resize(stream, width, height));
+    SVRD_Client_replyCode(client, message, SVRD_Stream_resize(stream, width, height));
 }
 
-void SVRs_Stream_rSetChannels(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Stream* stream;
+void SVRD_Stream_rSetChannels(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Stream* stream;
     char* stream_name;
     int channels;
 
@@ -177,22 +177,22 @@ void SVRs_Stream_rSetChannels(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    stream = SVRs_Client_getStream(client, stream_name);
+    stream = SVRD_Client_getStream(client, stream_name);
     if(stream == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
         return;
     }
 
-    SVRs_Client_replyCode(client, message, SVRs_Stream_setChannels(stream, channels));
+    SVRD_Client_replyCode(client, message, SVRD_Stream_setChannels(stream, channels));
 }
 
-void SVRs_Stream_rAttachSource(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Stream* stream;
-    SVRs_Source* source;
+void SVRD_Stream_rAttachSource(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Stream* stream;
+    SVRD_Source* source;
     char* stream_name;
     char* source_name;
 
@@ -203,27 +203,27 @@ void SVRs_Stream_rAttachSource(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    stream = SVRs_Client_getStream(client, stream_name);
+    stream = SVRD_Client_getStream(client, stream_name);
     if(stream == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
         return;
     }
 
-    source = SVRs_Source_getByName(source_name);
+    source = SVRD_Source_getByName(source_name);
     if(source == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
         return;
     }
 
-    SVRs_Client_replyCode(client, message, SVRs_Stream_attachSource(stream, source));
+    SVRD_Client_replyCode(client, message, SVRD_Stream_attachSource(stream, source));
 }
 
-void SVRs_Stream_rSetDropRate(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Stream* stream;
+void SVRD_Stream_rSetDropRate(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Stream* stream;
     char* stream_name;
     int drop_rate;
 
@@ -234,21 +234,21 @@ void SVRs_Stream_rSetDropRate(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    stream = SVRs_Client_getStream(client, stream_name);
+    stream = SVRD_Client_getStream(client, stream_name);
     if(stream == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
         return;
     }
 
-    SVRs_Client_replyCode(client, message, SVRs_Stream_setDropRate(stream, drop_rate));
+    SVRD_Client_replyCode(client, message, SVRD_Stream_setDropRate(stream, drop_rate));
 }
 
-void SVRs_Stream_rSetEncoding(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Stream* stream;
+void SVRD_Stream_rSetEncoding(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Stream* stream;
     SVR_Encoding* encoding;
     char* stream_name;
     char* encoding_name;
@@ -260,27 +260,27 @@ void SVRs_Stream_rSetEncoding(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    stream = SVRs_Client_getStream(client, stream_name);
+    stream = SVRD_Client_getStream(client, stream_name);
     if(stream == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
         return;
     }
 
     encoding = SVR_Encoding_getByName(encoding_name);
     if(encoding == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHENCODING);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHENCODING);
         return;
     }
 
-    SVRs_Client_replyCode(client, message, SVRs_Stream_setEncoding(stream, encoding));
+    SVRD_Client_replyCode(client, message, SVRD_Stream_setEncoding(stream, encoding));
 }
 
-void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Source* source;
+void SVRD_Source_rOpen(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Source* source;
     bool client_source;
     char* source_name;
     char* source_descriptor;
@@ -288,7 +288,7 @@ void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message) {
     switch(message->count) {
     case 3:
         if(strcmp(message->components[1], "client") != 0) {
-            SVRs_Client_replyCode(client, message, SVR_INVALIDARGUMENT);
+            SVRD_Client_replyCode(client, message, SVR_INVALIDARGUMENT);
             return;
         }
         client_source = true;
@@ -297,7 +297,7 @@ void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message) {
 
     case 4:
         if(strcmp(message->components[1], "server") != 0) {
-            SVRs_Client_replyCode(client, message, SVR_INVALIDARGUMENT);
+            SVRD_Client_replyCode(client, message, SVR_INVALIDARGUMENT);
             return;
         }
         client_source = false;
@@ -306,39 +306,39 @@ void SVRs_Source_rOpen(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    if(SVRs_Source_getByName(source_name)) {
-        SVRs_Client_replyCode(client, message, SVR_NAMECLASH);
+    if(SVRD_Source_getByName(source_name)) {
+        SVRD_Client_replyCode(client, message, SVR_NAMECLASH);
         return;
     }
 
     if(client_source) {
-        source = SVRs_Source_new(source_name);
+        source = SVRD_Source_new(source_name);
 
         if(source == NULL) {
-            SVRs_Client_replyCode(client, message, SVR_NAMECLASH);
+            SVRD_Client_replyCode(client, message, SVR_NAMECLASH);
             return;
         }
 
-        SVRs_Source_setEncoding(source, SVR_Encoding_getByName("jpeg"));
-        SVRs_Client_provideSource(client, source);
+        SVRD_Source_setEncoding(source, SVR_Encoding_getByName("jpeg"));
+        SVRD_Client_provideSource(client, source);
     } else {
-        source = SVRs_Source_openInstance(source_name, source_descriptor);
+        source = SVRD_Source_openInstance(source_name, source_descriptor);
 
         if(source == NULL) {
-            SVRs_Client_replyCode(client, message, SVR_UNKNOWNERROR);
+            SVRD_Client_replyCode(client, message, SVR_UNKNOWNERROR);
             return;
         }
     }
 
-    SVRs_Client_replyCode(client, message, SVR_SUCCESS);
+    SVRD_Client_replyCode(client, message, SVR_SUCCESS);
 }
 
-void SVRs_Source_rSetEncoding(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Source* source;
+void SVRD_Source_rSetEncoding(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Source* source;
     SVR_Encoding* encoding;
     char* source_name;
     char* encoding_name;
@@ -350,27 +350,27 @@ void SVRs_Source_rSetEncoding(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    source = SVRs_Client_getSource(client, source_name);
+    source = SVRD_Client_getSource(client, source_name);
     if(source == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
         return;
     }
 
     encoding = SVR_Encoding_getByName(encoding_name);
     if(encoding == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHENCODING);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHENCODING);
         return;
     }
 
-    SVRs_Client_replyCode(client, message, SVRs_Source_setEncoding(source, encoding));
+    SVRD_Client_replyCode(client, message, SVRD_Source_setEncoding(source, encoding));
 }
 
-void SVRs_Source_rSetFrameProperties(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Source* source;
+void SVRD_Source_rSetFrameProperties(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Source* source;
     SVR_FrameProperties* frame_properties;
     char* source_name;
     char* frame_properties_string;
@@ -383,25 +383,25 @@ void SVRs_Source_rSetFrameProperties(SVRs_Client* client, SVR_Message* message) 
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    source = SVRs_Client_getSource(client, source_name);
+    source = SVRD_Client_getSource(client, source_name);
     if(source == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
         return;
     }
 
     frame_properties = SVR_FrameProperties_fromString(frame_properties_string);
-    return_code = SVRs_Source_setFrameProperties(source, frame_properties);
+    return_code = SVRD_Source_setFrameProperties(source, frame_properties);
     SVR_FrameProperties_destroy(frame_properties);
 
-    SVRs_Client_replyCode(client, message, return_code);
+    SVRD_Client_replyCode(client, message, return_code);
 }
 
-void SVRs_Source_rData(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Source* source;
+void SVRD_Source_rData(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Source* source;
     char* source_name;
 
     switch(message->count) {
@@ -410,21 +410,21 @@ void SVRs_Source_rData(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    source = SVRs_Client_getSource(client, source_name);
+    source = SVRD_Client_getSource(client, source_name);
     if(source == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
         return;
     }
 
-    SVRs_Source_provideData(source, message->payload, message->payload_size);
+    SVRD_Source_provideData(source, message->payload, message->payload_size);
 }
 
-void SVRs_Source_rClose(SVRs_Client* client, SVR_Message* message) {
-    SVRs_Source* source;
+void SVRD_Source_rClose(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Source* source;
     char* source_name;
 
     switch(message->count) {
@@ -433,25 +433,25 @@ void SVRs_Source_rClose(SVRs_Client* client, SVR_Message* message) {
         break;
 
     default:
-        SVRs_Client_kick(client, "Invalid message");
+        SVRD_Client_kick(client, "Invalid message");
         return;
     }
 
-    source = SVRs_Client_getSource(client, source_name);
+    source = SVRD_Client_getSource(client, source_name);
     if(source == NULL) {
-        SVRs_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSOURCE);
         return;
     }
     
-    SVRs_Client_unprovideSource(client, source);
-    SVRs_Source_destroy(source);
-    SVRs_Client_replyCode(client, message, SVR_SUCCESS);
+    SVRD_Client_unprovideSource(client, source);
+    SVRD_Source_destroy(source);
+    SVRD_Client_replyCode(client, message, SVR_SUCCESS);
 }
 
-void SVRs_Event_rRegister(SVRs_Client* client, SVR_Message* message) {
+void SVRD_Event_rRegister(SVRD_Client* client, SVR_Message* message) {
     // --
 }
 
-void SVRs_Event_rUnregister(SVRs_Client* client, SVR_Message* message) {
+void SVRD_Event_rUnregister(SVRD_Client* client, SVR_Message* message) {
     // --
 }

@@ -4,7 +4,7 @@
 
 #include <svr/forward.h>
 
-void SVRs_MessageRouter_init(void);
-void SVRs_processMessage(SVRs_Client* client, SVR_Message* message);
+void SVRD_MessageRouter_init(void);
+void SVRD_processMessage(SVRD_Client* client, SVR_Message* message);
 
 #endif // #ifndef __SVR_SERVER_MESSAGEROUTING_H

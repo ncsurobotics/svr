@@ -2,14 +2,14 @@
 #ifndef __SVR_SERVER_FORWARD_H
 #define __SVR_SERVER_FORWARD_H
 
-struct SVRs_Client_s;
-struct SVRs_Source_s;
-struct SVRs_SourceType_s;
-struct SVRs_Stream_s;
+struct SVRD_Client_s;
+struct SVRD_Source_s;
+struct SVRD_SourceType_s;
+struct SVRD_Stream_s;
 
-typedef struct SVRs_Client_s SVRs_Client;
-typedef struct SVRs_Source_s SVRs_Source;
-typedef struct SVRs_SourceType_s SVRs_SourceType;
-typedef struct SVRs_Stream_s SVRs_Stream;
+typedef struct SVRD_Client_s SVRD_Client;
+typedef struct SVRD_Source_s SVRD_Source;
+typedef struct SVRD_SourceType_s SVRD_SourceType;
+typedef struct SVRD_Stream_s SVRD_Stream;
 
 #endif // #ifndef __SVR_SERVER_FORWARD_H

@@ -1,12 +1,12 @@
 
 #include "svr.h"
-#include "svr/server/svr.h"
+#include "svrd.h"
 
 #include <highgui.h>
 
-static SVRs_Source* FileSource_open(const char* name, Dictionary* arguments);
+static SVRD_Source* FileSource_open(const char* name, Dictionary* arguments);
 
-SVRs_SourceType SVR_SOURCE(file) = {
+SVRD_SourceType SVR_SOURCE(file) = {
         .name = "file",
         .open = FileSource_open,
 };
@@ -16,15 +16,15 @@ typedef struct {
     pthread_t thread;
     int rate;
     bool close;
-} SVRs_FileSource;
+} SVRD_FileSource;
 
 static void* FileSource_background(void* _source);
-static void FileSource_close(SVRs_Source* source);
+static void FileSource_close(SVRD_Source* source);
 
-static SVRs_Source* FileSource_open(const char* name, Dictionary* arguments) {
-    SVRs_FileSource* source_data;
+static SVRD_Source* FileSource_open(const char* name, Dictionary* arguments) {
+    SVRD_FileSource* source_data;
     SVR_FrameProperties* frame_properties;
-    SVRs_Source* source;
+    SVRD_Source* source;
     IplImage* frame;
     char* filename;
 
@@ -34,7 +34,7 @@ static SVRs_Source* FileSource_open(const char* name, Dictionary* arguments) {
     }
 
     filename = Dictionary_get(arguments, "path");
-    source_data = malloc(sizeof(SVRs_FileSource));
+    source_data = malloc(sizeof(SVRD_FileSource));
     source_data->capture = cvCaptureFromFile(filename);
     source_data->rate = 15;
     source_data->close = false;
@@ -62,9 +62,9 @@ static SVRs_Source* FileSource_open(const char* name, Dictionary* arguments) {
     frame_properties->channels = 3;
     frame_properties->depth = 8;
 
-    source = SVRs_Source_new(name);
-    SVRs_Source_setEncoding(source, SVR_Encoding_getByName("raw"));
-    SVRs_Source_setFrameProperties(source, frame_properties);
+    source = SVRD_Source_new(name);
+    SVRD_Source_setEncoding(source, SVR_Encoding_getByName("raw"));
+    SVRD_Source_setFrameProperties(source, frame_properties);
     SVR_FrameProperties_destroy(frame_properties);
 
     if(source == NULL) {
@@ -81,8 +81,8 @@ static SVRs_Source* FileSource_open(const char* name, Dictionary* arguments) {
 }
 
 static void* FileSource_background(void* _source) {
-    SVRs_Source* source = (SVRs_Source*) _source;
-    SVRs_FileSource* source_data = (SVRs_FileSource*) source->private_data;
+    SVRD_Source* source = (SVRD_Source*) _source;
+    SVRD_FileSource* source_data = (SVRD_FileSource*) source->private_data;
     IplImage* frame;
     float sleep = 0;
 
@@ -96,7 +96,7 @@ static void* FileSource_background(void* _source) {
             /* Reset to beginning */
             cvSetCaptureProperty(source_data->capture, CV_CAP_PROP_POS_AVI_RATIO, 0.0);
         } else {
-            SVRs_Source_provideData(source, (void*) frame->imageData, frame->imageSize);
+            SVRD_Source_provideData(source, (void*) frame->imageData, frame->imageSize);
             Util_usleep(sleep);
         }
     }
@@ -106,8 +106,8 @@ static void* FileSource_background(void* _source) {
     return NULL;
 }
 
-static void FileSource_close(SVRs_Source* source) {
-    SVRs_FileSource* source_data = (SVRs_FileSource*) source->private_data;
+static void FileSource_close(SVRD_Source* source) {
+    SVRD_FileSource* source_data = (SVRD_FileSource*) source->private_data;
 
     source_data->close = true;
     pthread_join(source_data->thread, NULL);

@@ -3,13 +3,13 @@
 #define __SVR_SERVER_STREAM_H
 
 #include <svr/forward.h>
-#include <svr/server/forward.h>
+#include <svrd/forward.h>
 
-struct SVRs_Stream_s {
+struct SVRD_Stream_s {
     char* name;
 
-    SVRs_Client* client;
-    SVRs_Source* source;
+    SVRD_Client* client;
+    SVRD_Source* source;
 
     SVR_Encoding* encoding;
     SVR_Encoder* encoder;
@@ -28,18 +28,18 @@ struct SVRs_Stream_s {
     SVR_LOCKABLE;
 };
 
-SVRs_Stream* SVRs_Stream_new(const char* name);
-void SVRs_Stream_destroy(SVRs_Stream* stream);
-void SVRs_Stream_setClient(SVRs_Stream* stream, SVRs_Client* client);
-int SVRs_Stream_attachSource(SVRs_Stream* stream, SVRs_Source* source);
-int SVRs_Stream_detachSource(SVRs_Stream* stream);
-int SVRs_Stream_setEncoding(SVRs_Stream* stream, SVR_Encoding* encoding);
-int SVRs_Stream_setChannels(SVRs_Stream* stream, int channels);
-int SVRs_Stream_setDropRate(SVRs_Stream* stream, int rate);
-int SVRs_Stream_resize(SVRs_Stream* stream, int width, int height);
+SVRD_Stream* SVRD_Stream_new(const char* name);
+void SVRD_Stream_destroy(SVRD_Stream* stream);
+void SVRD_Stream_setClient(SVRD_Stream* stream, SVRD_Client* client);
+int SVRD_Stream_attachSource(SVRD_Stream* stream, SVRD_Source* source);
+int SVRD_Stream_detachSource(SVRD_Stream* stream);
+int SVRD_Stream_setEncoding(SVRD_Stream* stream, SVR_Encoding* encoding);
+int SVRD_Stream_setChannels(SVRD_Stream* stream, int channels);
+int SVRD_Stream_setDropRate(SVRD_Stream* stream, int rate);
+int SVRD_Stream_resize(SVRD_Stream* stream, int width, int height);
 
-void SVRs_Stream_pause(SVRs_Stream* stream);
-void SVRs_Stream_unpause(SVRs_Stream* stream);
-void SVRs_Stream_inputSourceFrame(SVRs_Stream* stream, IplImage* frame);
+void SVRD_Stream_pause(SVRD_Stream* stream);
+void SVRD_Stream_unpause(SVRD_Stream* stream);
+void SVRD_Stream_inputSourceFrame(SVRD_Stream* stream, IplImage* frame);
 
 #endif // #ifndef __SVR_SERVER_STREAM_H
