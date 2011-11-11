@@ -46,7 +46,7 @@
     exit(-1); \
 }
 
-void SVR_init(void);
+int SVR_init(void);
 void SVR_initCore(void);
 void SVR_setServerAddress(char* address);
 

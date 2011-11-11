@@ -277,6 +277,7 @@ void SVRD_Source_rOpen(SVRD_Client* client, SVR_Message* message) {
     bool client_source;
     char* source_name;
     char* source_descriptor;
+    int err;
 
     switch(message->count) {
     case 3:
@@ -319,10 +320,10 @@ void SVRD_Source_rOpen(SVRD_Client* client, SVR_Message* message) {
         SVRD_Source_setEncoding(source, "jpeg");
         SVRD_Client_provideSource(client, source);
     } else {
-        source = SVRD_Source_openInstance(source_name, source_descriptor);
+        source = SVRD_Source_openInstance(source_name, source_descriptor, &err);
 
         if(source == NULL) {
-            SVRD_Client_replyCode(client, message, SVR_UNKNOWNERROR);
+            SVRD_Client_replyCode(client, message, err);
             return;
         }
     }

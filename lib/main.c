@@ -22,7 +22,7 @@ void SVR_setServerAddress(char* address) {
     server_address = strdup(address);
 }
 
-void SVR_init(void) {
+int SVR_init(void) {
     SVR_initCore();
 
     if(getenv("SVR_DEBUG")) {
@@ -37,8 +37,8 @@ void SVR_init(void) {
     SVR_Stream_init();
 
     if(server_address) {
-        SVR_Comm_init(server_address);
+        return SVR_Comm_init(server_address);
     } else {
-        SVR_Comm_init("127.0.0.1");
+        return SVR_Comm_init("127.0.0.1");
     }
 }

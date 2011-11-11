@@ -25,7 +25,7 @@ SVRD_Source* SVRD_Source_getByName(const char* source_name) {
     return Dictionary_get(sources, source_name);
 }
 
-SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descriptor) {
+SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descriptor, int* return_code) {
     Dictionary* options;
     SVRD_Source* source;
     SVRD_SourceType* source_type;
@@ -36,6 +36,9 @@ SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descr
         err = SVR_getOptionStringErrorPosition();
         SVR_log(SVR_ERROR, Util_format("Error parsing source descriptor \"%s\" at position %d, character '%c'",
                                        descriptor, err, descriptor[err]));
+        if(return_code) {
+            *return_code = SVR_PARSEERROR;
+        }
         return NULL;
     }
 
@@ -43,6 +46,9 @@ SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descr
     if(source_type == NULL) {
         SVR_log(SVR_DEBUG, Util_format("No such source type '%s'", Dictionary_get(options, "%name")));
         SVR_freeParsedOptionString(options);
+        if(return_code) {
+            *return_code = SVR_INVALIDARGUMENT;
+        }
         return NULL;
     }
 
@@ -50,6 +56,10 @@ SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descr
     source->type = source_type;
 
     SVR_freeParsedOptionString(options);
+    
+    if(return_code) {
+        *return_code = SVR_SUCCESS;
+    }
 
     return source;
 }
@@ -81,7 +91,7 @@ void SVRD_Source_fromFile(const char* filename) {
 
     source_names = Dictionary_getKeys(source_descriptions);
     for(int i = 0; (source_name = List_get(source_names, i)) != NULL; i++) {
-        if(SVRD_Source_openInstance(source_name, Dictionary_get(source_descriptions, source_name)) == NULL) {
+        if(SVRD_Source_openInstance(source_name, Dictionary_get(source_descriptions, source_name), NULL) == NULL) {
             SVR_log(SVR_CRITICAL, "Error parsing stream descriptor and/or starting stream");
             SVRD_exitError();
         }
@@ -131,11 +141,11 @@ void SVRD_Source_destroy(SVRD_Source* source) {
     Dictionary_remove(sources, source->name);
     pthread_mutex_unlock(&sources_lock);
 
-    SVR_LOCK(source);
     if(source->type && source->type->close) {
         source->type->close(source);
     }
 
+    SVR_LOCK(source);
     /* Send signals to streams first? */
     List_destroy(source->streams);
 
