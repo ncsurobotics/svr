@@ -165,7 +165,7 @@ static int SVR_Stream_updateInfo(SVR_Stream* stream) {
     return return_code;
 }
 
-int SVR_Stream_setEncoding(SVR_Stream* stream, const char* encoding) {
+int SVR_Stream_setEncoding(SVR_Stream* stream, const char* encoding_descriptor) {
     SVR_Message* message;
     SVR_Message* response;
     int return_code;
@@ -174,7 +174,7 @@ int SVR_Stream_setEncoding(SVR_Stream* stream, const char* encoding) {
     message = SVR_Message_new(3);
     message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.setEncoding");
     message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
-    message->components[2] = SVR_Arena_strdup(message->alloc, encoding);
+    message->components[2] = SVR_Arena_strdup(message->alloc, encoding_descriptor);
 
     response = SVR_Comm_sendMessage(message, true);
     return_code = SVR_Comm_parseResponse(response);

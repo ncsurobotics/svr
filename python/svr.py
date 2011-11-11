@@ -19,7 +19,8 @@ _errors = {
     5 : "Name already in use",
     6 : "Invalid argument",
     7 : "Invalid state",
-    8 : "Unknown error"
+    8 : "Parse error",
+    255 : "Unknown error"
     }
 
 def _check_stream_call(value):

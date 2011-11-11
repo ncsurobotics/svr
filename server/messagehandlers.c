@@ -249,14 +249,13 @@ void SVRD_Stream_rSetDropRate(SVRD_Client* client, SVR_Message* message) {
 
 void SVRD_Stream_rSetEncoding(SVRD_Client* client, SVR_Message* message) {
     SVRD_Stream* stream;
-    SVR_Encoding* encoding;
     char* stream_name;
-    char* encoding_name;
+    char* encoding_descriptor;
 
     switch(message->count) {
     case 3:
         stream_name = message->components[1];
-        encoding_name = message->components[2];
+        encoding_descriptor = message->components[2];
         break;
 
     default:
@@ -270,13 +269,7 @@ void SVRD_Stream_rSetEncoding(SVRD_Client* client, SVR_Message* message) {
         return;
     }
 
-    encoding = SVR_Encoding_getByName(encoding_name);
-    if(encoding == NULL) {
-        SVRD_Client_replyCode(client, message, SVR_NOSUCHENCODING);
-        return;
-    }
-
-    SVRD_Client_replyCode(client, message, SVRD_Stream_setEncoding(stream, encoding));
+    SVRD_Client_replyCode(client, message, SVRD_Stream_setEncoding(stream, encoding_descriptor));
 }
 
 void SVRD_Source_rOpen(SVRD_Client* client, SVR_Message* message) {
@@ -323,7 +316,7 @@ void SVRD_Source_rOpen(SVRD_Client* client, SVR_Message* message) {
             return;
         }
 
-        SVRD_Source_setEncoding(source, SVR_Encoding_getByName("jpeg"));
+        SVRD_Source_setEncoding(source, "jpeg");
         SVRD_Client_provideSource(client, source);
     } else {
         source = SVRD_Source_openInstance(source_name, source_descriptor);
@@ -339,14 +332,13 @@ void SVRD_Source_rOpen(SVRD_Client* client, SVR_Message* message) {
 
 void SVRD_Source_rSetEncoding(SVRD_Client* client, SVR_Message* message) {
     SVRD_Source* source;
-    SVR_Encoding* encoding;
     char* source_name;
-    char* encoding_name;
+    char* encoding_descriptor;
 
     switch(message->count) {
     case 3:
         source_name = message->components[1];
-        encoding_name = message->components[2];
+        encoding_descriptor = message->components[2];
         break;
 
     default:
@@ -360,13 +352,7 @@ void SVRD_Source_rSetEncoding(SVRD_Client* client, SVR_Message* message) {
         return;
     }
 
-    encoding = SVR_Encoding_getByName(encoding_name);
-    if(encoding == NULL) {
-        SVRD_Client_replyCode(client, message, SVR_NOSUCHENCODING);
-        return;
-    }
-
-    SVRD_Client_replyCode(client, message, SVRD_Source_setEncoding(source, encoding));
+    SVRD_Client_replyCode(client, message, SVRD_Source_setEncoding(source, encoding_descriptor));
 }
 
 void SVRD_Source_rSetFrameProperties(SVRD_Client* client, SVR_Message* message) {

@@ -25,6 +25,7 @@ SVR_Source* SVR_Source_new(const char* name) {
     source = malloc(sizeof(SVR_Source));
     source->name = strdup(name);
     source->encoding = NULL;
+    source->encoding_options = NULL;
     source->encoder = NULL;
     source->frame_properties = NULL;
 
@@ -73,21 +74,32 @@ int SVR_Source_destroy(SVR_Source* source) {
     return return_code;
 }
 
-int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_name) {
+int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_descriptor) {
+    Dictionary* options;
     SVR_Encoding* encoding;
     SVR_Message* message;
     SVR_Message* response;
     int return_code;
-
-    encoding = SVR_Encoding_getByName(encoding_name);
+    int err;
+    
+    options = SVR_parseOptionString(encoding_descriptor);
+    if(options == NULL) {
+        err = SVR_getOptionStringErrorPosition();
+        SVR_log(SVR_DEBUG, Util_format("Parse error in \"%s\" at position %d '%c'",
+                                       encoding_descriptor, err, encoding_descriptor[err]));
+        return SVR_PARSEERROR;
+    }
+    
+    encoding = SVR_Encoding_getByName(Dictionary_get(options, "%name"));
     if(encoding == NULL) {
+        SVR_freeParsedOptionString(options);
         return SVR_NOSUCHENCODING;
     }
 
     message = SVR_Message_new(3);
     message->components[0] = SVR_Arena_strdup(message->alloc, "Source.setEncoding");
     message->components[1] = SVR_Arena_strdup(message->alloc, source->name);
-    message->components[2] = SVR_Arena_strdup(message->alloc, encoding_name);
+    message->components[2] = SVR_Arena_strdup(message->alloc, encoding_descriptor);
 
     response = SVR_Comm_sendMessage(message, true);
     return_code = SVR_Comm_parseResponse(response);
@@ -96,7 +108,13 @@ int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_name) {
     SVR_Message_release(response);
 
     if(return_code == SVR_SUCCESS) {
+        if(source->encoding_options) {
+            SVR_freeParsedOptionString(source->encoding_options);
+        }
         source->encoding = encoding;
+        source->encoding_options = options;
+    } else {
+        SVR_freeParsedOptionString(options);
     }
 
     return return_code;
@@ -158,7 +176,7 @@ int SVR_Source_sendFrame(SVR_Source* source, IplImage* frame) {
     }
 
     if(source->encoder == NULL) {
-        source->encoder = SVR_Encoder_new(source->encoding, source->frame_properties);
+        source->encoder = SVR_Encoder_new(source->encoding, source->encoding_options, source->frame_properties);
     }
 
     /* Check frame properties */

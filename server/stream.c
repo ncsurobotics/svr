@@ -16,7 +16,8 @@ SVRD_Stream* SVRD_Stream_new(const char* name) {
     stream->source = NULL;
     stream->frame_properties = SVR_FrameProperties_new();
     stream->encoder = NULL;
-    stream->encoding = SVR_Encoding_getByName("raw");
+    stream->encoding = NULL;
+    stream->encoding_options = NULL;
 
     stream->payload_buffer_size = 8 * 1024;
     stream->payload_buffer = malloc(stream->payload_buffer_size);
@@ -28,6 +29,9 @@ SVRD_Stream* SVRD_Stream_new(const char* name) {
     stream->drop_rate = 0;
 
     SVR_LOCKABLE_INIT(stream);
+
+    /* Set default encoding */
+    SVRD_Stream_setEncoding(stream, "raw");
 
     return stream;
 }
@@ -50,7 +54,7 @@ static void SVRD_Stream_initializeEncoder(SVRD_Stream* stream) {
         SVR_Encoder_destroy(stream->encoder);
     }
 
-    stream->encoder = SVR_Encoder_new(stream->encoding, stream->frame_properties);
+    stream->encoder = SVR_Encoder_new(stream->encoding, stream->encoding_options, stream->frame_properties);
     SVR_UNLOCK(stream);
 }
 
@@ -85,12 +89,31 @@ int SVRD_Stream_detachSource(SVRD_Stream* stream) {
     return SVR_SUCCESS;
 }
 
-int SVRD_Stream_setEncoding(SVRD_Stream* stream, SVR_Encoding* encoding) {
+int SVRD_Stream_setEncoding(SVRD_Stream* stream, const char* encoding_descriptor) {
+    Dictionary* options;
+    SVR_Encoding* encoding;
+    
     if(stream->state == SVR_UNPAUSED) {
         return SVR_INVALIDSTATE;
     }
 
+    options = SVR_parseOptionString(encoding_descriptor);
+    if(options == NULL) {
+        return SVR_PARSEERROR;
+    }
+
+    encoding = SVR_Encoding_getByName(Dictionary_get(options, "%name"));
+    if(encoding == NULL) {
+        SVR_freeParsedOptionString(options);
+        return SVR_NOSUCHENCODING;
+    }
+
+    if(stream->encoding_options) {
+        SVR_freeParsedOptionString(stream->encoding_options);
+    }
     stream->encoding = encoding;
+    stream->encoding_options = options;
+    
     return SVR_SUCCESS;
 }
 

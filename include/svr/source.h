@@ -7,6 +7,7 @@
 struct SVR_Source_s {
     char* name;
     SVR_Encoding* encoding;
+    Dictionary* encoding_options;
     SVR_Encoder* encoder;
     SVR_FrameProperties* frame_properties;
     void* payload_buffer;

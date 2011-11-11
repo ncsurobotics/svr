@@ -12,6 +12,7 @@ struct SVRD_Stream_s {
     SVRD_Source* source;
 
     SVR_Encoding* encoding;
+    Dictionary* encoding_options;
     SVR_Encoder* encoder;
     SVR_FrameProperties* frame_properties;
 
@@ -33,7 +34,7 @@ void SVRD_Stream_destroy(SVRD_Stream* stream);
 void SVRD_Stream_setClient(SVRD_Stream* stream, SVRD_Client* client);
 int SVRD_Stream_attachSource(SVRD_Stream* stream, SVRD_Source* source);
 int SVRD_Stream_detachSource(SVRD_Stream* stream);
-int SVRD_Stream_setEncoding(SVRD_Stream* stream, SVR_Encoding* encoding);
+int SVRD_Stream_setEncoding(SVRD_Stream* stream, const char* encoding_descriptor);
 int SVRD_Stream_setChannels(SVRD_Stream* stream, int channels);
 int SVRD_Stream_setDropRate(SVRD_Stream* stream, int rate);
 int SVRD_Stream_resize(SVRD_Stream* stream, int width, int height);

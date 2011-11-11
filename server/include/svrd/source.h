@@ -8,6 +8,7 @@ struct SVRD_Source_s {
     char* name;
 
     SVR_Encoding* encoding;
+    Dictionary* encoding_options;
     SVR_Decoder* decoder;
     SVR_FrameProperties* frame_properties;
 
@@ -35,7 +36,7 @@ void SVRD_Source_fromFile(const char* filename);
 SVRD_Source* SVRD_Source_new(const char* name);
 void SVRD_Source_destroy(SVRD_Source* source);
 SVR_FrameProperties* SVRD_Source_getFrameProperties(SVRD_Source* source);
-int SVRD_Source_setEncoding(SVRD_Source* source, SVR_Encoding* encoding);
+int SVRD_Source_setEncoding(SVRD_Source* source, const char* encoding_descriptor);
 int SVRD_Source_setFrameProperties(SVRD_Source* source, SVR_FrameProperties* frame_properties);
 void SVRD_Source_registerStream(SVRD_Source* source, SVRD_Stream* stream);
 void SVRD_Source_unregisterStream(SVRD_Source* source, SVRD_Stream* stream);

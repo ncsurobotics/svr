@@ -6,9 +6,9 @@
 #include "encoding_internal.h"
 
 #define BUFFER_GROW_SIZE 1024
-#define JPEG_QUALITY 50
+#define JPEG_DEFAULT_QUALITY 70
 
-static void* openEncoder(SVR_FrameProperties* frame_properties);
+static void* openEncoder(SVR_FrameProperties* frame_properties, Dictionary* options);
 static void closeEncoder(SVR_Encoder* encoder);
 static void encode(SVR_Encoder* encoder, IplImage* frame);
 
@@ -75,8 +75,9 @@ METHODDEF(void) term_svr_destination(j_compress_ptr cinfo) {
     SVR_Encoder_provideData(private_data->encoder, private_data->buffer, data_length);
 }
 
-static void* openEncoder(SVR_FrameProperties* frame_properties) {
+static void* openEncoder(SVR_FrameProperties* frame_properties, Dictionary* options) {
     SVR_JpegEncoder* private_data = malloc(sizeof(SVR_JpegEncoder));
+    int quality = JPEG_DEFAULT_QUALITY;;
 
     private_data->cinfo.err = jpeg_std_error(&private_data->jerr);
     jpeg_create_compress(&private_data->cinfo);
@@ -92,7 +93,16 @@ static void* openEncoder(SVR_FrameProperties* frame_properties) {
     }
 
     jpeg_set_defaults(&private_data->cinfo);
-    jpeg_set_quality(&private_data->cinfo, JPEG_QUALITY, true);
+
+    if(Dictionary_exists(options, "quality")) {
+        quality = atoi(Dictionary_get(options, "quality"));
+        if(quality < 5 || quality > 100) {
+            SVR_log(SVR_WARNING, "Invalid JPEG quality %d. Falling back to default");
+            quality = JPEG_DEFAULT_QUALITY;
+        }
+    }
+    
+    jpeg_set_quality(&private_data->cinfo, quality, true);
 
     private_data->cinfo.dest = (struct jpeg_destination_mgr*) private_data;
     private_data->buffer_size = BUFFER_GROW_SIZE;

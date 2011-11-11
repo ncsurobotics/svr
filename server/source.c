@@ -109,6 +109,7 @@ SVRD_Source* SVRD_Source_new(const char* name) {
     source->name = strdup(name);
     source->streams = List_new();
     source->frame_properties = NULL;
+    source->encoding = NULL;
     source->decoder = NULL;
     source->type = NULL;
     source->private_data = NULL;
@@ -149,13 +150,29 @@ void SVRD_Source_destroy(SVRD_Source* source) {
     free(source);
 }
 
-int SVRD_Source_setEncoding(SVRD_Source* source, SVR_Encoding* encoding) {
+int SVRD_Source_setEncoding(SVRD_Source* source, const char* encoding_descriptor) {
+    Dictionary* options;
+    SVR_Encoding* encoding;
+    
     if(source->decoder) {
         /* Source already started */
         return SVR_INVALIDSTATE;
     }
 
+    options = SVR_parseOptionString(encoding_descriptor);
+    if(options == NULL) {
+        return SVR_PARSEERROR;
+    }
+
+    encoding = SVR_Encoding_getByName(Dictionary_get(options, "%name"));
+    if(encoding == NULL) {
+        SVR_freeParsedOptionString(options);
+        return SVR_NOSUCHENCODING;
+    }
+
     source->encoding = encoding;
+    SVR_freeParsedOptionString(options);
+    
     return SVR_SUCCESS;
 }
 

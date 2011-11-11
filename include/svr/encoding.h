@@ -18,7 +18,7 @@ struct SVR_Encoding_s {
      * Create a new encoder instance. The returned data is the
      * private data of the encoder
      */
-    void* (*openEncoder)(SVR_FrameProperties* frame_properties);
+    void* (*openEncoder)(SVR_FrameProperties* frame_properties, Dictionary* options);
 
     /**
      * Create a new decoder instance. The returned data is the
@@ -77,7 +77,7 @@ void SVR_Encoding_close(void);
 SVR_Encoding* SVR_Encoding_getByName(const char* name);
 int SVR_Encoding_register(SVR_Encoding* encoding);
 
-SVR_Encoder* SVR_Encoder_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_properties);
+SVR_Encoder* SVR_Encoder_new(SVR_Encoding* encoding, Dictionary* encoding_options, SVR_FrameProperties* frame_properties);
 void SVR_Encoder_destroy(SVR_Encoder* encoder);
 size_t SVR_Encoder_encode(SVR_Encoder* encoder, IplImage* frame);
 size_t SVR_Encoder_dataReady(SVR_Encoder* encoder);

@@ -66,7 +66,7 @@ static SVRD_Source* TestSource_open(const char* name, Dictionary* arguments) {
     frame_properties->depth = 8;
 
     source = SVRD_Source_new(name);
-    SVRD_Source_setEncoding(source, SVR_Encoding_getByName("raw"));
+    SVRD_Source_setEncoding(source, "raw");
     SVRD_Source_setFrameProperties(source, frame_properties);
     SVR_FrameProperties_destroy(frame_properties);
 

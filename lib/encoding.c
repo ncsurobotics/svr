@@ -37,7 +37,7 @@ int SVR_Encoding_register(SVR_Encoding* encoding) {
     return 0;
 }
 
-SVR_Encoder* SVR_Encoder_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_properties) {
+SVR_Encoder* SVR_Encoder_new(SVR_Encoding* encoding, Dictionary* encoding_options, SVR_FrameProperties* frame_properties) {
     SVR_Encoder* encoder = malloc(sizeof(SVR_Encoder));
 
     encoder->encoding = encoding;
@@ -48,7 +48,7 @@ SVR_Encoder* SVR_Encoder_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_
     SVR_LOCKABLE_INIT(encoder);
 
     if(encoding->openEncoder) {
-        encoder->private_data = encoding->openEncoder(frame_properties);
+        encoder->private_data = encoding->openEncoder(frame_properties, encoding_options);
     } else {
         encoder->private_data = NULL;
     }
