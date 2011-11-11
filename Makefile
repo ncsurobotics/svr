@@ -5,16 +5,32 @@ include $(CONFIG)
 # Ensure that PREFIX is saved as an absolute path
 export PREFIX := $(abspath $(PREFIX))
 
-all: $(LIB_NAME) $(SERVER_NAME)
+all: lib server python
 
-$(LIB_NAME):
-	cd lib && $(MAKE) $@
+lib:
+	cd lib && $(MAKE) $(LIB_NAME)
 
-$(SERVER_NAME):
-	cd server && $(MAKE) $@
+server: lib
+	cd server && $(MAKE) $(SERVER_NAME)
 
-python:
+python: lib
 	cd python && $(PYTHON) setup.py build
+
+install: lib-install server-install python-install
+
+uninstall: lib-uninstall server-uninstall
+
+lib-install:
+	cd lib && $(MAKE) install
+
+lib-uninstall:
+	cd lib && $(MAKE) uninstall
+
+server-install:
+	cd server && $(MAKE) install
+
+sever-uninstall:
+	cd server && $(MAKE) uninstall
 
 python-install:
 	cd python && $(PYTHON) setup.py install
@@ -28,16 +44,11 @@ clean:
 	-rm -rf doc/html/ 2> /dev/null
 	-rm -rf doc/server/html/ 2> /dev/null
 
-install uninstall:
-	cd lib && $(MAKE) $@
-ifneq ($(strip $(SERVER_NAME)),)
-	cd server && $(MAKE) $@
-endif
-
 doc:
 	doxygen doc/Doxyfile
 
 doc-hub:
 	doxygen doc/server/Doxyfile
 
-.PHONY: all clean install uninstall doc python python-install tests
+.PHONY: all lib server python install uninstall python-install lib-install \
+	lib-uninstall server-install server-uninstall tests clean doc doc-hub
