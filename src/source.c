@@ -7,7 +7,6 @@ SVR_Source* SVR_Source_new(const char* name) {
     SVR_Message* response;
     int return_code;
 
-
     message = SVR_Message_new(3);
     message->components[0] = SVR_Arena_strdup(message->alloc, "Source.open");
     message->components[1] = SVR_Arena_strdup(message->alloc, "client");
@@ -29,7 +28,7 @@ SVR_Source* SVR_Source_new(const char* name) {
     source->encoder = NULL;
     source->frame_properties = NULL;
 
-    source->payload_buffer_size = 8 * 1024;
+    source->payload_buffer_size = 4 * 1024;
     source->payload_buffer = malloc(source->payload_buffer_size);
 
     /* Attempt to set encoding to jpeg and try raw if that fails */

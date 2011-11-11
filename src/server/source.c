@@ -207,6 +207,35 @@ SVRs_Source* SVRs_Source_new(const char* name) {
     return source;
 }
 
+void SVRs_Source_destroy(SVRs_Source* source) {
+    pthread_mutex_lock(&sources_lock);
+    if(Dictionary_exists(sources, source->name) == false) {
+        pthread_mutex_unlock(&sources_lock);
+        return;
+    }
+
+    Dictionary_remove(sources, source->name);
+    pthread_mutex_unlock(&sources_lock);
+
+    SVR_LOCK(source);
+    if(source->cleanup) {
+        source->cleanup(source);
+    }
+
+    /* Send signals to streams first? */
+    List_destroy(source->streams);
+
+    if(source->frame_properties) {
+        SVR_FrameProperties_destroy(source->frame_properties);
+    }
+
+    free(source->name);
+    SVR_Decoder_destroy(source->decoder);
+    SVR_UNLOCK(source);
+
+    free(source);
+}
+
 int SVRs_Source_setEncoding(SVRs_Source* source, SVR_Encoding* encoding) {
     if(source->decoder) {
         /* Source already started */

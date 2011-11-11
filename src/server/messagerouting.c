@@ -34,8 +34,8 @@ static SVRs_RequestMapping request_types[] = {
     {"Source.setEncoding", SVRs_Source_rSetEncoding},
     {"Source.setFrameProperties", SVRs_Source_rSetFrameProperties},
     {"Source.close", SVRs_Source_rClose},
-
     {"Data", SVRs_Source_rData},
+
     {"Event.register", SVRs_Event_rRegister},
     {"Event.unregister", SVRs_Event_rUnregister}
 };

@@ -32,7 +32,7 @@ SVRs_Source* SVRs_Source_openInstance(const char* source_name, const char* descr
 void SVRs_Source_fromFile(const char* filename);
 
 SVRs_Source* SVRs_Source_new(const char* name);
-
+void SVRs_Source_destroy(SVRs_Source* source);
 SVR_FrameProperties* SVRs_Source_getFrameProperties(SVRs_Source* source);
 int SVRs_Source_setEncoding(SVRs_Source* source, SVR_Encoding* encoding);
 int SVRs_Source_setFrameProperties(SVRs_Source* source, SVR_FrameProperties* frame_properties);

@@ -55,6 +55,9 @@ struct SVRs_Client_s {
      */
     Dictionary* sources;
 
+    void* payload_buffer;
+    size_t payload_buffer_size;
+
     /* This object is reference counted */
     SVR_REFCOUNTED;
 

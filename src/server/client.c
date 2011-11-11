@@ -47,6 +47,8 @@ SVRs_Client* SVRs_Client_new(int socket) {
     client->streams = Dictionary_new();
     client->sources = Dictionary_new();
     client->state = SVR_CONNECTED;
+    client->payload_buffer = NULL;
+    client->payload_buffer_size = 0;
 
     SVR_REFCOUNTED_INIT(client, SVRs_Client_cleanup);
     SVR_LOCKABLE_INIT(client);
@@ -135,8 +137,11 @@ void SVRs_addClient(int socket) {
  * \param client Mark the given client as closed
  */
 void SVRs_Client_markForClosing(SVRs_Client* client) {
+    SVRs_Source* source;
     List* streams;
+    List* sources;
     char* stream_name;
+    char* source_name;
 
     SVR_LOCK(client);
     if(client->state != SVR_CLOSED) {
@@ -158,6 +163,14 @@ void SVRs_Client_markForClosing(SVRs_Client* client) {
             SVRs_Client_closeStream(client, stream_name);
         }
         List_destroy(streams);
+
+        /* Destroy all sources */
+        sources = Dictionary_getKeys(client->sources);
+        for(int i = 0; (source_name = List_get(sources, i)) != NULL; i++) {
+            source = Dictionary_get(client->sources, source_name);
+            SVRs_Source_destroy(source);
+        }
+        List_destroy(sources);
     } else {
         SVR_UNLOCK(client);
     }
@@ -269,6 +282,16 @@ static void* SVRs_Client_worker(void* _client) {
             SVR_log(SVR_WARNING, "Lost client connection");
             SVRs_Client_markForClosing(client);
             break;
+        }
+
+        /* Receive payload */
+        if(message->payload_size > 0) {
+            if(message->payload_size > client->payload_buffer_size) {
+                client->payload_buffer = realloc(client->payload_buffer, message->payload_size);
+                message->payload = client->payload_buffer;
+
+                SVR_Net_receivePayload(client->socket, message);
+            }
         }
 
         /* Process message */
