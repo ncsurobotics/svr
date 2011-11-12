@@ -23,6 +23,18 @@ _errors = {
     255 : "Unknown error"
     }
 
+class SVRSourcesList(ctypes.Structure):
+    """ Seawolf list returned by SVR_getSourcesList """
+
+    _fields_ = [
+        ("base", ctypes.POINTER(ctypes.c_char_p)),
+        ("items", ctypes.c_int),
+        ("space", ctypes.c_int)
+    ]
+
+    def to_list(self):
+        return [str(self.base[i]) for i in range(0, self.items)]
+
 def _check_stream_call(value):
     if value == 0:
         return True
@@ -45,6 +57,7 @@ _svr.SVR_Stream_setGrayscale.restype = _check_stream_call
 _svr.SVR_Stream_setDropRate.restype = _check_stream_call
 _svr.SVR_Stream_unpause.restype = _check_stream_call
 _svr.SVR_Stream_pause.restype = _check_stream_call
+_svr.SVR_Stream_isOrphaned.restype = ctypes.c_bool
 
 _svr.SVR_Source_destroy.restype = _check_source_call
 _svr.SVR_Source_setEncoding.restype = _check_source_call
@@ -52,8 +65,12 @@ _svr.SVR_Source_setFrameProperties.restype = _check_source_call
 _svr.SVR_Source_sendFrame.restype = _check_source_call
 _svr.SVR_openServerSource.restype = _check_source_call
 _svr.SVR_closeServerSource.restype = _check_source_call
+_svr.SVR_getSourcesList.restype = ctypes.POINTER(SVRSourcesList)
 
 class StreamException(Exception):
+    pass
+
+class OrphanStreamException(Exception):
     pass
 
 class SourceException(Exception):
@@ -64,6 +81,9 @@ def connect(server_address=None):
     if server_address:
         _svr.SVR_setServerAddress(server_address)
     _connected = (_svr.SVR_init() == 0)
+
+    if not _connected:
+        raise Exception("Error connecting to SVR server")
 
 class Stream(object):
     def __init__(self, source_name):
@@ -98,11 +118,16 @@ class Stream(object):
     def pause(self):
         return self.svr.SVR_Stream_pause(self.handle)
 
+    def is_orphaned(self):
+        return self.svr.SVR_Stream_isOrphaned(self.handle)
+
     def get_frame(self, wait=True):
         frame_handle = self.svr.SVR_Stream_getFrame(self.handle, ctypes.c_bool(wait))
 
         if frame_handle == 0:
-            if wait:
+            if self.is_orphaned():
+                raise OrphanStreamException("Remote source closed")
+            elif wait:
                 raise StreamException("Error retreiving frame")
             else:
                 return None
@@ -149,3 +174,9 @@ def open_server_source(source_name, source_description):
 
 def close_server_source(source_name):
     return _svr.SVR_closeServerSource(source_name)
+
+def get_sources_list():
+    p = _svr.SVR_getSourcesList()
+    sources = p.contents.to_list()
+    _svr.SVR_freeSourcesList(p)
+    return sources
