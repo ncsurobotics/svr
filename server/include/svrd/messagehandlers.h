@@ -18,6 +18,7 @@ void SVRD_Source_rSetEncoding(SVRD_Client* client, SVR_Message* message);
 void SVRD_Source_rSetFrameProperties(SVRD_Client* client, SVR_Message* message);
 void SVRD_Source_rClose(SVRD_Client* client, SVR_Message* message);
 void SVRD_Source_rData(SVRD_Client* client, SVR_Message* message);
+void SVRD_Source_rGetSourcesList(SVRD_Client* client, SVR_Message* message);
 
 void SVRD_Event_rRegister(SVRD_Client* client, SVR_Message* message);
 void SVRD_Event_rUnregister(SVRD_Client* client, SVR_Message* message);

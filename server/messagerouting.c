@@ -34,6 +34,7 @@ static SVRD_RequestMapping request_types[] = {
     {"Source.setEncoding", SVRD_Source_rSetEncoding},
     {"Source.setFrameProperties", SVRD_Source_rSetFrameProperties},
     {"Source.close", SVRD_Source_rClose},
+    {"Source.getSourcesList", SVRD_Source_rGetSourcesList},
     {"Data", SVRD_Source_rData},
 
     {"Event.register", SVRD_Event_rRegister},

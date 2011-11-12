@@ -25,6 +25,35 @@ SVRD_Source* SVRD_Source_getByName(const char* source_name) {
     return Dictionary_get(sources, source_name);
 }
 
+SVRD_Source* SVRD_Source_getLockedSource(const char* source_name) {
+    SVRD_Source* source;
+
+    pthread_mutex_lock(&sources_lock);
+    source = Dictionary_get(sources, source_name);
+    if(source != NULL) {
+        SVR_LOCK(source);
+    }
+
+    pthread_mutex_unlock(&sources_lock);
+    return source;
+}
+
+List* SVRD_Source_getSourcesList(void) {
+    List* sources_list;
+    List* sources_list_copy = List_new();
+    char* source_name;
+
+    pthread_mutex_lock(&sources_lock);
+    sources_list = Dictionary_getKeys(sources);
+    for(int i = 0; (source_name = List_get(sources_list, i)) != NULL; i++) {
+        List_append(sources_list_copy, strdup(source_name));
+    }
+    pthread_mutex_unlock(&sources_lock);
+
+    List_destroy(sources_list);
+    return sources_list_copy;
+}
+
 SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descriptor, int* return_code) {
     Dictionary* options;
     SVRD_Source* source;

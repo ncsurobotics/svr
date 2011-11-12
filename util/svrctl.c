@@ -32,6 +32,8 @@ static void svrctl_usage(const char* argv0) {
 
 int main(int argc, char** argv) {
     int opt, indexptr, i, err;
+    char* source_name;
+    List* sources;
 
     struct option long_options[] = {
         {"help", 0, NULL, 'h'},
@@ -175,11 +177,27 @@ int main(int argc, char** argv) {
             break;
 
         case SVRCTL_CLOSEALL:
-            fprintf(stderr, "Not implemented\n");
+            sources = SVR_getSourcesList();
+            List_sort(sources, List_compareString);
+
+            for(int i = 0; (source_name = List_get(sources, i)) != NULL; i++) {
+                if(source_name[0] == 's') {
+                    SVR_closeServerSource(source_name + 2);
+                }
+            }
+
+            SVR_freeSourcesList(sources); 
             break;
 
         case SVRCTL_LISTALL:
-            fprintf(stderr, "Not implemented\n");
+            sources = SVR_getSourcesList();
+            List_sort(sources, List_compareString);
+
+            for(int i = 0; (source_name = List_get(sources, i)) != NULL; i++) {
+                printf("%s\n", source_name);
+            }
+
+            SVR_freeSourcesList(sources);
             break;
         }
     }

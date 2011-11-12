@@ -242,3 +242,34 @@ int SVR_closeServerSource(const char* name) {
 
     return return_code;
 }
+
+List* SVR_getSourcesList(void) {
+    List* sources_list;
+    SVR_Message* message;
+    SVR_Message* response;
+
+    message = SVR_Message_new(1);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Source.getSourcesList");
+
+    response = SVR_Comm_sendMessage(message, true);
+
+    sources_list = List_new();
+    for(int i = 1; i < response->count; i++) {
+        List_append(sources_list, strdup(response->components[i]));
+    }
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    return sources_list;
+}
+
+void SVR_freeSourcesList(List* sources_list) {
+    char* source_name;
+
+    for(int i = 0; (source_name = List_get(sources_list, i)) != NULL; i++) {
+        free(source_name);
+    }
+
+    List_destroy(sources_list);
+}

@@ -21,5 +21,7 @@ int SVR_Source_setFrameProperties(SVR_Source* source, SVR_FrameProperties* frame
 int SVR_Source_sendFrame(SVR_Source* source, IplImage* frame);
 int SVR_openServerSource(const char* name, const char* descriptor);
 int SVR_closeServerSource(const char* name);
+List* SVR_getSourcesList(void);
+void SVR_freeSourcesList(List* sources_list);
 
 #endif // #ifndef __SVR_SOURCE_H

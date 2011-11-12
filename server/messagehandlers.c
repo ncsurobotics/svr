@@ -444,6 +444,46 @@ void SVRD_Source_rClose(SVRD_Client* client, SVR_Message* message) {
     SVRD_Client_replyCode(client, message, SVR_SUCCESS);
 }
 
+void SVRD_Source_rGetSourcesList(SVRD_Client* client, SVR_Message* message) {
+    SVR_Message* response;
+    SVRD_Source* source;
+    List* sources_list;
+    char* source_name;
+    int j;
+    
+    if(message->count != 1) {
+        return;
+    }
+
+    sources_list = SVRD_Source_getSourcesList();
+    response = SVR_Message_new(List_getSize(sources_list) + 1);
+
+    response->components[0] = SVR_Arena_strdup(response->alloc, "Source.getSourceList");
+    j = 1;
+    for(int i = 0; (source_name = List_get(sources_list, i)) != NULL; i++) {
+        source = SVRD_Source_getLockedSource(source_name);
+        free(source_name);
+
+        if(source == NULL) {
+            message->count--;
+            continue;
+        }
+
+        if(source->type == NULL) {
+            response->components[j] = SVR_Arena_sprintf(response->alloc, "c:%s", source->name);
+        } else {
+            response->components[j] = SVR_Arena_sprintf(response->alloc, "s:%s", source->name);
+        }
+
+        SVR_UNLOCK(source);
+        j++;
+    }
+
+    List_destroy(sources_list);
+    SVRD_Client_reply(client, message, response);
+    SVR_Message_release(response);
+}
+
 void SVRD_Event_rRegister(SVRD_Client* client, SVR_Message* message) {
     // --
 }

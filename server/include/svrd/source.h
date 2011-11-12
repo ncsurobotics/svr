@@ -30,6 +30,8 @@ struct SVRD_SourceType_s {
 
 void SVRD_Source_init(void);
 SVRD_Source* SVRD_Source_getByName(const char* source_name);
+SVRD_Source* SVRD_Source_getLockedSource(const char* source_name);
+List* SVRD_Source_getSourcesList(void);
 SVRD_Source* SVRD_Source_openInstance(const char* source_name, const char* descriptor_orig, int* return_code);
 void SVRD_Source_fromFile(const char* filename);
 
