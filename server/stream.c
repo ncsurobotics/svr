@@ -89,6 +89,25 @@ int SVRD_Stream_detachSource(SVRD_Stream* stream) {
     return SVR_SUCCESS;
 }
 
+/* Source is closing */
+void SVRD_Stream_sourceClosing(SVRD_Stream* stream) {
+    SVR_Message* message;
+
+    /* Pause stream */
+    SVRD_Stream_pause(stream);
+
+    /* Detach source */
+    SVRD_Stream_detachSource(stream);
+
+    /* Notify client that source has orphaned the stream */
+    message = SVR_Message_new(2);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.orphaned");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->name);
+
+    SVRD_Client_sendMessage(stream->client, message);
+    SVR_Message_release(message);
+}
+
 int SVRD_Stream_setEncoding(SVRD_Stream* stream, const char* encoding_descriptor) {
     Dictionary* options;
     SVR_Encoding* encoding;

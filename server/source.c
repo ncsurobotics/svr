@@ -138,6 +138,10 @@ SVRD_Source* SVRD_Source_new(const char* name) {
 }
 
 void SVRD_Source_destroy(SVRD_Source* source) {
+    SVRD_Stream* stream;
+
+    /* Remove source from sources list and ensure source is only destroyed
+       once */
     pthread_mutex_lock(&sources_lock);
     if(Dictionary_exists(sources, source->name) == false) {
         pthread_mutex_unlock(&sources_lock);
@@ -152,7 +156,11 @@ void SVRD_Source_destroy(SVRD_Source* source) {
     }
 
     SVR_LOCK(source);
-    /* Send signals to streams first? */
+
+    /* Send signals to streams first */
+    for(int i = 0; (stream = List_get(source->streams, i)) != NULL; i++) {
+        SVRD_Stream_sourceClosing(stream);
+    }
     List_destroy(source->streams);
 
     if(source->frame_properties) {

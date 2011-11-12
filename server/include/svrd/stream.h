@@ -34,6 +34,7 @@ void SVRD_Stream_destroy(SVRD_Stream* stream);
 void SVRD_Stream_setClient(SVRD_Stream* stream, SVRD_Client* client);
 int SVRD_Stream_attachSource(SVRD_Stream* stream, SVRD_Source* source);
 int SVRD_Stream_detachSource(SVRD_Stream* stream);
+void SVRD_Stream_sourceClosing(SVRD_Stream* stream);
 int SVRD_Stream_setEncoding(SVRD_Stream* stream, const char* encoding_descriptor);
 int SVRD_Stream_setChannels(SVRD_Stream* stream, int channels);
 int SVRD_Stream_setDropRate(SVRD_Stream* stream, int rate);

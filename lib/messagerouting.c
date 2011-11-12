@@ -7,7 +7,9 @@ typedef struct {
 } SVR_RequestMapping;
 
 static SVR_RequestMapping request_types[] = {
-    {"Data", SVR_MessageHandler_data}
+    {"Stream.orphaned", SVR_MessageHandler_streamOrphaned},
+    {"Data", SVR_MessageHandler_data},
+    {"SVR.kick", SVR_MessageHandler_kick}
 };
 
 static int SVR_compareRequestMapping(const void* v1, const void* v2);

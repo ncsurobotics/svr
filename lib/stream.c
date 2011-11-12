@@ -28,6 +28,7 @@ SVR_Stream* SVR_Stream_new(const char* source_name) {
     stream->frame_properties = NULL;
     stream->encoding = NULL;
     stream->decoder = NULL;
+    stream->orphaned = false;
 
     pthread_cond_init(&stream->new_frame, NULL);
     SVR_LOCKABLE_INIT(stream);
@@ -348,6 +349,30 @@ void SVR_Stream_returnFrame(SVR_Stream* stream, IplImage* frame) {
     if(stream->decoder) {
         SVR_Decoder_returnFrame(stream->decoder, frame);
     }
+}
+
+bool SVR_Stream_isOrphaned(SVR_Stream* stream) {
+    return stream->orphaned;
+}
+
+void SVR_Stream_setOrphaned(const char* stream_name) {
+    SVR_Stream* stream;
+
+    pthread_mutex_lock(&stream_list_lock);
+    stream = SVR_Stream_getByName(stream_name);
+    if(stream == NULL) {
+        SVR_log(SVR_WARNING, "Received orphaned signal for uknown stream");
+        return;
+    }
+    SVR_LOCK(stream);
+    pthread_mutex_unlock(&stream_list_lock);
+
+    /* We've been orphaned, pause the stream, mark as orphaned and wake up any
+       getFrame calls */
+    stream->orphaned = true;
+    stream->state = SVR_PAUSED;
+    pthread_cond_broadcast(&stream->new_frame);
+    SVR_UNLOCK(stream);
 }
 
 void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n) {

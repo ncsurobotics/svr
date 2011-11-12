@@ -98,8 +98,16 @@ int main(int argc, char** argv) {
 
     while(cvWaitKey(10) != 'q') {
         frame = SVR_Stream_getFrame(stream, true);
-        cvShowImage(source_name, frame);
-        SVR_Stream_returnFrame(stream, frame);
+        if(frame) {
+            cvShowImage(source_name, frame);
+            SVR_Stream_returnFrame(stream, frame);
+        } else if(SVR_Stream_isOrphaned(stream)) {
+            fprintf(stderr, "Stream orphaned (source closed)\n");
+            break;
+        } else {
+            fprintf(stderr, "Received NULL frame\n");
+            Util_usleep(1.0);
+        }
     }
 
     return 0;

@@ -19,6 +19,7 @@ struct SVR_Stream_s {
     SVR_FrameProperties* frame_properties;
     SVR_Encoding* encoding;
     SVR_Decoder* decoder;
+    bool orphaned;
 
     pthread_cond_t new_frame;
     SVR_LOCKABLE;
@@ -36,6 +37,8 @@ int SVR_Stream_pause(SVR_Stream* stream);
 SVR_FrameProperties* SVR_Stream_getFrameProperties(SVR_Stream* stream);
 IplImage* SVR_Stream_getFrame(SVR_Stream* stream, bool wait);
 void SVR_Stream_returnFrame(SVR_Stream* stream, IplImage* frame);
+bool SVR_Stream_isOrphaned(SVR_Stream* stream);
+void SVR_Stream_setOrphaned(const char* stream_name);
 void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n);
 
 #endif // #ifndef __SVR_STREAM_H
