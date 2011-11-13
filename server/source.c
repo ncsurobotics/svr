@@ -196,8 +196,12 @@ void SVRD_Source_destroy(SVRD_Source* source) {
         SVR_FrameProperties_destroy(source->frame_properties);
     }
 
+    if(source->decoder) {
+        SVR_Decoder_destroy(source->decoder);
+    }
+
     free(source->name);
-    SVR_Decoder_destroy(source->decoder);
+
     SVR_UNLOCK(source);
 
     free(source);
