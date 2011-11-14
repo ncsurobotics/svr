@@ -40,6 +40,14 @@ static SVRD_Source* CamSource_open(const char* name, Dictionary* arguments) {
         return NULL;
     }
 
+    if(Dictionary_exists(arguments, "width")) {
+        cvSetCaptureProperty(source_data->capture, CV_CAP_PROP_FRAME_WIDTH, atoi(Dictionary_get(arguments, "width")));
+    }
+
+    if(Dictionary_exists(arguments, "height")) {
+        cvSetCaptureProperty(source_data->capture, CV_CAP_PROP_FRAME_HEIGHT, atoi(Dictionary_get(arguments, "height")));
+    }
+
     for(int i = 0; (frame = cvQueryFrame(source_data->capture)) == NULL && i < 5; i++);
     if(frame == NULL) {
         SVR_log(SVR_ERROR, Util_format("Could not query frame from device with index %d", index));
