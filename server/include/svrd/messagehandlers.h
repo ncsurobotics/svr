@@ -11,6 +11,7 @@ void SVRD_Stream_rResize(SVRD_Client* client, SVR_Message* message);
 void SVRD_Stream_rSetChannels(SVRD_Client* client, SVR_Message* message);
 void SVRD_Stream_rAttachSource(SVRD_Client* client, SVR_Message* message);
 void SVRD_Stream_rSetEncoding(SVRD_Client* client, SVR_Message* message);
+void SVRD_Stream_rSetPriority(SVRD_Client* client, SVR_Message* message);
 void SVRD_Stream_rSetDropRate(SVRD_Client* client, SVR_Message* message);
 
 void SVRD_Source_rOpen(SVRD_Client* client, SVR_Message* message);

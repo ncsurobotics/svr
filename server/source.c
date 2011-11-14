@@ -160,6 +160,11 @@ SVRD_Source* SVRD_Source_new(const char* name) {
     source->private_data = NULL;
     SVR_LOCKABLE_INIT(source);
 
+#ifdef SVR_SOURCE_FPS
+    source->timer = Timer_new();
+    source->count = 0;
+#endif
+
     Dictionary_set(sources, name, source);
     pthread_mutex_unlock(&sources_lock);
 
@@ -251,9 +256,23 @@ SVR_FrameProperties* SVRD_Source_getFrameProperties(SVRD_Source* source) {
     return source->frame_properties;
 }
 
-void SVRD_Source_registerStream(SVRD_Source* source, SVRD_Stream* stream) {
+void SVRD_Source_adjustStreamPriority(SVRD_Source* source, SVRD_Stream* stream) {
     SVR_LOCK(source);
-    List_append(source->streams, stream);
+    /* Unregister the stream and register it to account for a new stream
+       priority */
+    SVRD_Source_unregisterStream(source, stream);
+    SVRD_Source_registerStream(source, stream);
+    SVR_UNLOCK(source);
+}
+
+void SVRD_Source_registerStream(SVRD_Source* source, SVRD_Stream* stream) {
+    SVRD_Stream* temp_stream;
+    int i;
+
+    SVR_LOCK(source);
+    for(i = 0; (temp_stream = List_get(source->streams, i)) != NULL &&
+                temp_stream->priority <= stream->priority; i++);
+    List_insert(source->streams, stream, i);
     SVR_UNLOCK(source);
 }
 
@@ -286,6 +305,16 @@ int SVRD_Source_provideData(SVRD_Source* source, void* data, size_t data_availab
         SVR_Decoder_returnFrame(source->decoder, frame);
     }
     SVR_UNLOCK(source);
+
+#ifdef SVR_SOURCE_FPS
+    if(Timer_getTotal(source->timer) > 2) {
+        SVR_log(SVR_DEBUG, Util_format("(%s) Processing %.2f frames per second",
+                                       source->name, source->count / Timer_getTotal(source->timer)));
+        source->count = 0;
+        Timer_reset(source->timer);
+    }
+    source->count++;
+#endif
 
     return SVR_SUCCESS;
 }

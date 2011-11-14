@@ -252,6 +252,32 @@ int SVR_Stream_setGrayscale(SVR_Stream* stream, bool grayscale) {
     return return_code;
 }
 
+int SVR_Stream_setPriority(SVR_Stream* stream, short priority) {
+    SVR_Message* message;
+    SVR_Message* response;
+    int return_code;
+
+    /* Open stream */
+    message = SVR_Message_new(3);
+    message->components[0] = SVR_Arena_strdup(message->alloc, "Stream.setPriority");
+    message->components[1] = SVR_Arena_strdup(message->alloc, stream->stream_name);
+    message->components[2] = SVR_Arena_sprintf(message->alloc, "%d", (int) priority);
+
+    response = SVR_Comm_sendMessage(message, true);
+    return_code = SVR_Comm_parseResponse(response);
+
+    SVR_Message_release(message);
+    SVR_Message_release(response);
+
+    if(return_code != SVR_SUCCESS) {
+        return return_code;
+    }
+
+    return_code = SVR_Stream_updateInfo(stream);
+
+    return return_code;
+}
+
 int SVR_Stream_setDropRate(SVR_Stream* stream, int drop_rate) {
     SVR_Message* message;
     SVR_Message* response;
@@ -377,6 +403,12 @@ void SVR_Stream_setOrphaned(const char* stream_name) {
     stream->state = SVR_PAUSED;
     pthread_cond_broadcast(&stream->new_frame);
     SVR_UNLOCK(stream);
+
+    /* Notify SVR_Stream_sync that something happened */
+    pthread_mutex_lock(&new_global_data_lock);
+    new_global_data = true;
+    pthread_cond_broadcast(&new_global_data_cond);
+    pthread_mutex_unlock(&new_global_data_lock);
 }
 
 void SVR_Stream_sync(void) {

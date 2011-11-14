@@ -26,6 +26,7 @@ static SVRD_RequestMapping request_types[] = {
     {"Stream.setChannels", SVRD_Stream_rSetChannels},
     {"Stream.setEncoding", SVRD_Stream_rSetEncoding},
     {"Stream.setDropRate", SVRD_Stream_rSetDropRate},
+    {"Stream.setPriority", SVRD_Stream_rSetPriority},
     {"Stream.getInfo", SVRD_Stream_rGetInfo},
     {"Stream.pause", SVRD_Stream_rPause},
     {"Stream.unpause", SVRD_Stream_rUnpause},

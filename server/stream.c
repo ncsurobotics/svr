@@ -22,6 +22,8 @@ SVRD_Stream* SVRD_Stream_new(const char* name) {
     stream->payload_buffer_size = 8 * 1024;
     stream->payload_buffer = malloc(stream->payload_buffer_size);
 
+    stream->priority = 1;
+
     stream->temp_frame[0] = NULL;
     stream->temp_frame[1] = NULL;
 
@@ -140,6 +142,16 @@ int SVRD_Stream_setEncoding(SVRD_Stream* stream, const char* encoding_descriptor
 int SVRD_Stream_setDropRate(SVRD_Stream* stream, int rate) {
     stream->drop_rate = rate;
     stream->drop_counter = 0;
+
+    return SVR_SUCCESS;
+}
+
+int SVRD_Stream_setPriority(SVRD_Stream* stream, short priority) {
+    stream->priority = priority;
+    
+    if(stream->source) {
+        SVRD_Source_adjustStreamPriority(stream->source, stream);
+    }
 
     return SVR_SUCCESS;
 }

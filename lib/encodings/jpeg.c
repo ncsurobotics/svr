@@ -178,7 +178,8 @@ static void* openEncoder(SVR_FrameProperties* frame_properties, Dictionary* opti
     if(Dictionary_exists(options, "quality")) {
         quality = atoi(Dictionary_get(options, "quality"));
         if(quality < 5 || quality > 100) {
-            SVR_log(SVR_WARNING, "Invalid JPEG quality %d. Falling back to default");
+            SVR_log(SVR_WARNING, Util_format("Invalid JPEG quality %s. Falling back to default",
+                                             Dictionary_get(options, "quality")));
             quality = JPEG_DEFAULT_QUALITY;
         }
     }

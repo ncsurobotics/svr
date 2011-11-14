@@ -222,6 +222,31 @@ void SVRD_Stream_rAttachSource(SVRD_Client* client, SVR_Message* message) {
     SVRD_Client_replyCode(client, message, SVRD_Stream_attachSource(stream, source));
 }
 
+void SVRD_Stream_rSetPriority(SVRD_Client* client, SVR_Message* message) {
+    SVRD_Stream* stream;
+    char* stream_name;
+    short priority;
+
+    switch(message->count) {
+    case 3:
+        stream_name = message->components[1];
+        priority = atoi(message->components[2]);
+        break;
+
+    default:
+        SVRD_Client_kick(client, "Invalid message");
+        return;
+    }
+
+    stream = SVRD_Client_getStream(client, stream_name);
+    if(stream == NULL) {
+        SVRD_Client_replyCode(client, message, SVR_NOSUCHSTREAM);
+        return;
+    }
+
+    SVRD_Client_replyCode(client, message, SVRD_Stream_setPriority(stream, priority));
+}
+
 void SVRD_Stream_rSetDropRate(SVRD_Client* client, SVR_Message* message) {
     SVRD_Stream* stream;
     char* stream_name;

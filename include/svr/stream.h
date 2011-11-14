@@ -31,6 +31,7 @@ void SVR_Stream_destroy(SVR_Stream* stream);
 int SVR_Stream_setEncoding(SVR_Stream* stream, const char* encoding);
 int SVR_Stream_resize(SVR_Stream* stream, int width, int height);
 int SVR_Stream_setGrayscale(SVR_Stream* stream, bool grayscale);
+int SVR_Stream_setPriority(SVR_Stream* stream, short priority);
 int SVR_Stream_setDropRate(SVR_Stream* stream, int drop_rate);
 int SVR_Stream_unpause(SVR_Stream* stream);
 int SVR_Stream_pause(SVR_Stream* stream);

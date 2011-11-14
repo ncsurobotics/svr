@@ -55,6 +55,7 @@ _svr.SVR_Stream_setEncoding.restype = _check_stream_call
 _svr.SVR_Stream_resize.restype = _check_stream_call
 _svr.SVR_Stream_setGrayscale.restype = _check_stream_call
 _svr.SVR_Stream_setDropRate.restype = _check_stream_call
+_svr.SVR_Stream_setPriority.restype = _check_stream_call
 _svr.SVR_Stream_unpause.restype = _check_stream_call
 _svr.SVR_Stream_pause.restype = _check_stream_call
 _svr.SVR_Stream_isOrphaned.restype = ctypes.c_bool
@@ -109,6 +110,9 @@ class Stream(object):
     def set_grayscale(self, grayscale=True):
         return self.svr.SVR_Stream_setGrayscale(self.handle, ctypes.c_bool(grayscale))
 
+    def set_priority(self, priority):
+        return self.svr.SVR_Stream_setPriority(self.handle, priority)
+
     def set_drop_rate(self, drop_rate):
         return self.svr.SVR_Stream_setDropRate(self.handle, drop_rate)
 
@@ -137,6 +141,7 @@ class Stream(object):
         else:
             swpycv.copy_ipl_to_pyipl(frame_handle, self.frame)
 
+        self.svr.SVR_Stream_returnFrame(self.handle, frame_handle)
         return self.frame
 
 class Source(object):
