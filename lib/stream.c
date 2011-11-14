@@ -10,6 +10,10 @@ static pthread_mutex_t stream_list_lock = PTHREAD_MUTEX_INITIALIZER;
 static Dictionary* streams;
 static unsigned int last_stream_num = 0;
 
+static pthread_mutex_t new_global_data_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t new_global_data_cond = PTHREAD_COND_INITIALIZER;
+static bool new_global_data = false;
+
 void SVR_Stream_init(void) {
     streams = Dictionary_new();
 }
@@ -375,6 +379,15 @@ void SVR_Stream_setOrphaned(const char* stream_name) {
     SVR_UNLOCK(stream);
 }
 
+void SVR_Stream_sync(void) {
+    pthread_mutex_lock(&new_global_data_lock);
+    if(new_global_data == false) {
+        pthread_cond_wait(&new_global_data_cond, &new_global_data_lock);
+    }
+    new_global_data = false;
+    pthread_mutex_unlock(&new_global_data_lock);
+}
+
 void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n) {
     SVR_Stream* stream;
 
@@ -401,6 +414,11 @@ void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n) {
         stream->current_frame = SVR_Decoder_getFrame(stream->decoder);
         pthread_cond_broadcast(&stream->new_frame);
     }
+
+    pthread_mutex_lock(&new_global_data_lock);
+    new_global_data = true;
+    pthread_cond_broadcast(&new_global_data_cond);
+    pthread_mutex_unlock(&new_global_data_lock);
 
     SVR_UNLOCK(stream);
 }
