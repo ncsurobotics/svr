@@ -13,23 +13,31 @@ static void svrwatch_usage(const char* argv0) {
            "  -h, --help                            Show this help message\n"
            "  -d, --debug                           Enable debugging\n"
            "  -s, --server=ADDRESS                  Address of SVR server\n"
+           "  -r, --raw                             Use raw encoding (default is JPEG)\n"
            "  -q, --quality=VALUE                   JPEG stream quality\n", argv0);
 }
 
 static SVR_Stream* svrwatch_open_stream(const char* source_name, int quality) {
     SVR_Stream* stream;
+    char* encoding;
 
     stream = SVR_Stream_new(source_name);
     if(stream == NULL) {
         fprintf(stderr, "Could not open stream for '%s'\n", source_name);
         exit(-1);
     }
-    
-    if(SVR_Stream_setEncoding(stream, Util_format("jpeg:quality=%d", quality))) {
+
+    if(quality == -1) {  /* Raw encoding */
+        encoding = "raw";
+    } else {
+        encoding = Util_format("jpeg:quality=%d", quality);
+    }
+
+    if(SVR_Stream_setEncoding(stream, encoding)) {
         fprintf(stderr, "Error setting encoding\n");
         exit(-1);
     }
-    
+
     if(SVR_Stream_unpause(stream)) {
         fprintf(stderr, "Error unpausing stream\n");
         exit(-1);
@@ -46,12 +54,14 @@ int main(int argc, char** argv) {
     int opt, indexptr;
     char* source_name;
     bool watch_all = false;
+    bool raw = false;
     int quality = 70;
 
     struct option long_options[] = {
         {"help", 0, NULL, 'h'},
         {"debug", 0, NULL, 'd'},
         {"server", 1, NULL, 's'},
+        {"raw", 0, NULL, 'r'},
         {"quality", 1, NULL, 'q'},
         {"all", 0, NULL, 'a'},
         {NULL, 0, NULL, 0}
@@ -59,7 +69,7 @@ int main(int argc, char** argv) {
 
     SVR_Logging_setThreshold(SVR_LOGGING_OFF);
 
-    while((opt = getopt_long(argc, argv, ":hds:aq:", long_options, &indexptr)) != -1) {
+    while((opt = getopt_long(argc, argv, ":hdrs:aq:", long_options, &indexptr)) != -1) {
         switch(opt) {
         case 'h':
             svrwatch_usage(argv[0]);
@@ -75,6 +85,10 @@ int main(int argc, char** argv) {
 
         case 'a':
             watch_all = true;
+            break;
+
+        case 'r':
+            raw = true;
             break;
 
         case 'q':
@@ -95,7 +109,7 @@ int main(int argc, char** argv) {
             break;
         }
     }
-    
+
     if(watch_all == false && optind >= argc) {
         fprintf(stderr, "No source name given and --all not specified\n");
         svrwatch_usage(argv[0]);
@@ -105,6 +119,10 @@ int main(int argc, char** argv) {
     if(SVR_init()) {
         fprintf(stderr, "Could not connect to SVR server!\n");
         return -1;
+    }
+
+    if(raw) {
+        quality = -1;
     }
 
     if(watch_all) {
@@ -148,7 +166,7 @@ int main(int argc, char** argv) {
             }
         }
     }
-    
+
     if(stream_count == 0) {
         fprintf(stderr, "All streams orphaned\n");
         return -1;
