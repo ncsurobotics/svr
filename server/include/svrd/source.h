@@ -6,6 +6,12 @@
 
 //#define SVR_SOURCE_FPS
 
+struct SVRD_SourceFrame_s {
+    IplImage* frame;
+    SVRD_Source* source;
+    SVR_REFCOUNTED;
+};
+
 struct SVRD_Source_s {
     char* name;
 
@@ -14,7 +20,9 @@ struct SVRD_Source_s {
     SVR_Decoder* decoder;
     SVR_FrameProperties* frame_properties;
 
-    List* streams;
+    SVRD_SourceFrame* current_frame;
+    pthread_mutex_t current_frame_lock;
+    pthread_cond_t new_frame;
 
     SVRD_SourceType* type;
     void* private_data;
@@ -48,8 +56,11 @@ SVR_FrameProperties* SVRD_Source_getFrameProperties(SVRD_Source* source);
 int SVRD_Source_setEncoding(SVRD_Source* source, const char* encoding_descriptor);
 int SVRD_Source_setFrameProperties(SVRD_Source* source, SVR_FrameProperties* frame_properties);
 void SVRD_Source_adjustStreamPriority(SVRD_Source* source, SVRD_Stream* stream);
-void SVRD_Source_registerStream(SVRD_Source* source, SVRD_Stream* stream);
-void SVRD_Source_unregisterStream(SVRD_Source* source, SVRD_Stream* stream);
+SVRD_SourceFrame* SVRD_Source_getFrame(SVRD_Source* source, SVRD_SourceFrame* last_frame);
 int SVRD_Source_provideData(SVRD_Source* source, void* data, size_t data_available);
 
 #endif // #ifndef __SVR_SERVER_SOURCE_H
+
+
+
+

@@ -7,14 +7,17 @@
 #include "sources/sources.h"
 
 static void SVRD_Source_addType(SVRD_SourceType* source_type);
+static void SVRD_Source_releaseSourceFrame(void* _source_frame);
 
 static Dictionary* sources = NULL;
 static Dictionary* source_types = NULL;
 static pthread_mutex_t sources_lock = PTHREAD_MUTEX_INITIALIZER;
+static SVR_BlockAlloc* source_frame_alloc = NULL;
 
 void SVRD_Source_init(void) {
     sources = Dictionary_new();
     source_types = Dictionary_new();
+    source_frame_alloc = SVR_BlockAlloc(sizeof(SVRD_SourceFrame), 4);
 
     SVRD_Source_addType(&SVR_SOURCE(test));
     SVRD_Source_addType(&SVR_SOURCE(cam));
@@ -152,12 +155,14 @@ SVRD_Source* SVRD_Source_new(const char* name) {
 
     source = malloc(sizeof(SVRD_Source));
     source->name = strdup(name);
-    source->streams = List_new();
     source->frame_properties = NULL;
     source->encoding = NULL;
     source->decoder = NULL;
     source->type = NULL;
     source->private_data = NULL;
+    source->current_frame = NULL;
+    source->current_frame_lock = PTHREAD_MUTEX_INITIALIZER;
+    source->new_frame_cond = PTHREAD_COND_INITIALIZER;
     SVR_LOCKABLE_INIT(source);
 
 #ifdef SVR_SOURCE_FPS
@@ -190,12 +195,6 @@ void SVRD_Source_destroy(SVRD_Source* source) {
     }
 
     SVR_LOCK(source);
-
-    /* Send signals to streams first */
-    for(int i = 0; (stream = List_get(source->streams, i)) != NULL; i++) {
-        SVRD_Stream_sourceClosing(stream);
-    }
-    List_destroy(source->streams);
 
     if(source->frame_properties) {
         SVR_FrameProperties_destroy(source->frame_properties);
@@ -256,33 +255,35 @@ SVR_FrameProperties* SVRD_Source_getFrameProperties(SVRD_Source* source) {
     return source->frame_properties;
 }
 
-void SVRD_Source_adjustStreamPriority(SVRD_Source* source, SVRD_Stream* stream) {
-    SVR_LOCK(source);
-    /* Unregister the stream and register it to account for a new stream
-       priority */
-    SVRD_Source_unregisterStream(source, stream);
-    SVRD_Source_registerStream(source, stream);
-    SVR_UNLOCK(source);
+SVRD_SourceFrame* SVRD_Source_getFrame(SVRD_Source* source, SVRD_SourceFrame* last_frame) {
+    SVRD_SourceFrame* new_frame = NULL;
+
+    /* Dereference the last frame */
+    if(last_frame) {
+        SVR_UNREF(last_frame);
+    }
+
+    /* Wait for a different frame */
+    pthread_mutex_lock(&source->current_frame_lock);
+    while(source->current_frame == last_frame) {
+        pthread_cond_wait(&source->new_frame, &source->current_frame_lock);
+    }
+    new_frame = source->current_frame;
+    SVR_REF(new_frame);
+    pthread_mutex_unlock(&source->current_frame_lock);
+
+    return new_frame;
 }
 
-void SVRD_Source_registerStream(SVRD_Source* source, SVRD_Stream* stream) {
-    SVRD_Stream* temp_stream;
-    int i;
+static void SVRD_Source_releaseSourceFrame(void* _source_frame) {
+    SVRD_SourceFrame* source_frame = (SVRD_SourceFrame*) _source_frame;
 
-    SVR_LOCK(source);
-    for(i = 0; (temp_stream = List_get(source->streams, i)) != NULL &&
-                temp_stream->priority <= stream->priority; i++);
-    List_insert(source->streams, stream, i);
-    SVR_UNLOCK(source);
-}
-
-void SVRD_Source_unregisterStream(SVRD_Source* source, SVRD_Stream* stream) {
-    SVR_LOCK(source);
-    List_remove(source->streams, List_indexOf(source->streams, stream));
-    SVR_UNLOCK(source);
+    SVR_Decoder_returnFrame(source_frame->source->decoder, source_frame->frame);
+    SVR_BlockAlloc_free(source_frame_alloc, source_frame);
 }
 
 int SVRD_Source_provideData(SVRD_Source* source, void* data, size_t data_available) {
+    SVRD_SourceFrame* source_frame;
     SVRD_Stream* stream;
     IplImage* frame;
 
@@ -299,10 +300,18 @@ int SVRD_Source_provideData(SVRD_Source* source, void* data, size_t data_availab
     SVR_Decoder_decode(source->decoder, data, data_available);
     while(SVR_Decoder_framesReady(source->decoder) > 0) {
         frame = SVR_Decoder_getFrame(source->decoder);
-        for(int i = 0; (stream = List_get(source->streams, i)) != NULL; i++) {
-            SVRD_Stream_inputSourceFrame(stream, frame);
+
+        pthread_mutex_lock(&source->current_frame_lock);
+        source_frame = SVR_BlockAlloc_alloc(source_frame_alloc);
+        source_frame->source = source;
+        source_frame->frame = frame;
+        SVR_REFCOUNTED_INIT(source_frame, SVRD_Source_releaseSourceFrame);
+        if(source->current_frame) {
+            SVR_UNREF(source->current_frame);
         }
-        SVR_Decoder_returnFrame(source->decoder, frame);
+        source->current_frame = source_frame;
+        pthread_cond_broadcast(&source->new_frame);
+        pthread_mutex_unlock(&source->current_frame_lock);
     }
     SVR_UNLOCK(source);
 

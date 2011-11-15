@@ -4,11 +4,13 @@
 
 struct SVRD_Client_s;
 struct SVRD_Source_s;
+struct SVRD_SourceFrame_s;
 struct SVRD_SourceType_s;
 struct SVRD_Stream_s;
 
 typedef struct SVRD_Client_s SVRD_Client;
 typedef struct SVRD_Source_s SVRD_Source;
+typedef struct SVRD_SourceFrame_s SVRD_SourceFrame;
 typedef struct SVRD_SourceType_s SVRD_SourceType;
 typedef struct SVRD_Stream_s SVRD_Stream;
 
