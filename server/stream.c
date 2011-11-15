@@ -5,6 +5,7 @@
 static void SVRD_Stream_initializeEncoder(SVRD_Stream* stream);
 static void SVRD_Stream_reallocateTemporaryFrames(SVRD_Stream* stream);
 static IplImage* SVRD_Stream_preprocessFrame(SVRD_Stream* stream, IplImage* frame);
+static void* SVRD_Stream_worker(void* _stream);
 
 SVRD_Stream* SVRD_Stream_new(const char* name) {
     SVRD_Stream* stream = malloc(sizeof(SVRD_Stream));
@@ -66,13 +67,16 @@ int SVRD_Stream_attachSource(SVRD_Stream* stream, SVRD_Source* source) {
         return SVR_INVALIDSTATE;
     }
 
+    if(stream->source) {
+        SVR_UNREF(stream->source);
+    }
+
     stream->source = source;
     if(stream->frame_properties) {
         SVR_FrameProperties_destroy(stream->frame_properties);
     }
 
     stream->frame_properties = SVR_FrameProperties_clone(SVRD_Source_getFrameProperties(source));
-    SVRD_Source_registerStream(source, stream);
 
     return SVR_SUCCESS;
 }
@@ -80,10 +84,6 @@ int SVRD_Stream_attachSource(SVRD_Stream* stream, SVRD_Source* source) {
 int SVRD_Stream_detachSource(SVRD_Stream* stream) {
     if(stream->state == SVR_UNPAUSED) {
         return SVR_INVALIDSTATE;
-    }
-
-    if(stream->source) {
-        SVRD_Source_unregisterStream(stream->source, stream);
     }
 
     stream->source = NULL;
@@ -148,11 +148,6 @@ int SVRD_Stream_setDropRate(SVRD_Stream* stream, int rate) {
 
 int SVRD_Stream_setPriority(SVRD_Stream* stream, short priority) {
     stream->priority = priority;
-    
-    if(stream->source) {
-        SVRD_Source_adjustStreamPriority(stream->source, stream);
-    }
-
     return SVR_SUCCESS;
 }
 
@@ -226,14 +221,26 @@ int SVRD_Stream_setChannels(SVRD_Stream* stream, int channels) {
  */
 void SVRD_Stream_pause(SVRD_Stream* stream) {
     SVR_LOCK(stream);
-    stream->state = SVR_PAUSED;
+    if(stream->state == SVR_UNPAUSED) {
+        stream->state = SVR_PAUSED;
+
+        /* Request that the source dismiss the streams getFrame request */
+        SVRD_Source_dismissPausedStreams(stream->source);
+
+        /* Wait for thread to exit */
+        pthread_join(stream->worker, NULL);
+    }
     SVR_UNLOCK(stream);
 }
 
 void SVRD_Stream_unpause(SVRD_Stream* stream) {
     SVR_LOCK(stream);
-    stream->state = SVR_UNPAUSED;
-    SVRD_Stream_initializeEncoder(stream);
+    if(stream->state == SVR_PAUSED && stream->client != NULL &&
+       stream->encoding != NULL && stream->source != NULL) {
+        stream->state = SVR_UNPAUSED;
+        SVRD_Stream_initializeEncoder(stream);
+        pthread_create(&stream->worker, NULL, SVRD_Stream_worker, stream);
+    }
     SVR_UNLOCK(stream);
 }
 
@@ -305,24 +312,11 @@ static IplImage* SVRD_Stream_preprocessFrame(SVRD_Stream* stream, IplImage* fram
     return frame;
 }
 
-void SVRD_Stream_inputSourceFrame(SVRD_Stream* stream, IplImage* frame) {
+static void* SVRD_Stream_worker(void* _stream) {
+    SVRD_Stream* stream = (SVRD_Stream*) _stream;
+    SVRD_SourceFrame* source_frame = NULL;
+    IplImage* frame;
     SVR_Message* message;
-
-    SVR_LOCK(stream);
-    /* Ignore data if paused */
-    if(stream->state == SVR_PAUSED || stream->client == NULL) {
-        SVR_UNLOCK(stream);
-        return;
-    }
-
-    if(stream->drop_rate) {
-        stream->drop_counter = (stream->drop_counter + 1) % stream->drop_rate;
-
-        if(stream->drop_counter != 0) {
-            SVR_UNLOCK(stream);
-            return;
-        }
-    }
 
     /* Build the data message */
     message = SVR_Message_new(2);
@@ -330,24 +324,46 @@ void SVRD_Stream_inputSourceFrame(SVRD_Stream* stream, IplImage* frame) {
     message->components[1] = SVR_Arena_strdup(message->alloc, stream->name);
     message->payload = stream->payload_buffer;
 
-    frame = SVRD_Stream_preprocessFrame(stream, frame);
-    SVR_Encoder_encode(stream->encoder, frame);
+    while(stream->state == SVR_UNPAUSED) {
+        source_frame = SVRD_Source_getFrame(stream->source, stream, source_frame);
+        frame = source_frame->frame;
+        
+        if(frame == NULL) {
+            if(stream->state == SVR_UNPAUSED) {
+                /* Source closing */
+                SVRD_Stream_sourceClosing(stream);
+            }
 
-    /* Send all the encoded data out in chunks */
-    while(SVR_Encoder_dataReady(stream->encoder) > 0) {
-        /* Get part of payload */
-        message->payload_size = SVR_Encoder_readData(stream->encoder,
-                                                     message->payload,
-                                                     stream->payload_buffer_size);
-
-        /* Send message */
-        if(SVRD_Client_sendMessage(stream->client, message) < 0) {
-            SVRD_Stream_pause(stream);
-            SVR_log(SVR_DEBUG, "Can not send message");
             break;
+        }
+
+        if(stream->drop_rate) {
+            stream->drop_counter = (stream->drop_counter + 1) % stream->drop_rate;
+            
+            if(stream->drop_counter != 0) {
+                continue;
+            }
+        }
+
+        frame = SVRD_Stream_preprocessFrame(stream, frame);
+        SVR_Encoder_encode(stream->encoder, frame);
+
+        /* Send all the encoded data out in chunks */
+        while(SVR_Encoder_dataReady(stream->encoder) > 0) {
+            /* Get part of payload */
+            message->payload_size = SVR_Encoder_readData(stream->encoder,
+                                                         message->payload,
+                                                         stream->payload_buffer_size);
+
+            /* Send message */
+            if(SVRD_Client_sendMessage(stream->client, message) < 0) {
+                SVRD_Stream_pause(stream);
+                SVR_log(SVR_DEBUG, "Can not send message");
+                break;
+            }
         }
     }
 
     SVR_Message_release(message);
-    SVR_UNLOCK(stream);
+    return NULL;
 }

@@ -4,8 +4,6 @@
 
 #include <svr/forward.h>
 
-//#define SVR_SOURCE_FPS
-
 struct SVRD_SourceFrame_s {
     IplImage* frame;
     SVRD_Source* source;
@@ -27,12 +25,10 @@ struct SVRD_Source_s {
     SVRD_SourceType* type;
     void* private_data;
 
-#ifdef SVR_SOURCE_FPS
-    Timer* timer;
-    int count;
-#endif
+    bool closed;
 
     SVR_LOCKABLE;
+    SVR_REFCOUNTED;
 };
 
 struct SVRD_SourceType_s {
@@ -44,6 +40,7 @@ struct SVRD_SourceType_s {
 #define SVR_SOURCE(name) __svr_##name##_source
 
 void SVRD_Source_init(void);
+bool SVRD_Source_exists(const char* source_name);
 SVRD_Source* SVRD_Source_getByName(const char* source_name);
 SVRD_Source* SVRD_Source_getLockedSource(const char* source_name);
 List* SVRD_Source_getSourcesList(void);
@@ -56,7 +53,8 @@ SVR_FrameProperties* SVRD_Source_getFrameProperties(SVRD_Source* source);
 int SVRD_Source_setEncoding(SVRD_Source* source, const char* encoding_descriptor);
 int SVRD_Source_setFrameProperties(SVRD_Source* source, SVR_FrameProperties* frame_properties);
 void SVRD_Source_adjustStreamPriority(SVRD_Source* source, SVRD_Stream* stream);
-SVRD_SourceFrame* SVRD_Source_getFrame(SVRD_Source* source, SVRD_SourceFrame* last_frame);
+void SVRD_Source_dismissPausedStreams(SVRD_Source* source);
+SVRD_SourceFrame* SVRD_Source_getFrame(SVRD_Source* source, SVRD_Stream* stream, SVRD_SourceFrame* last_frame);
 int SVRD_Source_provideData(SVRD_Source* source, void* data, size_t data_available);
 
 #endif // #ifndef __SVR_SERVER_SOURCE_H

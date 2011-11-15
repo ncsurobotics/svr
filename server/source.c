@@ -8,24 +8,38 @@
 
 static void SVRD_Source_addType(SVRD_SourceType* source_type);
 static void SVRD_Source_releaseSourceFrame(void* _source_frame);
+static void SVRD_Source_cleanup(void* _source);
 
 static Dictionary* sources = NULL;
 static Dictionary* source_types = NULL;
 static pthread_mutex_t sources_lock = PTHREAD_MUTEX_INITIALIZER;
-static SVR_BlockAlloc* source_frame_alloc = NULL;
+static SVR_BlockAllocator* source_frame_alloc = NULL;
 
 void SVRD_Source_init(void) {
     sources = Dictionary_new();
     source_types = Dictionary_new();
-    source_frame_alloc = SVR_BlockAlloc(sizeof(SVRD_SourceFrame), 4);
+    source_frame_alloc = SVR_BlockAlloc_newAllocator(sizeof(SVRD_SourceFrame), 4);
 
     SVRD_Source_addType(&SVR_SOURCE(test));
     SVRD_Source_addType(&SVR_SOURCE(cam));
     SVRD_Source_addType(&SVR_SOURCE(file));
 }
 
+bool SVRD_Source_exists(const char* source_name) {
+    return Dictionary_exists(sources, source_name);
+}
+
 SVRD_Source* SVRD_Source_getByName(const char* source_name) {
-    return Dictionary_get(sources, source_name);
+    SVRD_Source* source;
+
+    pthread_mutex_lock(&sources_lock);
+    source = Dictionary_get(sources, source_name);
+    if(source != NULL) {
+        SVR_REF(source);
+    }
+
+    pthread_mutex_unlock(&sources_lock);
+    return source;
 }
 
 SVRD_Source* SVRD_Source_getLockedSource(const char* source_name) {
@@ -161,14 +175,12 @@ SVRD_Source* SVRD_Source_new(const char* name) {
     source->type = NULL;
     source->private_data = NULL;
     source->current_frame = NULL;
-    source->current_frame_lock = PTHREAD_MUTEX_INITIALIZER;
-    source->new_frame_cond = PTHREAD_COND_INITIALIZER;
-    SVR_LOCKABLE_INIT(source);
+    source->closed = false;
 
-#ifdef SVR_SOURCE_FPS
-    source->timer = Timer_new();
-    source->count = 0;
-#endif
+    pthread_mutex_init(&source->current_frame_lock, NULL);
+    pthread_cond_init(&source->new_frame, NULL);
+    SVR_LOCKABLE_INIT(source);
+    SVR_REFCOUNTED_INIT(source, SVRD_Source_cleanup);
 
     Dictionary_set(sources, name, source);
     pthread_mutex_unlock(&sources_lock);
@@ -176,8 +188,32 @@ SVRD_Source* SVRD_Source_new(const char* name) {
     return source;
 }
 
+static void SVRD_Source_cleanup(void* _source) {
+    SVRD_Source* source = (SVRD_Source*) _source;
+
+    if(source->frame_properties) {
+        SVR_FrameProperties_destroy(source->frame_properties);
+    }
+
+    if(source->decoder) {
+        SVR_Decoder_destroy(source->decoder);
+    }
+
+    free(source->name);
+    free(source);
+}
+
 void SVRD_Source_destroy(SVRD_Source* source) {
-    SVRD_Stream* stream;
+
+    SVR_LOCK(source);
+    if(source->closed) {
+        /* Already closed */
+        SVR_UNLOCK(source);
+        return;
+    }
+
+    source->closed = true;
+    SVR_UNLOCK(source);
 
     /* Remove source from sources list and ensure source is only destroyed
        once */
@@ -190,25 +226,17 @@ void SVRD_Source_destroy(SVRD_Source* source) {
     Dictionary_remove(sources, source->name);
     pthread_mutex_unlock(&sources_lock);
 
+    /* Start shutdown of any provider if this is not a client source */
     if(source->type && source->type->close) {
         source->type->close(source);
     }
 
-    SVR_LOCK(source);
-
-    if(source->frame_properties) {
-        SVR_FrameProperties_destroy(source->frame_properties);
-    }
-
-    if(source->decoder) {
-        SVR_Decoder_destroy(source->decoder);
-    }
-
-    free(source->name);
-
-    SVR_UNLOCK(source);
-
-    free(source);
+    /* Wake up any SVRD_Source_getFrame calls */
+    pthread_cond_broadcast(&source->new_frame);
+    
+    /* Remove self reference. Object will be garbage collected once all
+       references a released */
+    SVR_UNREF(source);
 }
 
 int SVRD_Source_setEncoding(SVRD_Source* source, const char* encoding_descriptor) {
@@ -255,7 +283,7 @@ SVR_FrameProperties* SVRD_Source_getFrameProperties(SVRD_Source* source) {
     return source->frame_properties;
 }
 
-SVRD_SourceFrame* SVRD_Source_getFrame(SVRD_Source* source, SVRD_SourceFrame* last_frame) {
+SVRD_SourceFrame* SVRD_Source_getFrame(SVRD_Source* source, SVRD_Stream* stream, SVRD_SourceFrame* last_frame) {
     SVRD_SourceFrame* new_frame = NULL;
 
     /* Dereference the last frame */
@@ -265,14 +293,23 @@ SVRD_SourceFrame* SVRD_Source_getFrame(SVRD_Source* source, SVRD_SourceFrame* la
 
     /* Wait for a different frame */
     pthread_mutex_lock(&source->current_frame_lock);
-    while(source->current_frame == last_frame) {
+    while(source->closed == false && source->current_frame == last_frame && 
+          (stream == NULL || stream->state == SVR_UNPAUSED)) {
         pthread_cond_wait(&source->new_frame, &source->current_frame_lock);
     }
-    new_frame = source->current_frame;
-    SVR_REF(new_frame);
+    
+    if(source->closed == false && stream->state == SVR_UNPAUSED) {
+        new_frame = source->current_frame;
+        SVR_REF(new_frame);
+    }
+
     pthread_mutex_unlock(&source->current_frame_lock);
 
     return new_frame;
+}
+
+void SVRD_Source_dismissPausedStreams(SVRD_Source* source) {
+    pthread_cond_broadcast(&source->new_frame);
 }
 
 static void SVRD_Source_releaseSourceFrame(void* _source_frame) {
@@ -284,7 +321,6 @@ static void SVRD_Source_releaseSourceFrame(void* _source_frame) {
 
 int SVRD_Source_provideData(SVRD_Source* source, void* data, size_t data_available) {
     SVRD_SourceFrame* source_frame;
-    SVRD_Stream* stream;
     IplImage* frame;
 
     SVR_LOCK(source);
@@ -314,16 +350,6 @@ int SVRD_Source_provideData(SVRD_Source* source, void* data, size_t data_availab
         pthread_mutex_unlock(&source->current_frame_lock);
     }
     SVR_UNLOCK(source);
-
-#ifdef SVR_SOURCE_FPS
-    if(Timer_getTotal(source->timer) > 2) {
-        SVR_log(SVR_DEBUG, Util_format("(%s) Processing %.2f frames per second",
-                                       source->name, source->count / Timer_getTotal(source->timer)));
-        source->count = 0;
-        Timer_reset(source->timer);
-    }
-    source->count++;
-#endif
 
     return SVR_SUCCESS;
 }

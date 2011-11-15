@@ -195,6 +195,7 @@ void SVRD_Stream_rAttachSource(SVRD_Client* client, SVR_Message* message) {
     SVRD_Source* source;
     char* stream_name;
     char* source_name;
+    int err;
 
     switch(message->count) {
     case 3:
@@ -219,7 +220,13 @@ void SVRD_Stream_rAttachSource(SVRD_Client* client, SVR_Message* message) {
         return;
     }
 
-    SVRD_Client_replyCode(client, message, SVRD_Stream_attachSource(stream, source));
+    err = SVRD_Stream_attachSource(stream, source);
+    if(err != SVR_SUCCESS) {
+        /* Release source */
+        SVR_UNREF(source);
+    }
+
+    SVRD_Client_replyCode(client, message, err);
 }
 
 void SVRD_Stream_rSetPriority(SVRD_Client* client, SVR_Message* message) {
@@ -329,7 +336,7 @@ void SVRD_Source_rOpen(SVRD_Client* client, SVR_Message* message) {
         return;
     }
 
-    if(SVRD_Source_getByName(source_name)) {
+    if(SVRD_Source_exists(source_name)) {
         SVRD_Client_replyCode(client, message, SVR_NAMECLASH);
         return;
     }
@@ -459,6 +466,7 @@ void SVRD_Source_rClose(SVRD_Client* client, SVR_Message* message) {
     if(source->type == NULL) {
         if(SVRD_Client_getSource(client, source_name) == NULL) {
             SVRD_Client_replyCode(client, message, SVR_INVALIDARGUMENT);
+            SVR_UNREF(source);
             return;
         }
 
@@ -466,6 +474,8 @@ void SVRD_Source_rClose(SVRD_Client* client, SVR_Message* message) {
     }
     
     SVRD_Source_destroy(source);
+    SVR_UNREF(source);
+
     SVRD_Client_replyCode(client, message, SVR_SUCCESS);
 }
 
