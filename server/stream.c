@@ -221,16 +221,15 @@ int SVRD_Stream_setChannels(SVRD_Stream* stream, int channels) {
  */
 void SVRD_Stream_pause(SVRD_Stream* stream) {
     SVR_LOCK(stream);
-    if(stream->state == SVR_UNPAUSED) {
-        stream->state = SVR_PAUSED;
-
-        /* Request that the source dismiss the streams getFrame request */
-        SVRD_Source_dismissPausedStreams(stream->source);
-
-        /* Wait for thread to exit */
-        pthread_join(stream->worker, NULL);
+    if(stream->state == SVR_PAUSED) {
+        SVR_UNLOCK(stream);
+        return;
     }
+    stream->state = SVR_PAUSED;
     SVR_UNLOCK(stream);
+
+    /* Request that the source dismiss the streams getFrame request */
+    SVRD_Source_dismissPausedStreams(stream->source);
 }
 
 void SVRD_Stream_unpause(SVRD_Stream* stream) {
@@ -245,12 +244,13 @@ void SVRD_Stream_unpause(SVRD_Stream* stream) {
 }
 
 void SVRD_Stream_destroy(SVRD_Stream* stream) {
+    SVR_LOCK(stream);
+
     SVRD_Stream_pause(stream);
+    pthread_join(stream->worker, NULL);
 
     /* Detach the source without a lock to avoid a deadlock */
     SVRD_Stream_detachSource(stream);
-
-    SVR_LOCK(stream);
 
     if(stream->name) {
         free(stream->name);
@@ -319,19 +319,9 @@ static void* SVRD_Stream_worker(void* _stream) {
     SVRD_SourceFrame* source_frame = NULL;
     IplImage* frame;
     SVR_Message* message;
-    int i;
-
-    /* Build the data message */
-    message = SVR_Message_new(2);
-    message->components[0] = SVR_Arena_strdup(message->alloc, "Data");
-    message->components[1] = SVR_Arena_strdup(message->alloc, stream->name);
-    message->payload = stream->payload_buffer;
-
-    Timer* t = Timer_new();
 
     while(stream->state == SVR_UNPAUSED) {
         source_frame = SVRD_Source_getFrame(stream->source, stream, source_frame);
-        SVR_log(SVR_DEBUG, Util_format("Getting frame: %.5f", Timer_getDelta(t)));
         
         if(source_frame == NULL) {
             if(stream->state == SVR_UNPAUSED) {
@@ -352,14 +342,16 @@ static void* SVRD_Stream_worker(void* _stream) {
 
 
         frame = SVRD_Stream_preprocessFrame(stream, source_frame->frame);
-        SVR_log(SVR_DEBUG, Util_format("Preprocessing frame: %.5f", Timer_getDelta(t)));
-
         SVR_Encoder_encode(stream->encoder, frame);
-        SVR_log(SVR_DEBUG, Util_format("Encoding frame: %.5f", Timer_getDelta(t)));
 
         /* Send all the encoded data out in chunks */
-        i = 0;
         while(SVR_Encoder_dataReady(stream->encoder) > 0) {
+            /* Build the data message */
+            message = SVR_Message_new(2);
+            message->components[0] = "Data";
+            message->components[1] = stream->name;
+            message->payload = stream->payload_buffer;
+
             /* Get part of payload */
             message->payload_size = SVR_Encoder_readData(stream->encoder,
                                                          message->payload,
@@ -372,15 +364,13 @@ static void* SVRD_Stream_worker(void* _stream) {
                 break;
             }
 
-            i++;
+            SVR_Message_release(message);
         }
-        SVR_log(SVR_DEBUG, Util_format("Sending frame (%d packets): %.5f", i, Timer_getDelta(t)));
     }
 
     if(source_frame) {
         SVR_UNREF(source_frame);
     }
 
-    SVR_Message_release(message);
     return NULL;
 }
