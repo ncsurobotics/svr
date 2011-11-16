@@ -245,6 +245,8 @@ void SVRD_Stream_unpause(SVRD_Stream* stream) {
 }
 
 void SVRD_Stream_destroy(SVRD_Stream* stream) {
+    SVRD_Stream_pause(stream);
+
     /* Detach the source without a lock to avoid a deadlock */
     SVRD_Stream_detachSource(stream);
 
@@ -317,6 +319,7 @@ static void* SVRD_Stream_worker(void* _stream) {
     SVRD_SourceFrame* source_frame = NULL;
     IplImage* frame;
     SVR_Message* message;
+    int i;
 
     /* Build the data message */
     message = SVR_Message_new(2);
@@ -324,11 +327,13 @@ static void* SVRD_Stream_worker(void* _stream) {
     message->components[1] = SVR_Arena_strdup(message->alloc, stream->name);
     message->payload = stream->payload_buffer;
 
+    Timer* t = Timer_new();
+
     while(stream->state == SVR_UNPAUSED) {
         source_frame = SVRD_Source_getFrame(stream->source, stream, source_frame);
-        frame = source_frame->frame;
+        SVR_log(SVR_DEBUG, Util_format("Getting frame: %.5f", Timer_getDelta(t)));
         
-        if(frame == NULL) {
+        if(source_frame == NULL) {
             if(stream->state == SVR_UNPAUSED) {
                 /* Source closing */
                 SVRD_Stream_sourceClosing(stream);
@@ -345,10 +350,15 @@ static void* SVRD_Stream_worker(void* _stream) {
             }
         }
 
-        frame = SVRD_Stream_preprocessFrame(stream, frame);
+
+        frame = SVRD_Stream_preprocessFrame(stream, source_frame->frame);
+        SVR_log(SVR_DEBUG, Util_format("Preprocessing frame: %.5f", Timer_getDelta(t)));
+
         SVR_Encoder_encode(stream->encoder, frame);
+        SVR_log(SVR_DEBUG, Util_format("Encoding frame: %.5f", Timer_getDelta(t)));
 
         /* Send all the encoded data out in chunks */
+        i = 0;
         while(SVR_Encoder_dataReady(stream->encoder) > 0) {
             /* Get part of payload */
             message->payload_size = SVR_Encoder_readData(stream->encoder,
@@ -361,7 +371,14 @@ static void* SVRD_Stream_worker(void* _stream) {
                 SVR_log(SVR_DEBUG, "Can not send message");
                 break;
             }
+
+            i++;
         }
+        SVR_log(SVR_DEBUG, Util_format("Sending frame (%d packets): %.5f", i, Timer_getDelta(t)));
+    }
+
+    if(source_frame) {
+        SVR_UNREF(source_frame);
     }
 
     SVR_Message_release(message);

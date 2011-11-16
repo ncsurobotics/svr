@@ -2,11 +2,14 @@
 #ifndef __SVR_REFCOUNT_H
 #define __SVR_REFCOUNT_H
 
+#include <svr/lockable.h>
+
 struct SVR_RefCounter_s {
     uint32_t ref_count;
-    pthread_mutex_t lock;
     void (*cleanup)(void*);
     void* object;
+
+    SVR_LOCKABLE;
 };
 
 #define SVR_REF(object) (SVR_RefCounter_ref((object)->ref_counter))

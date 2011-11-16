@@ -342,6 +342,7 @@ int SVRD_Source_provideData(SVRD_Source* source, void* data, size_t data_availab
         source_frame->source = source;
         source_frame->frame = frame;
         SVR_REFCOUNTED_INIT(source_frame, SVRD_Source_releaseSourceFrame);
+
         if(source->current_frame) {
             SVR_UNREF(source->current_frame);
         }
