@@ -19,6 +19,13 @@ static char* level_names[] = {"DEBUG",
                               "CRITICAL"};
 
 /**
+ * \defgroup Logging Logging
+ * \ingroup Util
+ * \brief Simple logging mechanism used internally to SVR
+ * \{
+ */
+
+/**
  * \brief Set the logging threshold
  *
  * Set the threshold for logging to the given level
@@ -74,12 +81,11 @@ short SVR_Logging_getLevelFromName(const char* log_level) {
 /**
  * \brief Log a message
  *
- * Log a message. If initialization is complete, the message will be logged
- * through a hub server and may also be printed to standard output depending on
- * the value of the "LogReplicateStdout" variable.
+ * Log a message to stderr if the given log level is at least as high as the
+ * value given to SVR_Logging_setThreshold.
  *
- * \param log_level One of the log levels specified above
- * \param msg The message to log
+ * \param level One of the log levels specified above
+ * \param message The message to log
  */
 void SVR_log(short level, char* message) {
     /* Only log messages with a log level at least as high as min_debug_level */
@@ -87,3 +93,5 @@ void SVR_log(short level, char* message) {
         fprintf(stderr, "[%s][SVR] %s\n", level_names[level], message);
     }
 }
+
+/** \} */

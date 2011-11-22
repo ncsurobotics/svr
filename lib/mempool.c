@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Memory pool
+ */
 
 #include "svr.h"
 
@@ -7,8 +11,14 @@
 #define ALLOC_ALIGNMENT 2
 
 static SVR_BlockAllocator* descriptor_allocator = NULL;
-
 static SVR_Arena* SVR_Arena_allocExternal(size_t size);
+
+/**
+ * \defgroup MemPool Memory pool
+ * \ingroup Util
+ * \brief Memory pool for small short lived objects
+ * \{
+ */
 
 /**
  * \brief Initialize the SVR_MemPool component

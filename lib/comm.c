@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Server communications
+ */
 
 #include <svr.h>
 
@@ -17,6 +21,21 @@ static int payload_buffer_size = 0;
 
 static void* SVR_Comm_receiveThread(void* __unused);
 
+/**
+ * \defgroup ServComm Communication management
+ * \ingroup Comm
+ * \brief Provides synchronous request-response communication with an SVR server
+ * \{
+ */
+
+/**
+ * \brief Initialize Comm module
+ *
+ * Initialize Comm module and connect to SVR server
+ *
+ * \param server_address IP address of the server as a string
+ * \return 0 on success, -1 on failure
+ */
 int SVR_Comm_init(const char* server_address) {
     struct sockaddr_in addr;
 
@@ -43,6 +62,15 @@ int SVR_Comm_init(const char* server_address) {
     return 0;
 }
 
+/**
+ * \brief Background message receive thread
+ *
+ * Background thread started by SVR_Comm_init and responsible for handling
+ * incoming messages and message response
+ *
+ * \param __unused Unused
+ * \return Always returns NULL
+ */
 static void* SVR_Comm_receiveThread(void* __unused) {
     SVR_Message* message;
 
@@ -71,6 +99,20 @@ static void* SVR_Comm_receiveThread(void* __unused) {
     return NULL;
 }
 
+/**
+ * \brief Send a message
+ *
+ * Send a message. If the message is a request then a request ID will be
+ * generated for it and this call will block until a response is
+ * available. Otherwise, the message is sent and NULL returned. This call will
+ * not release the message.
+ *
+ * \param message Message to send
+ * \param is_request If true, then a request ID will be generated for the
+ * message and this call will block until a response becomes available. If
+ * false, then this function will return as soon as the message is sent.
+ * \return The response to the message if is_request is true, or NULL otherwise.
+ */
 void* SVR_Comm_sendMessage(SVR_Message* message, bool is_request) {
     void* response = NULL;
 
@@ -89,6 +131,15 @@ void* SVR_Comm_sendMessage(SVR_Message* message, bool is_request) {
     return response;
 }
 
+/**
+ * \brief Parse a SVR.response message
+ *
+ * Handle a SVR.response message and the associated return code
+ *
+ * \param response The response messages to verify
+ * \return The contained error code, or -1 of the message can not be parsed as
+ * an SVR.response message
+ */
 int SVR_Comm_parseResponse(SVR_Message* response) {
     if(response->count == 2 && strcmp(response->components[0], "SVR.response") == 0) {
         return atoi(response->components[1]);
@@ -96,3 +147,5 @@ int SVR_Comm_parseResponse(SVR_Message* response) {
         return -1;
     }
 }
+
+/** \} */

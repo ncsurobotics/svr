@@ -1,5 +1,16 @@
+/**
+ * \file
+ * \brief Frame properties
+ */
 
 #include <svr.h>
+
+/**
+ * \defgroup FrameProperties Frame properties
+ * \ingroup Misc
+ * \brief Frame properties
+ * \{
+ */
 
 SVR_FrameProperties* SVR_FrameProperties_new(void) {
     SVR_FrameProperties* properties = malloc(sizeof(SVR_FrameProperties));
@@ -67,3 +78,5 @@ IplImage* SVR_FrameProperties_imageFromProperties(SVR_FrameProperties* propertie
                          properties->depth,
                          properties->channels);
 }
+
+/** \} */

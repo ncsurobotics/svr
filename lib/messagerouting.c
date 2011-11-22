@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Message routing
+ */
 
 #include <svr.h>
 
@@ -14,6 +18,13 @@ static SVR_RequestMapping request_types[] = {
 
 static int SVR_compareRequestMapping(const void* v1, const void* v2);
 static SVR_RequestMapping* SVR_findRequestMapping(const char* request_string);
+
+/**
+ * \defgroup MessageRouting Message routing
+ * \ingroup Comm
+ * \brief Pass a message to an appropriate message handler
+ * \{
+ */
 
 static int SVR_compareRequestMapping(const void* v1, const void* v2) {
     return strcmp(((SVR_RequestMapping*)v1)->request_string, ((SVR_RequestMapping*)v2)->request_string);
@@ -72,3 +83,5 @@ int SVR_MessageRouter_processMessage(SVR_Message* message) {
 
     return request_type->callback(message);
 }
+
+/** \} */

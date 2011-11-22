@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Option string
+ */
 
 #include <svr.h>
 #include <ctype.h>
@@ -9,19 +13,26 @@ static char* get_value(char* descriptor, int* offset);
 static char* get_identifier(char* descriptor, int* offset);
 
 /**
+ * \defgroup OptionString Option string
+ * \ingroup Util
+ * \brief Parse a specially formatted option string
+ * \{
+ */
+
+/**
  * \brief Parse an option string
  *
  * An option string is a string of the form
  *
- * <object>:<option>=<value>,<option>=<value>,...
+ * &lt;object&gt;:&lt;option&gt;=&lt;value&gt;,&lt;option&gt;=&lt;value&gt;,...
  *
- * It is meant to encode a reference to some sort of object or type (<object>)
- * along with a set of options or parameters for that type. Only the <object>
- * part of the string is required. <object> and all <option>s should be
- * alphanumeric + '_'. <values> can contain any value except NULL and ',' though
+ * It is meant to encode a reference to some sort of object or type (&lt;object&gt;)
+ * along with a set of options or parameters for that type. Only the &lt;object&gt;
+ * part of the string is required. &lt;object&gt; and all &lt;option&gt;s should be
+ * alphanumeric + '_'. &lt;values&gt; can contain any value except NULL and ',' though
  * trailing and leading whitespace will be removed. The parsed string is
  * returned as a Dictionary mapping options to values. The special key "%name"
- * points to the value of <object>.
+ * points to the value of &lt;object&gt;.
  */
 Dictionary* SVR_parseOptionString(const char* s) {
     Dictionary* options;
@@ -188,3 +199,5 @@ static char* get_identifier(char* descriptor, int* offset) {
 
     return descriptor + start;
 }
+
+/** \} */

@@ -14,11 +14,12 @@
 #include <svr/forward.h>
 
 /**
- * \addtogroup SVR_MemPool
+ * \addtogroup MemPool
  * \{
  */
 
 /**
+ * \private
  * \brief A memory pool arena which allocations can be made from
  *
  * A MemPool arena is a linked list of SVR_Arenas, each acting as

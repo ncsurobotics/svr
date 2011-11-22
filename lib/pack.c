@@ -1,5 +1,16 @@
+/**
+ * \file
+ * \brief Packing
+ */
 
 #include "svr.h"
+
+/**
+ * \defgroup Packing Packing
+ * \ingroup Util
+ * \brief Byte buffer packing/unpacking
+ * \{
+ */
 
 size_t SVR_pack(void* buffer, size_t pack_offset, const char* format, ...) {
     uint8_t* p = (uint8_t*) buffer;
@@ -82,3 +93,5 @@ size_t SVR_unpack(void* buffer, size_t pack_offset, const char* format, ...) {
 
     return pack_offset;
 }
+
+/** \} */

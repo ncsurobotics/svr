@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Encoding
+ */
 
 #include <svr.h>
 #include <seawolf.h>
@@ -9,24 +13,87 @@ static void SVR_Encoding_registerDefaultEncodings(void);
 
 static Dictionary* encodings = NULL;
 
+/**
+ * \defgroup Encoding Encoding
+ * \ingroup Misc
+ * \brief Stream encoding and decoding
+ *
+ * An encoding (SVR_Encoding) is an implementations of both an encoder and
+ * decoder for a particular image/video encoding method. Once an encoding is
+ * registered with the SVR library, it can be used with streams and sources. An
+ * encoding can be retreive by name by calling SVR_Encoding_getByName. The
+ * encoding instance can then be used to initialize multiple encoders and
+ * decoders with calls to SVR_Encoder_new and SVR_Decoder_new respectively.
+ *
+ * An encoder processes frames and produces raw, encoded data. Conversely, a
+ * decoder processes raw, encoded data and produces decoded frames. The APIs
+ * below, provide this functionality.
+ *
+ * An encoder maintains an internal, circular buffer of encoded data. As the
+ * data is read out, internal buffer space is freed. The buffer will grow as
+ * large as necessary to keep all unread data buffered.
+ *
+ * A decoder maintains internal free, and ready frames lists. The free frames
+ * list is the list of frames which are available for the decoder to buffer
+ * incoming frames. The ready frames list is the list of fully buffered frames
+ * available to be returned by a call to SVR_Decoder_getFrame. Decoded frames
+ * are placed into the free frames list with a call to SVR_Decoder_returnFrame,
+ * so it is important that frames obtained by a call to SVR_Decoder_getFrame be
+ * returned to avoid memory leaks and excessive memory reallocation.
+ *
+ * \{
+ */
+
+/**
+ * \brief Initialize encoding module
+ *
+ * Initialize encoding module
+ */
 void SVR_Encoding_init(void) {
     encodings = Dictionary_new();
     SVR_Encoding_registerDefaultEncodings();
 }
 
+/**
+ * \brief Register the built-in encodings
+ *
+ * Register the built-in encodings
+ */
 static void SVR_Encoding_registerDefaultEncodings(void) {
     SVR_Encoding_register(&SVR_ENCODING(raw));
     SVR_Encoding_register(&SVR_ENCODING(jpeg));
 }
 
+/**
+ * \brief Close the encoding module
+ *
+ * Deallocate global data structures used by the encoding module
+ */
 void SVR_Encoding_close(void) {
     Dictionary_destroy(encodings);
 }
 
+/**
+ * \brief Retrieve an encoding by name
+ *
+ * Retrieve an encoding by name
+ *
+ * \param name Name of the encoding
+ * \return The encoding object, or NULL if no encoding exists with the given name
+ */
 SVR_Encoding* SVR_Encoding_getByName(const char* name) {
     return Dictionary_get(encodings, name);
 }
 
+/**
+ * \brief Register an encoding
+ *
+ * Register an encoding
+ *
+ * \param encoding The encoding to register. The encoding will be associated
+ * with the name given by encoding->name
+ * \return 0 on success, -1 on failure (encoding already exists)
+ */
 int SVR_Encoding_register(SVR_Encoding* encoding) {
     if(Dictionary_exists(encodings, encoding->name)) {
         return -1;
@@ -37,6 +104,17 @@ int SVR_Encoding_register(SVR_Encoding* encoding) {
     return 0;
 }
 
+/**
+ * \brief Open a new encoder
+ *
+ * Open a new instance of an encoder with the given encoding, encoder options,
+ * and frame properties
+ *
+ * \param encoding The encoding to use
+ * \param encoding_options A dictionary giving any options/arguments to the encoder
+ * \param frame_properties The frame properties for frames to be encoded
+ * \return A new encoder
+ */
 SVR_Encoder* SVR_Encoder_new(SVR_Encoding* encoding, Dictionary* encoding_options, SVR_FrameProperties* frame_properties) {
     SVR_Encoder* encoder = malloc(sizeof(SVR_Encoder));
 
@@ -56,10 +134,18 @@ SVR_Encoder* SVR_Encoder_new(SVR_Encoding* encoding, Dictionary* encoding_option
     return encoder;
 }
 
+/**
+ * \brief Destroy an encoder
+ *
+ * Destroy and deallocate the given encoder
+ *
+ * \param encoder The encoder to destroy
+ */
 void SVR_Encoder_destroy(SVR_Encoder* encoder) {
     if(encoder->encoding->closeEncoder) {
         encoder->encoding->closeEncoder(encoder);
     }
+
     if(encoder->buffer) {
         free(encoder->buffer);
     }
@@ -67,11 +153,28 @@ void SVR_Encoder_destroy(SVR_Encoder* encoder) {
     free(encoder);
 }
 
+/**
+ * \brief Encode a frame
+ *
+ * Encode a frame
+ *
+ * \param encoder The encoder to use to process the frame
+ * \param frame The frame to encode
+ * \return The number of encoded bytes available to be read
+ */
 size_t SVR_Encoder_encode(SVR_Encoder* encoder, IplImage* frame) {
     encoder->encoding->encode(encoder, frame);
     return SVR_Encoder_dataReady(encoder);
 }
 
+/**
+ * \brief Get the number of bytes ready to be read
+ *
+ * Get the amount of encoded data ready to be read expressed in bytes
+ *
+ * \param encoder An encoder instance
+ * \return The number of bytes ready to be read
+ */
 size_t SVR_Encoder_dataReady(SVR_Encoder* encoder) {
     if(encoder->read_index <= encoder->write_index) {
         return encoder->write_index - encoder->read_index;
@@ -80,6 +183,18 @@ size_t SVR_Encoder_dataReady(SVR_Encoder* encoder) {
     }
 }
 
+/**
+ * \brief Get encoded data
+ *
+ * Read up to buffer_size bytes from the encoder output buffer into the provided
+ * buffer. This call will automatically advance the interal read index.
+ *
+ * \param encoder An encoder instance to read from
+ * \param buffer Destination address to write to
+ * \param buffer_size Size of the destination buffer. The lesser of this and the
+ * number of bytes ready will be stored to buffer.
+ * \return Number of bytes stored to the buffer
+ */
 size_t SVR_Encoder_readData(SVR_Encoder* encoder, void* buffer, size_t buffer_size) {
     size_t read_size;
     size_t first_chunk;
@@ -96,6 +211,17 @@ size_t SVR_Encoder_readData(SVR_Encoder* encoder, void* buffer, size_t buffer_si
     return read_size;
 }
 
+/**
+ * \private
+ * \brief Store encoded data
+ *
+ * This call shall be used by encoding implementations to provide encoded data
+ * for buffering before returning to the user.
+ *
+ * \param encoder The associated encoder instance
+ * \param data Pointer to the encoded data
+ * \param n Number of bytes to store
+ */
 void SVR_Encoder_provideData(SVR_Encoder* encoder, void* data, size_t n) {
     size_t used_space;
     size_t free_space;
@@ -139,6 +265,15 @@ void SVR_Encoder_provideData(SVR_Encoder* encoder, void* data, size_t n) {
     SVR_UNLOCK(encoder);
 }
 
+/**
+ * \brief Open a decoder
+ *
+ * Open a new decoder using the given encoding and frame properties
+ *
+ * \param encoding Encoding type to use
+ * \param frame_properties Properties of the frames which will be decoded
+ * \return A new decoder
+ */
 SVR_Decoder* SVR_Decoder_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_properties) {
     SVR_Decoder* decoder = malloc(sizeof(SVR_Decoder));
 
@@ -158,21 +293,74 @@ SVR_Decoder* SVR_Decoder_new(SVR_Encoding* encoding, SVR_FrameProperties* frame_
     return decoder;
 }
 
+/**
+ * \brief Destroy a decoder
+ *
+ * Destroy the given decoder
+ *
+ * \param decoder A decoder instance
+ */
 void SVR_Decoder_destroy(SVR_Decoder* decoder) {
+    IplImage* frame;
+
     if(decoder->encoding->closeDecoder) {
         decoder->encoding->closeDecoder(decoder);
     }
+
+    SVR_FrameProperties_destroy(decoder->frame_properties);
+
+    /* Free frames in free frames list */
+    for(int i = 0; (frame = List_get(decoder->free_frames, i)) != NULL; i++) {
+        cvReleaseImage(&frame);
+    }
+    List_destroy(decoder->free_frames);
+
+    /* Free frames in ready frames list */
+    for(int i = 0; (frame = List_get(decoder->ready_frames, i)) != NULL; i++) {
+        cvReleaseImage(&frame);
+    }
+    List_destroy(decoder->ready_frames);
+
+    free(decoder);
 }
 
+/**
+ * \brief Provide data to be decoded
+ *
+ * Provide new encoded data to the decoder
+ *
+ * \param decoder A decoder instance
+ * \param data Pointer to the encoded data
+ * \param n Number of bytes to be read from the data buffer
+ * \return Number of new decoded frames available
+ */
 int SVR_Decoder_decode(SVR_Decoder* decoder, void* data, size_t n) {
     decoder->encoding->decode(decoder, data, n);
     return SVR_Decoder_framesReady(decoder);
 }
 
+/**
+ * \brief Get number of frames ready
+ *
+ * Get number of frames ready to be retrieved
+ *
+ * \param decoder A decoder instance
+ * \return Number of frames ready
+ */
 int SVR_Decoder_framesReady(SVR_Decoder* decoder) {
     return List_getSize(decoder->ready_frames);
 }
 
+/**
+ * \brief Get a decoded frame
+ *
+ * Get the next decoded frame. If one is not available, NULL shall be
+ * returned. Once the caller no longer needs the frames they should be returned
+ * to the decoder with a call to SVR_Decode_returnFrame.
+ *
+ * \param decoder A decoder instance
+ * \return The next frame ready, or NULL if no frames available
+ */
 IplImage* SVR_Decoder_getFrame(SVR_Decoder* decoder) {
     IplImage* frame = NULL;
 
@@ -185,24 +373,51 @@ IplImage* SVR_Decoder_getFrame(SVR_Decoder* decoder) {
     return frame;
 }
 
+/**
+ * \brief Return a frame to the decoder
+ *
+ * Return a frame obtained by a call to SVR_Decoder_getFrame to the decoder. The
+ * frame will be reused for future frames.
+ *
+ * \param decoder A decoder instance
+ * \param frame A frame obtained by a call to SVR_Decoder_getFrame
+ */
 void SVR_Decoder_returnFrame(SVR_Decoder* decoder, IplImage* frame) {
     SVR_LOCK(decoder);
     List_append(decoder->free_frames, frame);
     SVR_UNLOCK(decoder);
 }
 
-/* Get the frame currently being built */
+/**
+ * \brief Get the current, buffering frame
+ *
+ * Get the frame currently being buffered, or allocated and return a new frame
+ * if there are already no new frames available
+ *
+ * \param decoder A decoder instance
+ */
 static IplImage* SVR_Decoder_getCurrentFrame(SVR_Decoder* decoder) {
     IplImage* frame;
 
+    /* Allocate a new frame */
     if(List_getSize(decoder->free_frames) == 0) {
-        List_append(decoder->free_frames, SVR_FrameProperties_imageFromProperties(decoder->frame_properties));
+        frame = SVR_FrameProperties_imageFromProperties(decoder->frame_properties);
+        List_append(decoder->free_frames, frame);
     }
 
     frame = List_get(decoder->free_frames, 0);
     return frame;
 }
 
+/**
+ * \brief Mark the currently buffering frames as complete
+ *
+ * Called once the currently buffering frame has been completely buffered. This
+ * call makes the currently buffering frame available to the client through
+ * SVR_Decoder_getFrame.
+ *
+ * \param decoder A decoder instance
+ */
 static void SVR_Decoder_currentFrameComplete(SVR_Decoder* decoder) {
     if(List_getSize(decoder->free_frames) > 0) {
         /* Move current item from free frames to end of ready frames */
@@ -211,6 +426,17 @@ static void SVR_Decoder_currentFrameComplete(SVR_Decoder* decoder) {
     }
 }
 
+/**
+ * \private
+ * \brief Provide decoded frame data with padding
+ *
+ * Provide decoded frame data which is already correctly row padded. This
+ * function is only to be called by encoding implementations.
+ *
+ * \param decoder A decoder instance
+ * \param data Decoded frame data
+ * \param n Number of decoded bytes
+ */
 void SVR_Decoder_writePaddedFrameData(SVR_Decoder* decoder, void* data, size_t n) {
     IplImage* current_frame = SVR_Decoder_getCurrentFrame(decoder);
     size_t image_size = current_frame->imageSize;
@@ -233,6 +459,17 @@ void SVR_Decoder_writePaddedFrameData(SVR_Decoder* decoder, void* data, size_t n
     SVR_UNLOCK(decoder);
 }
 
+/**
+ * \private
+ * \brief Provide decoded frame data without padding
+ *
+ * Provide decoded frame data without row padding. This function should only be
+ * called by encoding implementations.
+ *
+ * \param decoder A decoder instance
+ * \param data Decoded frame data
+ * \param n Number of decoded bytes
+ */
 void SVR_Decoder_writeUnpaddedFrameData(SVR_Decoder* decoder, void* data, size_t n) {
     IplImage* current_frame;
     size_t image_size;
@@ -274,6 +511,17 @@ void SVR_Decoder_writeUnpaddedFrameData(SVR_Decoder* decoder, void* data, size_t
     }
 }
 
+/**
+ * \private
+ * \brief Get the row padding
+ *
+ * Get the amount of row padding, i.e. the number of additional bytes at the end
+ * of each row used to align rows at more optimal memory boundaries. This call
+ * is provide for the benefit of encoding implementations
+ *
+ * \param decoder A decoder instance
+ * \return The number of pad bytes in the decoded frames
+ */ 
 int SVR_Decoder_getRowPadding(SVR_Decoder* decoder) {
     IplImage* frame;
     int padding;
@@ -285,3 +533,5 @@ int SVR_Decoder_getRowPadding(SVR_Decoder* decoder) {
 
     return padding;
 }
+
+/** \} */

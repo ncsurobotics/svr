@@ -1,7 +1,18 @@
+/**
+ * \file
+ * \brief Response set
+ */
 
 #include <svr.h>
 
 #define RESPONSE_SET_GROW 8
+
+/**
+ * \defgroup ResponseSet Response set
+ * \ingroup Util
+ * \brief Specialized data structure for managing request-response patterns
+ * \{
+ */
 
 SVR_ResponseSet* SVR_ResponseSet_new(int max_request_id) {
     SVR_ResponseSet* response_set = malloc(sizeof(SVR_ResponseSet));
@@ -84,3 +95,5 @@ int SVR_ResponseSet_setResponse(SVR_ResponseSet* response_set, int response_id, 
 
     return success;
 }
+
+/** \} */

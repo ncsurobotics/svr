@@ -1,9 +1,19 @@
+/**
+ * \file
+ * \brief Top-level library routines and initalization
+ */
 
 #include <svr.h>
 
 #include <stdlib.h>
 
 static char* server_address = NULL;
+
+/**
+ * \defgroup Main Main
+ * \brief Top-level routines and initialization
+ * \{
+ */
 
 /* Initialize core SVR components that are needed even when the client aspects of SVR are not in use */
 void SVR_initCore(void) {
@@ -42,3 +52,5 @@ int SVR_init(void) {
         return SVR_Comm_init("127.0.0.1");
     }
 }
+
+/** \} */

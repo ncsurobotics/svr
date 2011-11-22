@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Message
+ */
 
 #include "svr.h"
 
@@ -5,6 +9,13 @@ static SVR_BlockAllocator* message_allocator = NULL;
 
 static SVR_Message* SVR_Message_newWithAlloc(unsigned int component_count, SVR_Arena* alloc);
 static SVR_PackedMessage* SVR_PackedMessage_newWithAlloc(size_t packed_length, SVR_Arena* alloc);
+
+/**
+ * \defgroup Message Message
+ * \ingroup Comm
+ * \brief Message construction and packing
+ * \{
+ */
 
 void SVR_Message_init(void) {
     message_allocator = SVR_BlockAlloc_newAllocator(256, 8);
@@ -135,3 +146,5 @@ void SVR_PackedMessage_release(SVR_PackedMessage* packed_message) {
 void SVR_Message_release(SVR_Message* message) {
     SVR_Arena_free(message->alloc);
 }
+
+/** \} */

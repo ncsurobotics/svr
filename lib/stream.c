@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Streams
+ */
 
 #include <svr.h>
 
@@ -13,6 +17,12 @@ static unsigned int last_stream_num = 0;
 static pthread_mutex_t new_global_data_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t new_global_data_cond = PTHREAD_COND_INITIALIZER;
 static bool new_global_data = false;
+
+/**
+ * \defgroup Stream Stream
+ * \brief A stream provides access to a source available through a running SVR server
+ * \{
+ */
 
 void SVR_Stream_init(void) {
     streams = Dictionary_new();
@@ -454,3 +464,6 @@ void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n) {
 
     SVR_UNLOCK(stream);
 }
+
+/** \} */
+

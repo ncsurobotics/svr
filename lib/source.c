@@ -1,5 +1,15 @@
+/**
+ * \file
+ * \brief Sources
+ */
 
 #include <svr.h>
+
+/**
+ * \defgroup Source Source
+ * \brief Manage sources including server sources and client sources
+ * \{
+ */
 
 SVR_Source* SVR_Source_new(const char* name) {
     SVR_Source* source;
@@ -273,3 +283,5 @@ void SVR_freeSourcesList(List* sources_list) {
 
     List_destroy(sources_list);
 }
+
+/** \} */

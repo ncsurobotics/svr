@@ -1,5 +1,16 @@
+/**
+ * \file
+ * \brief Message type handlers
+ */
 
 #include <svr.h>
+
+/**
+ * \defgroup MessageHandlers Message handlers
+ * \ingroup Comm
+ * \brief Functions to handle different types of received messages
+ * \{
+ */
 
 int SVR_MessageHandler_streamOrphaned(SVR_Message* message) {
     const char* stream_name;
@@ -29,3 +40,5 @@ int SVR_MessageHandler_kick(SVR_Message* message) {
     SVR_log(SVR_CRITICAL, "Kicked from SVR server!");
     return 0;
 }
+
+/** \} */

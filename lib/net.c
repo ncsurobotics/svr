@@ -1,10 +1,16 @@
 /**
  * \file net.c
- *
- * Routines for sending/receiving messages over standard TCP/IP
+ * \brief Message transmission/receipt
  */
 
 #include "svr.h"
+
+/**
+ * \defgroup Net Message IO
+ * \ingroup Comm
+ * \brief Send and receive messages
+ * \{
+ */
 
 /**
  * \brief Send a packed message
@@ -107,3 +113,5 @@ SVR_Message* SVR_Net_receiveMessage(int socket) {
 int SVR_Net_receivePayload(int socket, SVR_Message* message) {
     return recv(socket, message->payload, message->payload_size, MSG_WAITALL);
 }
+
+/** \} */

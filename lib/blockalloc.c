@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Block allocator
+ */
 
 #include "svr.h"
 
@@ -5,6 +9,13 @@
 
 static List* shared_allocators = NULL;
 static pthread_mutex_t piles_lock = PTHREAD_MUTEX_INITIALIZER;
+
+/**
+ * \defgroup BlockAlloc Block allocator
+ * \ingroup Util
+ * \brief Fast allocator for fixed sized blocks
+ * \{
+ */
 
 void SVR_BlockAlloc_init(void) {
     shared_allocators = List_new();
@@ -104,3 +115,5 @@ void SVR_BlockAlloc_free(SVR_BlockAllocator* allocator, void* p) {
     allocator->index++;
     pthread_mutex_unlock(&allocator->lock);
 }
+
+/** \} */
