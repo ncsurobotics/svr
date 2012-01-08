@@ -26,15 +26,26 @@ static SVR_RequestMapping* SVR_findRequestMapping(const char* request_string);
  * \{
  */
 
+/**
+ * Comparison used to sort the request mapping list
+ */
 static int SVR_compareRequestMapping(const void* v1, const void* v2) {
     return strcmp(((SVR_RequestMapping*)v1)->request_string, ((SVR_RequestMapping*)v2)->request_string);
 }
 
+/**
+ * \brief Initialize the MessageRouter component
+ *
+ * Initialize the MessageRouter component
+ */
 void SVR_MessageRouter_init(void) {
     /* Sort request types so they can be efficiently searched */
     qsort(request_types, sizeof(request_types) / sizeof(request_types[0]), sizeof(request_types[0]), SVR_compareRequestMapping);
 }
 
+/**
+ * Look up a request mapping for the given request string
+ */
 static SVR_RequestMapping* SVR_findRequestMapping(const char* request_string) {
     int lower = 0;
     int upper = (sizeof(request_types) / sizeof(request_types[0])) - 1;
@@ -67,6 +78,15 @@ static SVR_RequestMapping* SVR_findRequestMapping(const char* request_string) {
     return NULL;
 }
 
+/**
+ * \brief Process a message
+ *
+ * Process an unsolicited message, i.e. a message that isn't a response to an
+ * explicit request
+ *
+ * \param message The message to process
+ * \return 0 and success, all other values indicate an error condition
+ */
 int SVR_MessageRouter_processMessage(SVR_Message* message) {
     SVR_RequestMapping* request_type;
     

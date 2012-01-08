@@ -12,6 +12,14 @@
  * \{
  */
 
+/**
+ * \brief Process a "stream orphaned" message
+ *
+ * Process a stream orphaned message to mark the given stream as orphaned
+ *
+ * \param message Message to process
+ * \return 0 on success, -1 otherwise
+ */
 int SVR_MessageHandler_streamOrphaned(SVR_Message* message) {
     const char* stream_name;
 
@@ -24,6 +32,14 @@ int SVR_MessageHandler_streamOrphaned(SVR_Message* message) {
     return 0;
 }
 
+/**
+ * \brief Process a "data" message
+ *
+ * Process a data message which provides frame data for a stream
+ *
+ * \param message Message to process
+ * \return 0 on success, -1 otherwise
+ */
 int SVR_MessageHandler_data(SVR_Message* message) {
     const char* stream_name;
 
@@ -36,6 +52,15 @@ int SVR_MessageHandler_data(SVR_Message* message) {
     return 0;
 }
 
+/**
+ * \brief Process a "kick" message
+ *
+ * Process a kick message sent by the server when the client is being forcefully
+ * dropped
+ *
+ * \param message Message to process
+ * \return 0 on success, -1 otherwise
+ */
 int SVR_MessageHandler_kick(SVR_Message* message) {
     SVR_log(SVR_CRITICAL, "Kicked from SVR server!");
     return 0;

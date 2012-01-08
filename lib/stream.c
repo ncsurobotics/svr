@@ -24,14 +24,32 @@ static bool new_global_data = false;
  * \{
  */
 
+/**
+ * \brief Initialize the stream component
+ *
+ * Initialize the stream component
+ */
 void SVR_Stream_init(void) {
     streams = Dictionary_new();
 }
 
+/**
+ * Get a stream by name
+ */
 static SVR_Stream* SVR_Stream_getByName(const char* stream_name) {
     return Dictionary_get(streams, stream_name);
 }
 
+/**
+ * \brief Create a new stream
+ *
+ * Create a new stream with the source given by source_name. The source is
+ * intially paused.
+ *
+ * \param source_name The name of the source which the steam should be created
+ * for
+ * \return The new stream
+ */
 SVR_Stream* SVR_Stream_new(const char* source_name) {
     SVR_Stream* stream = malloc(sizeof(SVR_Stream));
 
@@ -56,6 +74,13 @@ SVR_Stream* SVR_Stream_new(const char* source_name) {
     return stream;
 }
 
+/**
+ * \brief Destroy a stream
+ *
+ * Close and destroy a stream
+ *
+ * \param stream The stream to close
+ */
 void SVR_Stream_destroy(SVR_Stream* stream) {
     SVR_Stream_close(stream);
 
@@ -83,6 +108,9 @@ void SVR_Stream_destroy(SVR_Stream* stream) {
     free(stream);
 }
 
+/**
+ * Open a stream with the server
+ */
 static int SVR_Stream_open(SVR_Stream* stream) {
     SVR_Message* message;
     SVR_Message* response;
@@ -132,6 +160,9 @@ static int SVR_Stream_open(SVR_Stream* stream) {
     return return_code;
 }
 
+/**
+ * Close a stream with the server
+ */
 static int SVR_Stream_close(SVR_Stream* stream) {
     SVR_Message* message;
     SVR_Message* response;
@@ -151,6 +182,9 @@ static int SVR_Stream_close(SVR_Stream* stream) {
     return return_code;
 }
 
+/**
+ * Update the stream info from the server
+ */
 static int SVR_Stream_updateInfo(SVR_Stream* stream) {
     SVR_Message* message;
     SVR_Message* response;
@@ -180,6 +214,16 @@ static int SVR_Stream_updateInfo(SVR_Stream* stream) {
     return return_code;
 }
 
+/**
+ * \brief Set the stream encoding
+ *
+ * Set the encoding of the stream. The stream must be paused to set the
+ * encoding.
+ *
+ * \param stream The stream
+ * \param encoding_descriptor Option string describing the new encoding
+ * \return An SVR return code
+ */
 int SVR_Stream_setEncoding(SVR_Stream* stream, const char* encoding_descriptor) {
     SVR_Message* message;
     SVR_Message* response;
@@ -206,6 +250,16 @@ int SVR_Stream_setEncoding(SVR_Stream* stream, const char* encoding_descriptor) 
     return return_code;
 }
 
+/**
+ * \brief Resize the stream
+ *
+ * Request the stream be resized on the server side being being sent
+ *
+ * \param stream The stream
+ * \param width The new width
+ * \param height The new height
+ * \return An SVR return code
+ */
 int SVR_Stream_resize(SVR_Stream* stream, int width, int height) {
     SVR_Message* message;
     SVR_Message* response;
@@ -232,6 +286,15 @@ int SVR_Stream_resize(SVR_Stream* stream, int width, int height) {
     return return_code;
 }
 
+/**
+ * \brief Change the color mode of the stream
+ *
+ * Set/unset the grayscale setting for the stream
+ *
+ * \param stream The stream
+ * \param grayscale Grayscale flag for the stream
+ * \return An SVR return code
+ */
 int SVR_Stream_setGrayscale(SVR_Stream* stream, bool grayscale) {
     SVR_Message* message;
     SVR_Message* response;
@@ -262,6 +325,15 @@ int SVR_Stream_setGrayscale(SVR_Stream* stream, bool grayscale) {
     return return_code;
 }
 
+/**
+ * \brief Set the priority of the stream
+ *
+ * Set the stream priority. This currently has not effect
+ *
+ * \param stream The stream
+ * \param priority The stream priority
+ * \return An SVR return code
+ */
 int SVR_Stream_setPriority(SVR_Stream* stream, short priority) {
     SVR_Message* message;
     SVR_Message* response;
@@ -288,6 +360,17 @@ int SVR_Stream_setPriority(SVR_Stream* stream, short priority) {
     return return_code;
 }
 
+/**
+ * \brief Set the stream droprate
+ *
+ * Set the drop rate for the stream. A drop rate of n specifies that one of
+ * every n frames should be sent. Thus a drop rate of 1 is full rate, 2 is half
+ * rate, 3 third, etc.
+ *
+ * \param stream The stream
+ * \param drop_rate The drop rate
+ * \return An SVR return code
+ */
 int SVR_Stream_setDropRate(SVR_Stream* stream, int drop_rate) {
     SVR_Message* message;
     SVR_Message* response;
@@ -314,6 +397,14 @@ int SVR_Stream_setDropRate(SVR_Stream* stream, int drop_rate) {
     return return_code;
 }
 
+/**
+ * \brief Unpause the stream
+ *
+ * Unpause a stream. A stream must be unpaused to receive frames
+ *
+ * \param stream The stream
+ * \return An SVR return code
+ */
 int SVR_Stream_unpause(SVR_Stream* stream) {
     SVR_Message* message;
     SVR_Message* response;
@@ -343,6 +434,15 @@ int SVR_Stream_unpause(SVR_Stream* stream) {
     return return_code;
 }
 
+
+/**
+ * \brief Pause the stream
+ *
+ * Pause a stream.
+ *
+ * \param stream The stream
+ * \return An SVR return code
+ */
 int SVR_Stream_pause(SVR_Stream* stream) {
     SVR_Message* message;
     SVR_Message* response;
@@ -366,10 +466,30 @@ int SVR_Stream_pause(SVR_Stream* stream) {
     return return_code;
 }
 
+/**
+ * \brief Get the stream frame properties
+ *
+ * Get the frame properties for the stream
+ *
+ * \param stream The stream
+ * \return The stream's frame properties
+ */
 SVR_FrameProperties* SVR_Stream_getFrameProperties(SVR_Stream* stream) {
     return stream->frame_properties;
 }
 
+/**
+ * \brief Get a frame from a stream
+ *
+ * Get a frame from a stream. The most recent frame is always returned
+ * (i.e. missed frame are silently dropped). When the caller is finished with
+ * a frame it should be returned with a call to SVR_Stream_returnFrame
+ *
+ * \param stream The stream
+ * \param wait A wait flag. If true, block until a frame is available. Otherwise
+ * return NULL immediately if a frame is unavailable.
+ * \return A frame, or NULL if wait was false and no frame was available
+ */
 IplImage* SVR_Stream_getFrame(SVR_Stream* stream, bool wait) {
     IplImage* frame;
 
@@ -385,16 +505,42 @@ IplImage* SVR_Stream_getFrame(SVR_Stream* stream, bool wait) {
     return frame;
 }
 
+/**
+ * \brief Return a frame
+ *
+ * When the caller is done with a frame returned by SVR_Stream_getFrame it
+ * should be retuned via this function.
+ *
+ * \param stream The stream
+ * \param frame The frame to return
+ */
 void SVR_Stream_returnFrame(SVR_Stream* stream, IplImage* frame) {
     if(stream->decoder) {
         SVR_Decoder_returnFrame(stream->decoder, frame);
     }
 }
 
+/**
+ * \brief Check stream orphaned status
+ *
+ * Check if a stream has been orphaned. A stream is orphaned when its source
+ * closes.
+ *
+ * \param stream The stream
+ * \return True if the stream has been orphaned, false otherwise
+ */
 bool SVR_Stream_isOrphaned(SVR_Stream* stream) {
     return stream->orphaned;
 }
 
+/**
+ * \private
+ * \brief Mark the stream as orphaned
+ *
+ * Mark the stream as orphaned
+ *
+ * \param stream_name The name of the stream to mark as orphaned
+ */
 void SVR_Stream_setOrphaned(const char* stream_name) {
     SVR_Stream* stream;
 
@@ -421,6 +567,11 @@ void SVR_Stream_setOrphaned(const char* stream_name) {
     pthread_mutex_unlock(&new_global_data_lock);
 }
 
+/**
+ * \brief Block until a frame is ready
+ *
+ * Block until a frame is available from any open stream
+ */
 void SVR_Stream_sync(void) {
     pthread_mutex_lock(&new_global_data_lock);
     if(new_global_data == false) {
@@ -430,6 +581,16 @@ void SVR_Stream_sync(void) {
     pthread_mutex_unlock(&new_global_data_lock);
 }
 
+/**
+ * \private
+ * \brief Provide encoded source data to a stream
+ *
+ * Provide encoded source data to a stream
+ *
+ * \param stream_name Name of the stream the data is for
+ * \param buffer A buffer of encoded frame data
+ * \param n Number of bytes in the buffer
+ */
 void SVR_Stream_provideData(const char* stream_name, void* buffer, size_t n) {
     SVR_Stream* stream;
 

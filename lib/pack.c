@@ -10,8 +10,30 @@
  * \ingroup Util
  * \brief Byte buffer packing/unpacking
  * \{
+ *
+ * These functions are inspired by the Python struct module. They provide a way
+ * for a data to be packed into a byte buffer and later unpacked from a byte
+ * buffer in a way that is safe to use regardless of byte order or structure
+ * padding.
  */
 
+/**
+ * \brief Pack a buffer
+ *
+ * Pack a number of values into the buffer at the given offset based on the
+ * format string given. The format string specifies the types of the values to
+ * be packed as a string of format characters. Valid characters are b, h, i, s,
+ * and D. The characters b, h, and i represent unsigned 8 bit, 16 bit, and 32
+ * bit integers types respectively. An s specifies a NULL-terminated string. A D
+ * is a fixed length byte array. The length is given immediately before the
+ * pointer in the argument string.
+ *
+ * \param buffer Output buffer
+ * \param pack_offset Offset into the buffer to write
+ * \param format Format string as described above
+ * \param ... Values to pack
+ * \return New pack offset
+ */
 size_t SVR_pack(void* buffer, size_t pack_offset, const char* format, ...) {
     uint8_t* p = (uint8_t*) buffer;
 
@@ -60,6 +82,17 @@ size_t SVR_pack(void* buffer, size_t pack_offset, const char* format, ...) {
     return pack_offset;
 }
 
+/**
+ * \brief Unpack a buffer
+ *
+ * Unpack the values described by the format string.
+ *
+ * \param buffer Buffer to unpack from
+ * \param pack_offset Offset in the buffer to unpack from
+ * \param format Format string as described above
+ * \param ... Pointers to variables to store the unpacked values in
+ * \return New pack offset
+ */
 size_t SVR_unpack(void* buffer, size_t pack_offset, const char* format, ...) {
     uint8_t* p = buffer;
     va_list ap;
