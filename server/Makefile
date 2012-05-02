@@ -8,7 +8,7 @@ LDFLAGS += -L../lib/ -l$(LIB_NAME:lib%.so=%) -lpthread $(CV_LDFLAGS)
 INCLUDES= ../include/svr/*.h ../include/svr.h include/svrd/*.h include/svrd.h 
 
 SRC= client.c event.c main.c messagehandlers.c messagerouting.c server.c \
-	source.c stream.c sources/test.c sources/cam.c sources/file.c
+	source.c stream.c sources/test.c sources/cam.c sources/file.c sources/v4l.c
 OBJ= $(SRC:.c=.o)
 
 all: $(SERVER_NAME)
