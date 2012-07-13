@@ -93,7 +93,7 @@ SVR_RefCounter* SVR_RefCounter_new(void (*cleanup)(void*), void* object) {
     ref_counter->cleanup = cleanup;
     ref_counter->object = object;
     SVR_LOCKABLE_INIT(ref_counter);
-    
+
     return ref_counter;
 }
 
@@ -116,7 +116,7 @@ void SVR_RefCounter_destroy(SVR_RefCounter* ref_counter) {
  * Background thread that cleans up objects and frees reference counters when
  * their reference count reaches 0. This is done asychronously from SVR_UNREF to
  * avoid any unexpected latency from object cleanup.
- * 
+ *
  * \param __unused Unused parameter
  * \return Always returns NULL
  */

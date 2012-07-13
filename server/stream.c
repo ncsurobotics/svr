@@ -113,7 +113,7 @@ void SVRD_Stream_sourceClosing(SVRD_Stream* stream) {
 int SVRD_Stream_setEncoding(SVRD_Stream* stream, const char* encoding_descriptor) {
     Dictionary* options;
     SVR_Encoding* encoding;
-    
+
     if(stream->state == SVR_UNPAUSED) {
         return SVR_INVALIDSTATE;
     }
@@ -134,7 +134,7 @@ int SVRD_Stream_setEncoding(SVRD_Stream* stream, const char* encoding_descriptor
     }
     stream->encoding = encoding;
     stream->encoding_options = options;
-    
+
     return SVR_SUCCESS;
 }
 
@@ -322,7 +322,7 @@ static void* SVRD_Stream_worker(void* _stream) {
 
     while(stream->state == SVR_UNPAUSED) {
         source_frame = SVRD_Source_getFrame(stream->source, stream, source_frame);
-        
+
         if(source_frame == NULL) {
             if(stream->state == SVR_UNPAUSED) {
                 /* Source closing */
@@ -334,7 +334,7 @@ static void* SVRD_Stream_worker(void* _stream) {
 
         if(stream->drop_rate) {
             stream->drop_counter = (stream->drop_counter + 1) % stream->drop_rate;
-            
+
             if(stream->drop_counter != 0) {
                 continue;
             }

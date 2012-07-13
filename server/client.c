@@ -34,7 +34,7 @@ void SVRD_Client_close(void) {
 
         /* Wait for all client threads to complete */
         SVRD_joinAllClientThreads();
-        
+
         /* Free the clients lists */
         List_destroy(clients);
     }
@@ -155,7 +155,7 @@ void SVRD_Client_markForClosing(SVRD_Client* client) {
         /* Immediately close the socket. The client can not longer generate requests */
         shutdown(client->socket, SHUT_RDWR);
         close(client->socket);
-        
+
         /* Remove client from clients list */
         SVRD_acquireGlobalClientsLock();
         List_remove(clients, List_indexOf(clients, client));
@@ -195,7 +195,7 @@ void SVRD_Client_replyCode(SVRD_Client* client, SVR_Message* request, int error_
 }
 
 /**
- * \brief Kick a client 
+ * \brief Kick a client
  */
 void SVRD_Client_kick(SVRD_Client* client, const char* reason) {
     SVR_Message* message = SVR_Message_new(2);
@@ -277,7 +277,7 @@ int SVRD_Client_sendMessage(SVRD_Client* client, SVR_Message* message) {
 static void* SVRD_Client_worker(void* _client) {
     SVRD_Client* client = (SVRD_Client*) _client;
     SVR_Message* message;
- 
+
     while(client->state != SVR_CLOSED) {
         /* Read message from the client  */
         message = SVR_Net_receiveMessage(client->socket);

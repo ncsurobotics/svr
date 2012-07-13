@@ -69,7 +69,7 @@ static SVR_RequestMapping* SVR_findRequestMapping(const char* request_string) {
 
 int SVR_MessageRouter_processMessage(SVR_Message* message) {
     SVR_RequestMapping* request_type;
-    
+
     if(message->count == 0) {
         SVR_log(SVR_ERROR, "Received empty message");
         return -1;

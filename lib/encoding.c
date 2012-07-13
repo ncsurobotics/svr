@@ -521,7 +521,7 @@ void SVR_Decoder_writeUnpaddedFrameData(SVR_Decoder* decoder, void* data, size_t
  *
  * \param decoder A decoder instance
  * \return The number of pad bytes in the decoded frames
- */ 
+ */
 int SVR_Decoder_getRowPadding(SVR_Decoder* decoder) {
     IplImage* frame;
     int padding;

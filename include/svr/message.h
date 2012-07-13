@@ -21,7 +21,7 @@ struct SVR_Message_s {
      * Pointer to the payload
      */
     void* payload;
-    
+
     /**
      * Payload size in bytes. A payload is appended to the message as part of the stream
      */

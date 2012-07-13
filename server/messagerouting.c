@@ -88,7 +88,7 @@ static SVRD_RequestMapping* SVRD_findRequestMapping(const char* request_string) 
 
 void SVRD_processMessage(SVRD_Client* client, SVR_Message* message) {
     SVRD_RequestMapping* request_type;
-    
+
     if(message->count == 0) {
         SVRD_Client_kick(client, INVALID_MESSAGE);
         return;

@@ -91,7 +91,7 @@ int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_descriptor) 
     SVR_Message* response;
     int return_code;
     int err;
-    
+
     options = SVR_parseOptionString(encoding_descriptor);
     if(options == NULL) {
         err = SVR_getOptionStringErrorPosition();
@@ -99,7 +99,7 @@ int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_descriptor) 
                                        encoding_descriptor, err, encoding_descriptor[err]));
         return SVR_PARSEERROR;
     }
-    
+
     encoding = SVR_Encoding_getByName(Dictionary_get(options, "%name"));
     if(encoding == NULL) {
         SVR_freeParsedOptionString(options);

@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
                 svrctl_usage(argv[0]);
                 return -1;
             }
-            
+
             jobs[job_count].arg0[i] = '\0';
             jobs[job_count].arg1 = jobs[job_count].arg0 + i + 1;
             job_count++;
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
             case SVR_PARSEERROR:
                 fprintf(stderr, "Invalid source descriptor for '%s'\n", jobs[i].arg0);
                 break;
-                
+
             default:
                 fprintf(stderr, "Uknown error opening '%s'\n", jobs[i].arg0);
                 break;
@@ -161,15 +161,15 @@ int main(int argc, char** argv) {
             switch(err) {
             case SVR_SUCCESS:
                 break;
-                
+
             case SVR_NOSUCHSOURCE:
                 fprintf(stderr, "Source '%s' does not exist\n", jobs[i].arg0);
                 break;
-                
+
             case SVR_INVALIDARGUMENT:
                 fprintf(stderr, "Source '%s' is not a server source\n", jobs[i].arg0);
                 break;
-                
+
             default:
                 fprintf(stderr, "Uknown error closing '%s'\n", jobs[i].arg0);
                 break;
@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
                 }
             }
 
-            SVR_freeSourcesList(sources); 
+            SVR_freeSourcesList(sources);
             break;
 
         case SVRCTL_LISTALL:
@@ -203,6 +203,6 @@ int main(int argc, char** argv) {
     }
 
     free(jobs);
-    
+
     return 0;
 }

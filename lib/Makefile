@@ -19,7 +19,7 @@ OBJ = $(SRC:.c=.o)
 
 all: $(LIB_NAME)
 
-$(LIB_NAME): $(OBJ) 
+$(LIB_NAME): $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o $(LIB_NAME)
 
 .c.o:

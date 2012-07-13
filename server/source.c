@@ -233,7 +233,7 @@ void SVRD_Source_destroy(SVRD_Source* source) {
 
     /* Wake up any SVRD_Source_getFrame calls */
     pthread_cond_broadcast(&source->new_frame);
-    
+
     /* Remove self reference. Object will be garbage collected once all
        references a released */
     SVR_UNREF(source);
@@ -242,7 +242,7 @@ void SVRD_Source_destroy(SVRD_Source* source) {
 int SVRD_Source_setEncoding(SVRD_Source* source, const char* encoding_descriptor) {
     Dictionary* options;
     SVR_Encoding* encoding;
-    
+
     if(source->decoder) {
         /* Source already started */
         return SVR_INVALIDSTATE;
@@ -261,7 +261,7 @@ int SVRD_Source_setEncoding(SVRD_Source* source, const char* encoding_descriptor
 
     source->encoding = encoding;
     SVR_freeParsedOptionString(options);
-    
+
     return SVR_SUCCESS;
 }
 
@@ -293,11 +293,11 @@ SVRD_SourceFrame* SVRD_Source_getFrame(SVRD_Source* source, SVRD_Stream* stream,
 
     /* Wait for a different frame */
     pthread_mutex_lock(&source->current_frame_lock);
-    while(source->closed == false && source->current_frame == last_frame && 
+    while(source->closed == false && source->current_frame == last_frame &&
           (stream == NULL || stream->state == SVR_UNPAUSED)) {
         pthread_cond_wait(&source->new_frame, &source->current_frame_lock);
     }
-    
+
     if(source->closed == false && stream->state == SVR_UNPAUSED) {
         new_frame = source->current_frame;
         SVR_REF(new_frame);

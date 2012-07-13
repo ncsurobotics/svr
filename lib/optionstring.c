@@ -41,11 +41,11 @@ Dictionary* SVR_parseOptionString(const char* s) {
     char* value;
     int offset;
     int end;
-    
+
     options = Dictionary_new();
     descriptor = strdup(s);
     offset = 0;
-    
+
     /* Save the descriptor to the options dictionary. This way we can use the
        memory allocated to store the descriptor string instead of allocating
        space for each value in the dictionary */
@@ -62,7 +62,7 @@ Dictionary* SVR_parseOptionString(const char* s) {
         Dictionary_set(options, "%name", identifier);
         return options;
     }
-        
+
     /* If the string is not just the object name then it must have a ':'
        seperating the object name from the options */
     if(descriptor[offset] != ':') {
@@ -77,7 +77,7 @@ Dictionary* SVR_parseOptionString(const char* s) {
     while(descriptor[offset] != '\0') {
         identifier = get_identifier(descriptor, &offset);
         end = offset;
-        
+
         if(identifier == NULL) {
             if(descriptor[offset] == '\0') {
                 /* End of input */
@@ -187,11 +187,11 @@ static char* get_identifier(char* descriptor, int* offset) {
 
     consume_whitespace(descriptor, offset);
     start = *offset;
-    
+
     while(isalnum(descriptor[*offset]) || descriptor[*offset] == '_') {
         (*offset)++;
     }
-    
+
     /* Empty/invalid */
     if(*offset == start) {
         return NULL;

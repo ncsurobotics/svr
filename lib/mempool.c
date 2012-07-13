@@ -141,7 +141,7 @@ void* SVR_Arena_sprintf(SVR_Arena* alloc, const char* format, ...) {
     va_start(ap, format);
     n = vsnprintf(p, space, format, ap);
     va_end(ap);
-    
+
     /* If the above vsnprintf call did not truncate the output then this call
        will simply claim the space used, otherwise it will make the necessary
        space so we can vsnprintf successfully */

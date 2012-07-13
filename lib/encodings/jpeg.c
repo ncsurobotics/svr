@@ -183,7 +183,7 @@ static void* openEncoder(SVR_FrameProperties* frame_properties, Dictionary* opti
             quality = JPEG_DEFAULT_QUALITY;
         }
     }
-    
+
     jpeg_set_quality(&private_data->cinfo, quality, true);
 
     private_data->cinfo.dest = (struct jpeg_destination_mgr*) private_data;

@@ -40,7 +40,7 @@ int main(void) {
     SVR_Stream_destroy(stream1);
     SVR_Stream_destroy(stream2);
     SVR_Source_destroy(source);
-    
+
     source = SVR_Source_new("clientsource");
     if(source == NULL) {
         fprintf(stderr, "Failed to make source\n");

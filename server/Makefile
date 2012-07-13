@@ -5,7 +5,7 @@ include ../$(CONFIG)
 EXTRA_CFLAGS = -I../include/ -Iinclude $(CV_CFLAGS)
 LDFLAGS += -L../lib/ -l$(LIB_NAME:lib%.so=%) -lpthread $(CV_LDFLAGS)
 
-INCLUDES= ../include/svr/*.h ../include/svr.h include/svrd/*.h include/svrd.h 
+INCLUDES= ../include/svr/*.h ../include/svr.h include/svrd/*.h include/svrd.h
 
 SRC= client.c event.c main.c messagehandlers.c messagerouting.c server.c \
 	source.c stream.c sources/test.c sources/cam.c sources/file.c

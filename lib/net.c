@@ -86,7 +86,7 @@ SVR_Message* SVR_Net_receiveMessage(int socket) {
     /* Create space for the message and receive it */
     message_length = ntohs(message_length);
     packed_message = SVR_PackedMessage_new(message_length + SVR_MESSAGE_PREFIX_LEN);
-    
+
     n = recv(socket, packed_message->data, packed_message->length, MSG_WAITALL);
     if(n <= 0) {
         SVR_PackedMessage_release(packed_message);

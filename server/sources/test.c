@@ -96,7 +96,7 @@ static void* TestSource_background(void* _source) {
                          CV_RGB(0, 255, 0),
                          CV_RGB(0, 0, 255)
     };
-    
+
     frame = SVR_FrameProperties_imageFromProperties(SVRD_Source_getFrameProperties(source));
 
     if(source_data->rate > 0) {
@@ -109,7 +109,7 @@ static void* TestSource_background(void* _source) {
         cvSet(frame, CV_RGB(0, 0, 0), NULL);
         cvSetImageROI(frame, cvRect(block_x, block_y, 64, 48));
         cvSet(frame, colors[rand() % 3], NULL);
-        
+
         /* Move to next block */
         block_x = (block_x + 64) % width;
         if(block_x == 0) {

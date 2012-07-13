@@ -9,7 +9,7 @@
 #include <svr/cv.h>
 
 struct SVR_Encoding_s {
-    /** 
+    /**
      * The name of the encoding
      */
     const char* name;

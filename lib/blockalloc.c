@@ -52,7 +52,7 @@ void SVR_BlockAlloc_freeAllocator(SVR_BlockAllocator* allocator) {
     while((chunk = List_get(allocator->chunks, 0)) != NULL) {
         free(chunk);
     }
-    
+
     free(allocator->blocks);
     free(allocator);
 }

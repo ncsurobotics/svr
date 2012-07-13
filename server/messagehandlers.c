@@ -472,7 +472,7 @@ void SVRD_Source_rClose(SVRD_Client* client, SVR_Message* message) {
 
         SVRD_Client_unprovideSource(client, source);
     }
-    
+
     SVRD_Source_destroy(source);
     SVR_UNREF(source);
 
@@ -485,7 +485,7 @@ void SVRD_Source_rGetSourcesList(SVRD_Client* client, SVR_Message* message) {
     List* sources_list;
     char* source_name;
     int j;
-    
+
     if(message->count != 1) {
         return;
     }

@@ -24,7 +24,7 @@ LIB_NAME = libsvr.so
 SERVER_NAME = svrd
 
 # Extra LDFLAGS for some systems
-EXTRA_LDFLAGS = 
+EXTRA_LDFLAGS =
 
 # Library version
 MAJOR = 0

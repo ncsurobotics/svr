@@ -69,7 +69,7 @@ SVR_Message* SVR_PackedMessage_unpack(SVR_PackedMessage* packed_message) {
 
     /* Read header */
     pack_offset = SVR_unpack(packed_message->data, pack_offset, "hhhh", &data_length, &message->request_id, &message->count, &message->payload_size);
-    
+
     /* Store points to components (does not copy) */
     message->components = SVR_Arena_reserve(packed_message->alloc, sizeof(char*) * message->count);
 

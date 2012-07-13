@@ -80,6 +80,6 @@ int main(int argc, char** argv) {
     signal(SIGPIPE, SIG_IGN);
 
     SVRD_Server_mainLoop(bind_address);
-    
+
     return 0;
 }
