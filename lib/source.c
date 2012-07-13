@@ -11,6 +11,14 @@
  * \{
  */
 
+/**
+ * \brief Open a new source
+ *
+ * Create a new (client) frame source with the given source name
+ *
+ * \param name Name of the new source
+ * \return New source or NULL if an error occurs
+ */
 SVR_Source* SVR_Source_new(const char* name) {
     SVR_Source* source;
     SVR_Message* message;
@@ -50,6 +58,14 @@ SVR_Source* SVR_Source_new(const char* name) {
     return source;
 }
 
+/**
+ * \brief Close and destroy a source
+ *
+ * Close and destroy a source, orphaning any streams associated with the source.
+ *
+ * \param source The client source to close
+ * \return 0 on success, otherwise an error has occurred
+ */
 int SVR_Source_destroy(SVR_Source* source) {
     SVR_Message* message;
     SVR_Message* response;
@@ -84,6 +100,15 @@ int SVR_Source_destroy(SVR_Source* source) {
     return return_code;
 }
 
+/**
+ * \brief Set the encoding for the source
+ *
+ * Set the encoding for the source from the option string describing the encoding
+ *
+ * \param source The source to set the encoding for
+ * \param encoding_descriptor The option string describing the encoding to use
+ * \return 0 on success, otherwise and error has occurred
+ */
 int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_descriptor) {
     Dictionary* options;
     SVR_Encoding* encoding;
@@ -130,6 +155,16 @@ int SVR_Source_setEncoding(SVR_Source* source, const char* encoding_descriptor) 
     return return_code;
 }
 
+/**
+ * \brief Set the frame properties for the source
+ *
+ * Set the frame properties for the source. If this is not called explicitly the
+ * properties will be derived from the first frame sent.
+ *
+ * \param source The source to set the frame properties of
+ * \param frame_properties The frame properties
+ * \return 0 on success, otherwise an error has occurred
+ */
 int SVR_Source_setFrameProperties(SVR_Source* source, SVR_FrameProperties* frame_properties) {
     SVR_Message* message;
     SVR_Message* response;
@@ -160,6 +195,17 @@ int SVR_Source_setFrameProperties(SVR_Source* source, SVR_FrameProperties* frame
     return return_code;
 }
 
+/**
+ * \brief Send a frame
+ *
+ * Send a frame with the given source. The frame must be valid for the frame
+ * properties for the stream. If no frames have been sent, the frame properties
+ * will be derived form the first frame.
+ *
+ * \param source The source to send the frame through
+ * \param frame The frame to send
+ * \return An SVR error code or SVR_SUCCESS on success
+ */
 int SVR_Source_sendFrame(SVR_Source* source, IplImage* frame) {
     SVR_FrameProperties* frame_properties;
     SVR_Message* message;
@@ -215,6 +261,16 @@ int SVR_Source_sendFrame(SVR_Source* source, IplImage* frame) {
     return SVR_SUCCESS;
 }
 
+/**
+ * \brief Open a new server side source
+ *
+ * Open a server source with the given name. The source type is described in the
+ * option string descriptor.
+ *
+ * \param name The name of the new source
+ * \param descriptor An option string describing the source, and source options
+ * \return An SVR error code or SVR_SUCCESS on success
+ */
 int SVR_openServerSource(const char* name, const char* descriptor) {
     SVR_Message* message;
     SVR_Message* response;
@@ -235,6 +291,14 @@ int SVR_openServerSource(const char* name, const char* descriptor) {
     return return_code;
 }
 
+/**
+ * \brief Close a server source
+ *
+ * Close the server source with the given name
+ *
+ * \param name Name of the server source
+ * \return An SVR error code or SVR_SUCCESS on success
+ */
 int SVR_closeServerSource(const char* name) {
     SVR_Message* message;
     SVR_Message* response;
@@ -253,6 +317,15 @@ int SVR_closeServerSource(const char* name) {
     return return_code;
 }
 
+/**
+ * \brief Get a list of sources
+ *
+ * Get a list of sources available. Each item in the list is a string giving the
+ * name of the source prefixed with either "c:" or "s:" for client and server
+ * sources respectively.
+ *
+ * \return List of sources
+ */
 List* SVR_getSourcesList(void) {
     List* sources_list;
     SVR_Message* message;
@@ -274,6 +347,13 @@ List* SVR_getSourcesList(void) {
     return sources_list;
 }
 
+/**
+ * \brief Free a sources list
+ *
+ * Free a sources list as returned by SVR_getSourcesList
+ *
+ * \param sources_list List to free
+ */
 void SVR_freeSourcesList(List* sources_list) {
     char* source_name;
 

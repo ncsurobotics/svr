@@ -17,10 +17,20 @@ static pthread_mutex_t piles_lock = PTHREAD_MUTEX_INITIALIZER;
  * \{
  */
 
+/**
+ * \brief Initialize block allocator module
+ *
+ * Initialize the block allocator module
+ */
 void SVR_BlockAlloc_init(void) {
     shared_allocators = List_new();
 }
 
+/**
+ * \brief Close the block allocator module
+ *
+ * Close the block allocator module
+ */
 void SVR_BlockAlloc_close(void) {
     SVR_BlockAllocator* allocator;
 
@@ -31,6 +41,15 @@ void SVR_BlockAlloc_close(void) {
     List_destroy(shared_allocators);
 }
 
+/**
+ * \brief Get a new allocator
+ *
+ * Create a new block allocator
+ *
+ * \param block_size Size of blocks to allocate in bytes
+ * \param grow_size Number of blocks to allocate at once
+ * \return New block allocator
+ */
 SVR_BlockAllocator* SVR_BlockAlloc_newAllocator(size_t block_size, size_t grow_size) {
     SVR_BlockAllocator* allocator;
 
@@ -46,6 +65,13 @@ SVR_BlockAllocator* SVR_BlockAlloc_newAllocator(size_t block_size, size_t grow_s
     return allocator;
 }
 
+/**
+ * \brief Free a block allocator
+ *
+ * Free a previously allocated block allocator
+ *
+ * \param allocator The allocator to free
+ */
 void SVR_BlockAlloc_freeAllocator(SVR_BlockAllocator* allocator) {
     void* chunk;
 
@@ -57,6 +83,14 @@ void SVR_BlockAlloc_freeAllocator(SVR_BlockAllocator* allocator) {
     free(allocator);
 }
 
+/**
+ * \brief Get a shared allocator
+ *
+ * Get a reference to shared allocator for blocks of the given size. 
+ *
+ * \param block_size Size of blocks needed for allocator
+ * \return Reference to an existing shared allocator or a newly allocated one
+ */
 SVR_BlockAllocator* SVR_BlockAlloc_getSharedAllocator(uint32_t block_size) {
     SVR_BlockAllocator* allocator;
     int i = 0;
@@ -78,10 +112,26 @@ SVR_BlockAllocator* SVR_BlockAlloc_getSharedAllocator(uint32_t block_size) {
     return allocator;
 }
 
+/**
+ * \brief Get block size of an allocator
+ *
+ * Get the block size (in bytes) of an existing allocator
+ *
+ * \param allocator A block allocator
+ * \return Size of blocks (in bytes) allocated by the given allocator
+ */
 size_t SVR_BlockAlloc_getBlockSize(SVR_BlockAllocator* allocator) {
     return allocator->block_size;
 }
 
+/**
+ * \brief Get a new allocation
+ *
+ * Get a new block from a block allocator
+ *
+ * \param allocator A block allocator
+ * \return Pointer to the newly allocated block
+ */
 void* SVR_BlockAlloc_alloc(SVR_BlockAllocator* allocator) {
     void* p;
 
@@ -109,6 +159,15 @@ void* SVR_BlockAlloc_alloc(SVR_BlockAllocator* allocator) {
     return p;
 }
 
+/**
+ * \brief Free a block
+ *
+ * Free a block previously allocated from the given allocator and a call to
+ * SVR_BlockAlloc_alloc.
+ *
+ * \param allocator The block allocator the block belongs to
+ * \param p Block to free
+ */
 void SVR_BlockAlloc_free(SVR_BlockAllocator* allocator, void* p) {
     pthread_mutex_lock(&allocator->lock);
     allocator->blocks[allocator->index] = p;

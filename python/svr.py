@@ -99,7 +99,8 @@ class Stream(object):
             raise StreamException("Error opening stream")
 
     def __del__(self):
-        self.svr.SVR_Stream_destroy(self.handle)
+        if self.handle != 0:
+            self.svr.SVR_Stream_destroy(self.handle)
 
     def set_encoding(self, encoding):
         return self.svr.SVR_Stream_setEncoding(self.handle, encoding)

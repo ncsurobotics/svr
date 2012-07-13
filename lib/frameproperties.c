@@ -12,6 +12,14 @@
  * \{
  */
 
+/**
+ * \brief Allocate a new FrameProperties object
+ *
+ * Create a new FrameProperties object with default parameters (8-bit depth, 3
+ * channels, 0 pixel width and 0 pixel height)
+ *
+ * \return FrameProperties object
+ */
 SVR_FrameProperties* SVR_FrameProperties_new(void) {
     SVR_FrameProperties* properties = malloc(sizeof(SVR_FrameProperties));
 
@@ -23,7 +31,18 @@ SVR_FrameProperties* SVR_FrameProperties_new(void) {
     return properties;
 }
 
-/* width,height,depth,channels */
+
+/**
+ * \brief Create a FramePropeties object from a string
+ *
+ * Convert a string in the form "width,height,depth,channels" to a
+ * FramePropreties with the same properties. Any number of properties may be
+ * ommitted from the end of the string and the defaults for a FrameProperties
+ * object will be used instead.
+ *
+ * \param string String in the form "width,height,depth,channels"
+ * \return New FrameProperties object with properties given by the string
+ */
 SVR_FrameProperties* SVR_FrameProperties_fromString(const char* string) {
     SVR_FrameProperties* properties = SVR_FrameProperties_new();
     char* copy = strdup(string);
@@ -62,16 +81,42 @@ SVR_FrameProperties* SVR_FrameProperties_fromString(const char* string) {
     return properties;
 }
 
+/**
+ * \brief Destroy a FrameProperties object
+ *
+ * Destroy/free a FrameProperties object
+ *
+ * \param properties Object to destroy
+ */
 void SVR_FrameProperties_destroy(SVR_FrameProperties* properties) {
     free(properties);
 }
 
+/**
+ * \brief Clone an existing FrameProperties object
+ *
+ * Create a new FrameProperties object with the same properties as the given
+ * FrameProperties object
+ *
+ * \param original_properties FrameProperties object to clone
+ * \return A new FrameProperties object
+ */
 SVR_FrameProperties* SVR_FrameProperties_clone(SVR_FrameProperties* original_properties) {
     SVR_FrameProperties* cloned_properties = malloc(sizeof(SVR_FrameProperties));
     memcpy(cloned_properties, original_properties, sizeof(SVR_FrameProperties));
     return cloned_properties;
 }
 
+/**
+ * \brief Create an IplImage from a FrameProperties object
+ *
+ * Create an IplImage with properties (height, width, depth, channels) derived
+ * from the given FrameProperties object.
+ *
+ * \param properties A FrameProperties object
+ * \return A new IplImage with the same properties as the given FrameProperties
+ * object
+ */
 IplImage* SVR_FrameProperties_imageFromProperties(SVR_FrameProperties* properties) {
     return cvCreateImage(cvSize(properties->width,
                                 properties->height),
