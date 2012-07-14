@@ -511,6 +511,7 @@ void SVRD_Source_rGetSourcesList(SVRD_Client* client, SVR_Message* message) {
         }
 
         SVR_UNLOCK(source);
+        SVR_UNREF(source);
         j++;
     }
 

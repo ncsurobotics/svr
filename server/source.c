@@ -49,6 +49,7 @@ SVRD_Source* SVRD_Source_getLockedSource(const char* source_name) {
     pthread_mutex_lock(&sources_lock);
     source = Dictionary_get(sources, source_name);
     if(source != NULL) {
+        SVR_REF(source);
         SVR_LOCK(source);
     }
 
