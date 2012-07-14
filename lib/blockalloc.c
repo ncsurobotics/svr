@@ -135,9 +135,13 @@ size_t SVR_BlockAlloc_getBlockSize(SVR_BlockAllocator* allocator) {
 void* SVR_BlockAlloc_alloc(SVR_BlockAllocator* allocator) {
     void* p;
 
+#ifdef SVR_DUMMY_ALLOC
+    p = malloc(allocator->block_size);
+#else
     pthread_mutex_lock(&allocator->lock);
 
     if(allocator->index == 0) {
+        /* No blocks are available, so allocate a new chunk */
         allocator->num_blocks += allocator->grow_size;
         allocator->blocks = realloc(allocator->blocks, allocator->num_blocks * sizeof(void*));
         allocator->index = allocator->grow_size;
@@ -155,6 +159,7 @@ void* SVR_BlockAlloc_alloc(SVR_BlockAllocator* allocator) {
     p = allocator->blocks[allocator->index];
 
     pthread_mutex_unlock(&allocator->lock);
+#endif
 
     return p;
 }
@@ -169,10 +174,14 @@ void* SVR_BlockAlloc_alloc(SVR_BlockAllocator* allocator) {
  * \param p Block to free
  */
 void SVR_BlockAlloc_free(SVR_BlockAllocator* allocator, void* p) {
+#ifdef SVR_DUMMY_ALLOC
+    free(p);
+#else
     pthread_mutex_lock(&allocator->lock);
     allocator->blocks[allocator->index] = p;
     allocator->index++;
     pthread_mutex_unlock(&allocator->lock);
+#endif
 }
 
 /** \} */

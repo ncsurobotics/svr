@@ -5,6 +5,9 @@
 CC ?= gcc
 CFLAGS = -std=gnu99 -Wall -Werror -Wno-unused-function -pedantic -Wmissing-prototypes -g
 
+# Enable dummy allocator
+#CFLAGS += -DSVR_DUMMY_ALLOC
+
 # Python executable
 PYTHON ?= python
 

@@ -50,8 +50,13 @@ void SVR_MemPool_close(void) {
 SVR_Arena* SVR_Arena_alloc(SVR_BlockAllocator* allocator) {
     SVR_Arena* alloc = SVR_BlockAlloc_alloc(descriptor_allocator);
 
+#ifdef SVR_DUMMY_ALLOC
+    alloc->base = NULL;
+    alloc->allocator = NULL;
+#else
     alloc->base = SVR_BlockAlloc_alloc(allocator);
     alloc->allocator = allocator;
+#endif
     alloc->write_index = 0;
     alloc->next = NULL;
 
@@ -133,6 +138,23 @@ void* SVR_Arena_strdup(SVR_Arena* alloc, const char* s) {
  * \return Pointer to formatted string
  */
 void* SVR_Arena_sprintf(SVR_Arena* alloc, const char* format, ...) {
+#ifdef SVR_DUMMY_ALLOC
+    void* p = NULL;
+    va_list ap;
+    int n;
+
+    va_start(ap, format);
+    n = vsnprintf(p, 0, format, ap);
+    va_end(ap);
+
+    p = SVR_Arena_reserve(alloc, n + 1);
+
+    va_start(ap, format);
+    vsnprintf(p, n + 1, format, ap);
+    va_end(ap);
+
+    return p;
+#else
     size_t space = SVR_BlockAlloc_getBlockSize(alloc->allocator) - alloc->write_index;
     void* p = ((uint8_t*)alloc->base) + alloc->write_index;
     va_list ap;
@@ -155,6 +177,7 @@ void* SVR_Arena_sprintf(SVR_Arena* alloc, const char* format, ...) {
     }
 
     return p;
+#endif
 }
 
 /**
@@ -169,6 +192,14 @@ void* SVR_Arena_sprintf(SVR_Arena* alloc, const char* format, ...) {
  * \return A pointer to the reserved space
  */
 void* SVR_Arena_reserve(SVR_Arena* alloc, size_t size) {
+#ifdef SVR_DUMMY_ALLOC
+    while(alloc->next) {
+        alloc = alloc->next;
+    }
+
+    alloc->next = SVR_Arena_allocExternal(size);
+    return alloc->next->base;
+#else
     SVR_BlockAllocator* allocator = alloc->allocator;
     size_t block_size = SVR_BlockAlloc_getBlockSize(allocator);
     bool found;
@@ -206,6 +237,7 @@ void* SVR_Arena_reserve(SVR_Arena* alloc, size_t size) {
     alloc->write_index += size;
 
     return p;
+#endif
 }
 
 /** \} */
