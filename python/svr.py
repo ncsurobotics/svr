@@ -123,6 +123,7 @@ class Stream(object):
     def __del__(self):
         if self.handle:
             self.svr.SVR_Stream_destroy(self.handle)
+        self.handle = None
 
     def set_encoding(self, encoding):
         return self.svr.SVR_Stream_setEncoding(self.handle, encoding)
@@ -179,7 +180,9 @@ class Source(object):
             raise SourceException("Error opening source")
 
     def __del__(self):
-        self.svr.SVR_Source_destroy(self.handle)
+        if self.handle:
+            self.svr.SVR_Source_destroy(self.handle)
+        self.handle = None
 
     def set_encoding(self, encoding):
         return self.svr.SVR_Source_setEncoding(self.handle, encoding)
@@ -196,6 +199,13 @@ def debug(source_name, frame):
         debug_sources[source_name] = Source(source_name)
 
     debug_sources[source_name].send_frame(frame)
+
+def debug_close(source_name):
+    global debug_sources
+    del debug_sources[source_name]
+
+def sync():
+    _svr.SVR_Stream_sync()
 
 def open_server_source(source_name, source_description):
     return _svr.SVR_openServerSource(source_name, source_description)
