@@ -51,20 +51,42 @@ def _check_source_call(value):
     else:
         raise SourceException("Unknown error")
 
+_svr.SVR_Stream_new.argtypes = [ctypes.c_char_p]
+_svr.SVR_Stream_new.restype = ctypes.c_void_p
+_svr.SVR_Stream_destroy.argtypes = [ctypes.c_void_p]
+_svr.SVR_Stream_getFrame.argtypes = [ctypes.c_void_p, ctypes.c_bool]
+_svr.SVR_Stream_getFrame.restype = ctypes.c_void_p
+_svr.SVR_Stream_setEncoding.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 _svr.SVR_Stream_setEncoding.restype = _check_stream_call
+_svr.SVR_Stream_resize.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_int]
 _svr.SVR_Stream_resize.restype = _check_stream_call
+_svr.SVR_Stream_setGrayscale.argtypes = [ctypes.c_void_p, ctypes.c_bool]
 _svr.SVR_Stream_setGrayscale.restype = _check_stream_call
+_svr.SVR_Stream_setDropRate.argtypes = [ctypes.c_void_p, ctypes.c_int]
 _svr.SVR_Stream_setDropRate.restype = _check_stream_call
+_svr.SVR_Stream_setPriority.argtypes = [ctypes.c_void_p, ctypes.c_short]
 _svr.SVR_Stream_setPriority.restype = _check_stream_call
+_svr.SVR_Stream_unpause.argtypes = [ctypes.c_void_p]
 _svr.SVR_Stream_unpause.restype = _check_stream_call
+_svr.SVR_Stream_pause.argtypes = [ctypes.c_void_p]
 _svr.SVR_Stream_pause.restype = _check_stream_call
+_svr.SVR_Stream_isOrphaned.argtypes = [ctypes.c_void_p]
 _svr.SVR_Stream_isOrphaned.restype = ctypes.c_bool
+_svr.SVR_Stream_returnFrame.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 
+_svr.SVR_Source_new.argtypes = [ctypes.c_char_p]
+_svr.SVR_Source_new.restype = ctypes.c_void_p
+_svr.SVR_Source_destroy.argtypes = [ctypes.c_void_p]
 _svr.SVR_Source_destroy.restype = _check_source_call
+_svr.SVR_Source_setEncoding.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 _svr.SVR_Source_setEncoding.restype = _check_source_call
-_svr.SVR_Source_setFrameProperties.restype = _check_source_call
+_svr.SVR_Source_sendFrame.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 _svr.SVR_Source_sendFrame.restype = _check_source_call
+
+_svr.SVR_setServerAddress.argtypes = [ctypes.c_char_p]
+_svr.SVR_openServerSource.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 _svr.SVR_openServerSource.restype = _check_source_call
+_svr.SVR_closeServerSource.argtypes = [ctypes.c_char_p]
 _svr.SVR_closeServerSource.restype = _check_source_call
 _svr.SVR_getSourcesList.restype = ctypes.POINTER(SVRSourcesList)
 
