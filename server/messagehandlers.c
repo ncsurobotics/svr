@@ -500,7 +500,7 @@ void SVRD_Source_rGetSourcesList(SVRD_Client* client, SVR_Message* message) {
         free(source_name);
 
         if(source == NULL) {
-            message->count--;
+            response->count--;
             continue;
         }
 
