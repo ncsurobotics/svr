@@ -60,7 +60,7 @@ static SVR_RequestMapping* SVR_findRequestMapping(const char* request_string) {
             }
         }
 
-         while(request_types[upper].request_string[sindex] > request_string[sindex]) {
+        while(request_types[upper].request_string[sindex] > request_string[sindex]) {
             upper--;
 
             if(lower > upper) {
