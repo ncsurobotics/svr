@@ -63,6 +63,36 @@ int SVR_Net_sendMessage(int socket, SVR_Message* message) {
 }
 
 /**
+ * \brief Read from a socket
+ *
+ * Read data from a socket. This function is guaranteed to return the requested
+ * number of bytes so long as no errors occur and the socket is not shut down.
+ *
+ * \param socket The socket to read from
+ * \param buffer A pointer to a buffer to write to
+ * \param len The amount of data to read
+ * \param flags Additional flags as described in recv(2)
+ * \return Return the number of bytes read (len) or -1 if an error occurs or 0
+ * if the remote partner performs a shutdown
+ */
+static int SVR_Net_recv(int socket, void* buffer, size_t len, int flags) {
+    int read = 0;
+    int n;
+
+    while(read < len) {
+        n = recv(socket, ((char*)buffer) + read, len - read, flags | MSG_WAITALL);
+
+        if(n <= 0) {
+            return n;
+        }
+
+        read += n;
+    }
+
+    return read;
+}
+
+/**
  * \brief Receive a message
  *
  * Receive a message from the given socket. Will not retrieve the payload. If a
@@ -76,18 +106,17 @@ SVR_Message* SVR_Net_receiveMessage(int socket) {
 
     /* The first byte received should be the size of the message that follows
        minus the header data */
-    while(n != sizeof(uint16_t)) {
-        n = recv(socket, &message_length, sizeof(uint16_t), MSG_PEEK|MSG_WAITALL);
-        if(n <= 0) {
-            return NULL;
-        }
+    n = SVR_Net_recv(socket, &message_length, sizeof(uint16_t), MSG_PEEK);
+
+    if(n <= 0) {
+        return NULL;
     }
 
     /* Create space for the message and receive it */
     message_length = ntohs(message_length);
     packed_message = SVR_PackedMessage_new(message_length + SVR_MESSAGE_PREFIX_LEN);
 
-    n = recv(socket, packed_message->data, packed_message->length, MSG_WAITALL);
+    n = SVR_Net_recv(socket, packed_message->data, packed_message->length, 0);
     if(n <= 0) {
         SVR_PackedMessage_release(packed_message);
         return NULL;
@@ -111,7 +140,7 @@ SVR_Message* SVR_Net_receiveMessage(int socket) {
  * one of the return codes for the recv function
  */
 int SVR_Net_receivePayload(int socket, SVR_Message* message) {
-    return recv(socket, message->payload, message->payload_size, MSG_WAITALL);
+    return SVR_Net_recv(socket, message->payload, message->payload_size, 0);
 }
 
 /** \} */

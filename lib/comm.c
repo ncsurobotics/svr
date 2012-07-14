@@ -73,9 +73,15 @@ int SVR_Comm_init(const char* server_address) {
  */
 static void* SVR_Comm_receiveThread(void* __unused) {
     SVR_Message* message;
+    int n;
 
     while(true) {
         message = SVR_Net_receiveMessage(client_sock);
+
+        if(message == NULL) {
+            SVR_log(SVR_ERROR, "Server has closed");
+            break;
+        }
 
         /* Retrieve payload */
         if(message->payload_size) {
@@ -85,7 +91,11 @@ static void* SVR_Comm_receiveThread(void* __unused) {
             }
 
             message->payload = payload_buffer;
-            SVR_Net_receivePayload(client_sock, message);
+            n = SVR_Net_receivePayload(client_sock, message);
+            if(n <= 0) {
+                SVR_log(SVR_ERROR, "Server has closed");
+                break;
+            }
         }
 
         if(message->request_id) {
