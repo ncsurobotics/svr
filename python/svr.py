@@ -117,11 +117,11 @@ class Stream(object):
         self.handle = self.svr.SVR_Stream_new(source_name)
         self.frame = None
 
-        if self.handle == 0:
+        if self.handle == None:
             raise StreamException("Error opening stream")
 
     def __del__(self):
-        if self.handle != 0:
+        if self.handle:
             self.svr.SVR_Stream_destroy(self.handle)
 
     def set_encoding(self, encoding):
@@ -151,7 +151,7 @@ class Stream(object):
     def get_frame(self, wait=True):
         frame_handle = self.svr.SVR_Stream_getFrame(self.handle, ctypes.c_bool(wait))
 
-        if frame_handle == 0:
+        if frame_handle == None:
             if self.is_orphaned():
                 raise OrphanStreamException("Remote source closed")
             elif wait:
@@ -175,7 +175,7 @@ class Source(object):
         self.svr = _svr
         self.handle = self.svr.SVR_Source_new(name)
 
-        if self.handle == 0:
+        if self.handle == None:
             raise SourceException("Error opening source")
 
     def __del__(self):
