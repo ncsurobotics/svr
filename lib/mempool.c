@@ -138,46 +138,24 @@ void* SVR_Arena_strdup(SVR_Arena* alloc, const char* s) {
  * \return Pointer to formatted string
  */
 void* SVR_Arena_sprintf(SVR_Arena* alloc, const char* format, ...) {
-#ifdef SVR_DUMMY_ALLOC
-    void* p = NULL;
+    void* p;
     va_list ap;
     int n;
 
+    /* Compute the required buffer length */
     va_start(ap, format);
-    n = vsnprintf(p, 0, format, ap);
+    n = vsnprintf(NULL, 0, format, ap);
     va_end(ap);
 
+    /* Reserve the number of bytes required plus one for the null terminator */
     p = SVR_Arena_reserve(alloc, n + 1);
 
+    /* Output was truncated, try with the new reserved space */
     va_start(ap, format);
     vsnprintf(p, n + 1, format, ap);
     va_end(ap);
 
     return p;
-#else
-    size_t space = SVR_BlockAlloc_getBlockSize(alloc->allocator) - alloc->write_index;
-    void* p = ((uint8_t*)alloc->base) + alloc->write_index;
-    va_list ap;
-    int n;
-
-    va_start(ap, format);
-    n = vsnprintf(p, space, format, ap);
-    va_end(ap);
-
-    /* If the above vsnprintf call did not truncate the output then this call
-       will simply claim the space used, otherwise it will make the necessary
-       space so we can vsnprintf successfully */
-    p = SVR_Arena_reserve(alloc, n + 1);
-
-    /* Output was truncated, try with the new reserved space */
-    if(n >= space) {
-        va_start(ap, format);
-        vsnprintf(p, n + 1, format, ap);
-        va_end(ap);
-    }
-
-    return p;
-#endif
 }
 
 /**
