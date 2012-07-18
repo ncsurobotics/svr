@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 static char* server_address = NULL;
+static bool initialized = false;
 
 /**
  * \defgroup Main Main
@@ -53,6 +54,11 @@ void SVR_setServerAddress(char* address) {
  * initialization
  */
 int SVR_init(void) {
+    if(initialized) {
+        return SVR_INVALIDSTATE;
+    }
+    initialized = true;
+
     SVR_initCore();
 
     if(getenv("SVR_DEBUG")) {
