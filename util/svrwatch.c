@@ -29,23 +29,26 @@ static SVR_Stream* svrwatch_open_stream(const char* source_name) {
     stream = SVR_Stream_new(source_name);
     if(stream == NULL) {
         fprintf(stderr, "Could not open stream for '%s'\n", source_name);
-        exit(-1);
+        return NULL;
     }
 
-    if(quality == -1) {  /* Raw encoding */
+    if(quality == -1) {
+        /* Raw encoding */
         encoding = "raw";
     } else {
         encoding = Util_format("jpeg:quality=%d", quality);
     }
 
     if(SVR_Stream_setEncoding(stream, encoding)) {
-        fprintf(stderr, "Error setting encoding\n");
-        exit(-1);
+        fprintf(stderr, "Error setting encoding for '%s'\n", source_name);
+        SVR_Stream_destroy(stream);
+        return NULL;
     }
 
     if(SVR_Stream_unpause(stream)) {
-        fprintf(stderr, "Error unpausing stream\n");
-        exit(-1);
+        fprintf(stderr, "Error unpausing stream for '%s'\n", source_name);
+        SVR_Stream_destroy(stream);
+        return NULL;
     }
 
     return stream;
@@ -81,8 +84,11 @@ static bool svrwatch_open_new(Dictionary* streams) {
 
         if(Dictionary_exists(streams, source_name) == false) {
             stream = svrwatch_open_stream(source_name);
-            Dictionary_set(streams, source_name, stream);
-            new_stream = true;
+
+            if(stream) {
+                Dictionary_set(streams, source_name, stream);
+                new_stream = true;
+            }
         }
     }
 
@@ -196,7 +202,11 @@ int main(int argc, char** argv) {
             source_name = argv[optind + i];
             stream = svrwatch_open_stream(source_name);
 
-            Dictionary_set(streams, source_name, stream);
+            if(stream) {
+                Dictionary_set(streams, source_name, stream);
+            } else {
+                exit(-1);
+            }
         }
     }
 
