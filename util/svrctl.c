@@ -26,8 +26,8 @@ static void svrctl_usage(const char* argv0) {
            "  -s, --server=ADDRESS                  Address of SVR server\n"
            "  -o, --open NAME,SOURCE_DESCRIPTOR     Open a new server source\n"
            "  -c, --close NAME                      Close a server source\n"
-           "      --close-all                       Close all server sources\n"
-           "      --list-all                        List all sources\n\n", argv0);
+           "  -l, --list-all                        List all sources\n"
+           "      --close-all                       Close all server sources\n\n", argv0);
 }
 
 int main(int argc, char** argv) {
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
         {"open", 1, NULL, 'o'},
         {"close", 1, NULL, 'c'},
         {"close-all", 0, NULL, 'C'},
-        {"list-all", 0, NULL, 'L'},
+        {"list-all", 0, NULL, 'l'},
         {NULL, 0, NULL, 0}
     };
 
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
 
     SVR_Logging_setThreshold(SVR_LOGGING_OFF);
 
-    while((opt = getopt_long(argc, argv, ":hds:o:c:", long_options, &indexptr)) != -1) {
+    while((opt = getopt_long(argc, argv, ":hdls:o:c:", long_options, &indexptr)) != -1) {
         switch(opt) {
         case 'h':
             svrctl_usage(argv[0]);
@@ -93,14 +93,14 @@ int main(int argc, char** argv) {
             jobs[job_count++].arg0 = optarg;
             break;
 
+        case 'l':
+            jobs = realloc(jobs, sizeof(struct svrctl_job) * (job_count + 1));
+            jobs[job_count++].type = SVRCTL_LISTALL;
+            break;
+
         case 'C':
             jobs = realloc(jobs, sizeof(struct svrctl_job) * (job_count + 1));
             jobs[job_count++].type = SVRCTL_CLOSEALL;
-            break;
-
-        case 'L':
-            jobs = realloc(jobs, sizeof(struct svrctl_job) * (job_count + 1));
-            jobs[job_count++].type = SVRCTL_LISTALL;
             break;
 
         case ':':
