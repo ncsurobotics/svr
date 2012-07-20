@@ -29,6 +29,7 @@ struct SVRD_Stream_s {
     IplImage* temp_frame[2];
 
     pthread_t worker;
+    bool worker_started;
 
     SVR_LOCKABLE;
 };

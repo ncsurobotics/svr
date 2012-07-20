@@ -31,6 +31,9 @@ SVRD_Stream* SVRD_Stream_new(const char* name) {
     stream->drop_counter = 0;
     stream->drop_rate = 0;
 
+    memset(&stream->worker, 1, sizeof(pthread_t));
+    stream->worker_started = false;
+
     SVR_LOCKABLE_INIT(stream);
 
     /* Set default encoding */
@@ -239,6 +242,7 @@ void SVRD_Stream_unpause(SVRD_Stream* stream) {
         stream->state = SVR_UNPAUSED;
         SVRD_Stream_initializeEncoder(stream);
         pthread_create(&stream->worker, NULL, SVRD_Stream_worker, stream);
+        stream->worker_started = true;
     }
     SVR_UNLOCK(stream);
 }
@@ -247,7 +251,9 @@ void SVRD_Stream_destroy(SVRD_Stream* stream) {
     SVR_LOCK(stream);
 
     SVRD_Stream_pause(stream);
-    pthread_join(stream->worker, NULL);
+    if(stream->worker_started) {
+        pthread_join(stream->worker, NULL);
+    }
 
     /* Detach the source without a lock to avoid a deadlock */
     SVRD_Stream_detachSource(stream);
