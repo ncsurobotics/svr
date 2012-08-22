@@ -3,7 +3,8 @@ include ../mk/config.base.mk
 include ../$(CONFIG)
 
 EXTRA_CFLAGS = -I../include/ $(CV_CFLAGS)
-LDFLAGS += -L../lib/ -l$(LIB_NAME:lib%.so=%)
+LDFLAGS += -L../lib/ -l$(LIB_NAME) -lseawolf
+LDFLAGS += $(CV_LDFLAGS)
 
 SRCS=$(wildcard *.c)
 TOOLS=$(SRCS:%.c=%)

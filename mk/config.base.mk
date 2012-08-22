@@ -22,17 +22,24 @@ CV_LDFLAGS ?= $(strip $(shell pkg-config --libs opencv))
 # Install prefix
 #PREFIX ?= /usr/local
 
+# Library version
+MAJOR = 0
+MINOR = 1
+REV = 0
+
 # Component names
-LIB_NAME = libsvr.so
+LIB_NAME = svr
 SERVER_NAME = svrd
 
 # Extra LDFLAGS for some systems
 EXTRA_LDFLAGS =
 
-# Library version
-MAJOR = 0
-MINOR = 1
-REV = 0
+# Library output file
+LIB_FILE = lib$(LIB_NAME).so.$(MAJOR)
+LIB_FILE_BASE = lib$(LIB_NAME).so
+
+# Arguments to the compiler for building the shared library
+LIB_LDFLAGS = --shared -Wl,-soname,$(LIB_FILE)
 
 # Attempt to automatically determine the host type
 ifndef CONFIG
@@ -40,6 +47,8 @@ ifndef CONFIG
 
   ifeq ($(HOSTTYPE), Linux)
     CONFIG = mk/config.linux.mk
+  else ifeq ($(HOSTTYPE), Darwin)
+    CONFIG = mk/config.darwin.mk
   else
     # Fall back to a generic set of options
     CONFIG = mk/config.generic.mk

@@ -19,7 +19,7 @@ static pthread_mutex_t send_lock = PTHREAD_MUTEX_INITIALIZER;
 static void* payload_buffer = NULL;
 static int payload_buffer_size = 0;
 
-static void* SVR_Comm_receiveThread(void* __unused);
+static void* SVR_Comm_receiveThread(void* _unused);
 
 /**
  * \defgroup ServComm Communication management
@@ -68,10 +68,10 @@ int SVR_Comm_init(const char* server_address) {
  * Background thread started by SVR_Comm_init and responsible for handling
  * incoming messages and message response
  *
- * \param __unused Unused
+ * \param _unused Unused
  * \return Always returns NULL
  */
-static void* SVR_Comm_receiveThread(void* __unused) {
+static void* SVR_Comm_receiveThread(void* _unused) {
     SVR_Message* message;
     int n;
 

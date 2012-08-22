@@ -11,7 +11,7 @@ static Queue* garbage_queue = NULL;
 static SVR_BlockAllocator* allocator = NULL;
 static pthread_t garbage_collector_thread;
 
-static void* SVR_RefCounter_garbageCollector(void* __unused);
+static void* SVR_RefCounter_garbageCollector(void* _unused);
 
 /**
  * \defgroup RefCounter Reference counter
@@ -117,10 +117,10 @@ void SVR_RefCounter_destroy(SVR_RefCounter* ref_counter) {
  * their reference count reaches 0. This is done asychronously from SVR_UNREF to
  * avoid any unexpected latency from object cleanup.
  *
- * \param __unused Unused parameter
+ * \param _unused Unused parameter
  * \return Always returns NULL
  */
-static void* SVR_RefCounter_garbageCollector(void* __unused) {
+static void* SVR_RefCounter_garbageCollector(void* _unused) {
     SVR_RefCounter* ref_counter;
 
     while(true) {

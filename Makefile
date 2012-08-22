@@ -8,7 +8,7 @@ export PREFIX := $(abspath $(PREFIX))
 all: lib server python util
 
 lib:
-	cd lib && $(MAKE) $(LIB_NAME)
+	cd lib && $(MAKE) $(LIB_FILE)
 
 server: lib
 	cd server && $(MAKE) $(SERVER_NAME)

@@ -3,7 +3,7 @@ include ../mk/config.base.mk
 include ../$(CONFIG)
 
 EXTRA_CFLAGS = -I../include/ -Iinclude $(CV_CFLAGS)
-LDFLAGS += -L../lib/ -l$(LIB_NAME:lib%.so=%) -lpthread $(CV_LDFLAGS)
+LDFLAGS += -L../lib/ -l$(LIB_NAME) -lseawolf -lpthread $(CV_LDFLAGS)
 
 INCLUDES= ../include/svr/*.h ../include/svr.h include/svrd/*.h include/svrd.h
 

@@ -23,7 +23,10 @@ void SVRD_Source_init(void) {
     SVRD_Source_addType(&SVR_SOURCE(test));
     SVRD_Source_addType(&SVR_SOURCE(cam));
     SVRD_Source_addType(&SVR_SOURCE(file));
+
+#ifdef __SW_Linux__
     SVRD_Source_addType(&SVR_SOURCE(v4l));
+#endif
 }
 
 bool SVRD_Source_exists(const char* source_name) {

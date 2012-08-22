@@ -1,4 +1,7 @@
 
+/* v4l only supported on Linux */
+#ifdef __SW_Linux__
+
 /*
  * Adapted from the example:
  *     http://v4l2spec.bytesex.org/spec/capture-example.html
@@ -391,3 +394,10 @@ static void V4LSource_close_data(SVRD_V4LSource* source_data, const char* name, 
     free(source_data);
 
 }
+
+#else
+/* Dummy code so the compiler doesn't complain about an empty file */
+static void _v4l_dummy(void) {
+    return;
+}
+#endif

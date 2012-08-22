@@ -3,7 +3,7 @@ include ../mk/config.base.mk
 include ../$(CONFIG)
 
 EXTRA_CFLAGS = -I../include/ $(CV_CFLAGS)
-LDFLAGS += -L../src/ -l$(LIB_NAME:lib%.so=%) -lpthread $(CV_LDFLAGS)
+LDFLAGS += -L../src/ -l$(LIB_NAME) -lpthread $(CV_LDFLAGS)
 
 all: test
 
