@@ -14,7 +14,7 @@ OBJ= $(SRC:.c=.o)
 all: $(SERVER_NAME)
 
 $(SERVER_NAME): $(OBJ)
-	$(CC) $(LDFLAGS) $(OBJ) -o $(SERVER_NAME)
+	$(CC) $(OBJ) $(LDFLAGS) -o $(SERVER_NAME)
 
 .c.o:
 	$(CC) $(EXTRA_CFLAGS) $(CFLAGS) -c $< -o $@

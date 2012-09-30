@@ -12,7 +12,7 @@ TOOLS=$(SRCS:%.c=%)
 all: $(TOOLS)
 
 %: %.c
-	$(CC) $(EXTRA_CFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(EXTRA_CFLAGS) $(CFLAGS) $< $(LDFLAGS) -o $@
 
 install: all
 	install -m 755 $(TOOLS) $(PREFIX)/bin

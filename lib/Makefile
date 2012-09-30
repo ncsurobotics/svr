@@ -19,7 +19,7 @@ OBJ = $(SRC:.c=.o)
 all: $(LIB_FILE)
 
 $(LIB_FILE): $(OBJ)
-	$(CC) $(LDFLAGS) $(LIB_LDFLAGS) $(OBJ) -o $(LIB_FILE)
+	$(CC) $(LIB_LDFLAGS) $(OBJ) $(LDFLAGS) -o $(LIB_FILE)
 	ln -sf $(LIB_FILE) $(LIB_FILE_BASE)
 
 .c.o:
