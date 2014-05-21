@@ -1,6 +1,6 @@
 
 # Build options for Linux
-CFLAGS += -D__SVR_Linux__
+CFLAGS += -D__SVR_Linux__ -pthread
 
 # Install to /usr/local if no alternate is given
 PREFIX ?= /usr/local
