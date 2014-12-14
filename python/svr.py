@@ -11,19 +11,21 @@ _svr = ctypes.cdll.LoadLibrary(_SVR_PATH)
 
 _connected = False
 _errors = {
-    0 : "Success",
-    1 : "No such stream",
-    2 : "No such encoding",
-    3 : "No such source",
-    4 : "Invalid dimension",
-    5 : "Name already in use",
-    6 : "Invalid argument",
-    7 : "Invalid state",
-    8 : "Parse error",
-    255 : "Unknown error"
-    }
+    0: "Success",
+    1: "No such stream",
+    2: "No such encoding",
+    3: "No such source",
+    4: "Invalid dimension",
+    5: "Name already in use",
+    6: "Invalid argument",
+    7: "Invalid state",
+    8: "Parse error",
+    255: "Unknown error"
+}
+
 
 class SVRSourcesList(ctypes.Structure):
+
     """ Seawolf list returned by SVR_getSourcesList """
 
     _fields_ = [
@@ -35,6 +37,7 @@ class SVRSourcesList(ctypes.Structure):
     def to_list(self):
         return [str(self.base[i]) for i in range(0, self.items)]
 
+
 def _check_stream_call(value):
     if value == 0:
         return True
@@ -42,6 +45,7 @@ def _check_stream_call(value):
         raise StreamException(_errors[value])
     else:
         raise StreamException("Unknown error")
+
 
 def _check_source_call(value):
     if value == 0:
@@ -90,14 +94,18 @@ _svr.SVR_closeServerSource.argtypes = [ctypes.c_char_p]
 _svr.SVR_closeServerSource.restype = _check_source_call
 _svr.SVR_getSourcesList.restype = ctypes.POINTER(SVRSourcesList)
 
+
 class StreamException(Exception):
     pass
+
 
 class OrphanStreamException(Exception):
     pass
 
+
 class SourceException(Exception):
     pass
+
 
 def connect(server_address=None):
     global _connected
@@ -108,7 +116,9 @@ def connect(server_address=None):
     if not _connected:
         raise Exception("Error connecting to SVR server")
 
+
 class Stream(object):
+
     def __init__(self, source_name):
         if not _connected:
             raise StreamException("Not connected to server")
@@ -117,7 +127,7 @@ class Stream(object):
         self.handle = self.svr.SVR_Stream_new(source_name)
         self.frame = None
 
-        if self.handle == None:
+        if self.handle is None:
             raise StreamException("Error opening stream")
 
     def __del__(self):
@@ -152,7 +162,7 @@ class Stream(object):
     def get_frame(self, wait=True):
         frame_handle = self.svr.SVR_Stream_getFrame(self.handle, ctypes.c_bool(wait))
 
-        if frame_handle == None:
+        if frame_handle is None:
             if self.is_orphaned():
                 raise OrphanStreamException("Remote source closed")
             elif wait:
@@ -160,7 +170,7 @@ class Stream(object):
             else:
                 return None
 
-        if self.frame == None:
+        if self.frame is None:
             self.frame = swpycv.pyipl_from_ipl(frame_handle)
         else:
             swpycv.copy_ipl_to_pyipl(frame_handle, self.frame)
@@ -168,7 +178,9 @@ class Stream(object):
         self.svr.SVR_Stream_returnFrame(self.handle, frame_handle)
         return self.frame
 
+
 class Source(object):
+
     def __init__(self, name):
         if not _connected:
             raise Exception("Not connected to server")
@@ -176,7 +188,7 @@ class Source(object):
         self.svr = _svr
         self.handle = self.svr.SVR_Source_new(name)
 
-        if self.handle == None:
+        if self.handle is None:
             raise SourceException("Error opening source")
 
     def __del__(self):
@@ -192,6 +204,8 @@ class Source(object):
         return self.svr.SVR_Source_sendFrame(self.handle, ipl_ptr)
 
 debug_sources = dict()
+
+
 def debug(source_name, frame):
     global debug_sources
 
@@ -200,18 +214,23 @@ def debug(source_name, frame):
 
     debug_sources[source_name].send_frame(frame)
 
+
 def debug_close(source_name):
     global debug_sources
     del debug_sources[source_name]
 
+
 def sync():
     _svr.SVR_Stream_sync()
+
 
 def open_server_source(source_name, source_description):
     return _svr.SVR_openServerSource(source_name, source_description)
 
+
 def close_server_source(source_name):
     return _svr.SVR_closeServerSource(source_name)
+
 
 def get_sources_list():
     p = _svr.SVR_getSourcesList()
