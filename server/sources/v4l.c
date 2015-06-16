@@ -1,6 +1,6 @@
 
 /* v4l only supported on Linux */
-#ifdef __SW_Linux__
+#ifdef __SVR_Linux__
 
 /*
  * Adapted from the example:

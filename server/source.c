@@ -24,7 +24,7 @@ void SVRD_Source_init(void) {
     SVRD_Source_addType(&SVR_SOURCE(cam));
     SVRD_Source_addType(&SVR_SOURCE(file));
 
-#ifdef __SW_Linux__
+#ifdef __SVR_Linux__
     SVRD_Source_addType(&SVR_SOURCE(v4l));
 #endif
 }
@@ -161,6 +161,7 @@ void SVRD_Source_fromFile(const char* filename) {
 
 static void SVRD_Source_addType(SVRD_SourceType* source_type) {
     Dictionary_set(source_types, source_type->name, source_type);
+    SVR_log(SVR_DEBUG, Util_format("source_type '%s'", source_type->name));
 }
 
 SVRD_Source* SVRD_Source_new(const char* name) {
