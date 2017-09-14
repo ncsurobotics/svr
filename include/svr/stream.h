@@ -4,7 +4,7 @@
 
 #include <svr/forward.h>
 #include <svr/lockable.h>
-#include <svr/cv.h>
+#include <svr/svrcv.h>
 
 typedef enum {
     SVR_PAUSED,
