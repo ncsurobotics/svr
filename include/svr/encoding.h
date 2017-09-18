@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #include <svr/forward.h>
-#include <svr/cv.h>
+#include <svr/svrcv.h>
 
 struct SVR_Encoding_s {
     /**
