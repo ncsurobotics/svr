@@ -1,0 +1,7 @@
+cmake_minimum_required (VERSION 3.1)
+#set(Python_ADDITIONAL_VERSIONS 2.7 2.6 2.5)
+#find_package(PythonInterp REQUIRED)
+#set(Python_ADDITIONAL_VERSIONS $(PYTHON_VERSION_STRING))
+#find_program(PYTHON "python")
+add_custom_target(pylib ALL COMMAND python "${CMAKE_CURRENT_SOURCE_DIR}/setup.py" "build")
+install(CODE "execute_process(COMMAND python \"${CMAKE_CURRENT_SOURCE_DIR}/setup.py\" \"install\")")
