@@ -4,5 +4,6 @@ set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPENCV_CFLAGS} -Wall -Werror -Wno-unused-
 include_directories ( ../include/ ./include/ ./include/svrd/ ${OPENCV_INCLUDE_DIRS} )
 list(APPEND LIBRARIES ${OPENCV_LDFLAGS} )
 add_executable( svrd client.c event.c main.c messagehandlers.c messagerouting.c server.c source.c stream.c sources/test.c sources/cam.c sources/file.c sources/v4l.c )
+add_dependencies( svrd libsvr )
 install( TARGETS svrd DESTINATION "bin")
 target_link_libraries( svrd libsvr seawolf pthread ${OPENCV_LIBRARIES} )

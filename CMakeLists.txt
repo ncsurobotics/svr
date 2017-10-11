@@ -4,6 +4,7 @@ add_subdirectory( lib )
 add_subdirectory( server )
 add_subdirectory( python )
 add_subdirectory( util )
+add_subdirectory( test )
 # Delete the find_package bits when moving to opencv2
 find_package( PkgConfig REQUIRED )
 pkg_check_modules( OPENCV REQUIRED opencv )
