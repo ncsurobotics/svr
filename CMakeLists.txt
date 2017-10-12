@@ -14,4 +14,6 @@ add_subdirectory( server )
 add_subdirectory( python )
 add_subdirectory( util )
 add_subdirectory( test )
-add_subdirectory( doc )
+
+# Finally the documentation target, which expects to be built from the toplevel dir
+add_custom_target(doc COMMAND doxygen ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile)
