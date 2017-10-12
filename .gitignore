@@ -9,7 +9,7 @@
 /.cproject
 /.project
 /.settings
-/test/test
+/test/check
 /python/build
 /util/svrwatch
 /util/svrctl
