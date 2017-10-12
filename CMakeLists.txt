@@ -2,9 +2,9 @@ cmake_minimum_required (VERSION 3.1)
 project( svr )
 
 # Global Configuration
-if( ${CMAKE_SYSTEM_NAME} EQUAL "Linux" )
+if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
   set( CMAKE_C_FLAGS "-D__SVR_Linux__" )
-elseif( ${CMAKE_SYSTEM_NAME} EQUAL "Darwin" )
+elseif( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
   set( CMAKE_C_FLAGS "-D__SW_Darwin__" )
 endif()
 
