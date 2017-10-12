@@ -4,6 +4,8 @@ project( svr )
 # Global Configuration
 if( ${CMAKE_SYSTEM_NAME} EQUAL "Linux" )
   set( CMAKE_C_FLAGS "-D__SVR_Linux__" )
+elseif( ${CMAKE_SYSTEM_NAME} EQUAL "Darwin" )
+  set( CMAKE_C_FLAGS "-D__SW_Darwin__" )
 endif()
 
 # Subdirectories to be built
