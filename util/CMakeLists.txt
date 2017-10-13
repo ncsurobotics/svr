@@ -1,0 +1,15 @@
+cmake_minimum_required (VERSION 3.1)
+project ( util )
+
+find_package( OpenCV REQUIRED )
+set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenCV_CFLAGS} -Wall -Werror" )
+include_directories ( ${OpenCV_INCLUDE_DIRS} ../include )
+
+add_executable( svrctl svrctl.c )
+add_executable( svrwatch svrwatch.c )
+add_dependencies( svrctl svr )
+add_dependencies( svrwatch svr )
+install( TARGETS svrctl DESTINATION "bin")
+install( TARGETS svrwatch DESTINATION "bin")
+target_link_libraries( svrctl svr seawolf ${OpenCV_LIBRARIES} )
+target_link_libraries( svrwatch svr seawolf ${OpenCV_LIBRARIES} )
